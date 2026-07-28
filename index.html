@@ -1126,7 +1126,7 @@
     // 注册 Service Worker（让工作台可作为 App 安装到手机桌面；file:// 下静默失败）
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=2').catch(function () {});
       });
     }
   </script>
@@ -1284,6 +1284,7 @@
           <button onclick="addPlan()">添加</button>
         </div>
         <div class="info-list" id="plan-list" style="margin-top:12px"></div>
+        <div id="plan-history" style="margin-top:14px"></div>
       </div>
     </section>
 
@@ -1296,6 +1297,7 @@
           <button class="icon-btn" onclick="addCountdown()">+</button>
         </div>
         <div class="countdown-list" id="countdown-list"></div>
+        <div id="exam-history" style="margin-top:14px"></div>
       </div>
     </section>
 
@@ -1344,6 +1346,7 @@
           </div>
           <div id="self-favorites" style="font-size:13px"></div>
         </div>
+        <div class="card glass" style="margin-top:14px" id="self-history"><div class="card-title"><span>📋 历史打卡</span></div></div>
       </div>
     </section>
 
@@ -1376,6 +1379,7 @@
             <div class="filter-tab" onclick="goPage('podcast')">查看播客列表</div>
           </div>
         </div>
+        <div class="card glass" style="margin-top:14px" id="ops-history"><div class="card-title"><span>📋 已完成</span></div></div>
       </div>
     </section>
 
@@ -1399,6 +1403,7 @@
           </div>
           <div class="todo-list" id="family-list"></div>
         </div>
+        <div class="card glass" style="margin-top:14px" id="family-history"><div class="card-title"><span>📋 已完成</span></div></div>
       </div>
     </section>
 
@@ -3478,7 +3483,7 @@
 
     function toggleItem(list, id, renderFn) {
       const item = list.find(i => i.id === id);
-      if (item) { item.done = !item.done; renderFn(); saveGlobalState(); }
+      if (item) { item.done = !item.done; if (item.done) item.doneAt = new Date().toISOString(); else delete item.doneAt; renderFn(); saveGlobalState(); }
     }
 
     function deleteItem(list, id, renderFn) {
@@ -3551,10 +3556,10 @@
     function deleteFamily(id) { deleteItem(globalState.familyTasks, id, () => { renderFamily(); updateProgress(); }); }
 
     function renderTodos() { renderTodoList(globalState.todos, 'todo-list', 'toggleTodo', 'deleteTodo'); }
-    function renderExam() { renderTodoList(globalState.examTasks, 'exam-list', 'toggleExam', 'deleteExam'); updateExamProgress(); }
-    function renderSelf() { renderTodoList(globalState.selfTasks, 'self-list', 'toggleSelf', 'deleteSelf'); }
-    function renderOps() { renderTodoList(globalState.opsTasks, 'ops-list', 'toggleOps', 'deleteOps'); }
-    function renderFamily() { renderTodoList(globalState.familyTasks, 'family-list', 'toggleFamily', 'deleteFamily'); }
+    function renderExam() { renderTodoList(globalState.examTasks, 'exam-list', 'toggleExam', 'deleteExam'); updateExamProgress(); renderTaskHistory(document.getElementById('exam-history'), 'examTasks', '备考任务'); }
+    function renderSelf() { renderTodoList(globalState.selfTasks, 'self-list', 'toggleSelf', 'deleteSelf'); renderTaskHistory(document.getElementById('self-history'), 'selfTasks', '自律打卡'); }
+    function renderOps() { renderTodoList(globalState.opsTasks, 'ops-list', 'toggleOps', 'deleteOps'); renderTaskHistory(document.getElementById('ops-history'), 'opsTasks', '运营任务'); }
+    function renderFamily() { renderTodoList(globalState.familyTasks, 'family-list', 'toggleFamily', 'deleteFamily'); renderTaskHistory(document.getElementById('family-history'), 'familyTasks', '家庭待办'); }
 
     function updateExamProgress() {
       const total = globalState.examTasks.length;
