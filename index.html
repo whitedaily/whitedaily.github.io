@@ -1126,7 +1126,7 @@
     // 注册 Service Worker（让工作台可作为 App 安装到手机桌面；file:// 下静默失败）
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=2').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=3').catch(function () {});
       });
     }
   </script>
@@ -1285,6 +1285,8 @@
         </div>
         <div class="info-list" id="plan-list" style="margin-top:12px"></div>
         <div id="plan-history" style="margin-top:14px"></div>
+        <div class="page-add-widget-bar"><button class="action-btn" onclick="openWidgetLib('plan')">➕ 添加小组件到本页</button></div>
+        <div class="widget-grid page-widgets" id="plan-widgets"></div>
       </div>
     </section>
 
@@ -1298,6 +1300,8 @@
         </div>
         <div class="countdown-list" id="countdown-list"></div>
         <div id="exam-history" style="margin-top:14px"></div>
+        <div class="page-add-widget-bar"><button class="action-btn" onclick="openWidgetLib('exam')">➕ 添加小组件到本页</button></div>
+        <div class="widget-grid page-widgets" id="exam-widgets"></div>
       </div>
     </section>
 
@@ -1347,6 +1351,8 @@
           <div id="self-favorites" style="font-size:13px"></div>
         </div>
         <div class="card glass" style="margin-top:14px" id="self-history"><div class="card-title"><span>📋 历史打卡</span></div></div>
+        <div class="page-add-widget-bar" style="margin-top:14px"><button class="action-btn" onclick="openWidgetLib('self')">➕ 添加小组件到本页</button></div>
+        <div class="widget-grid page-widgets" id="self-widgets"></div>
       </div>
     </section>
 
@@ -1380,6 +1386,8 @@
           </div>
         </div>
         <div class="card glass" style="margin-top:14px" id="ops-history"><div class="card-title"><span>📋 已完成</span></div></div>
+        <div class="page-add-widget-bar"><button class="action-btn" onclick="openWidgetLib('ops')">➕ 添加小组件到本页</button></div>
+        <div class="widget-grid page-widgets" id="ops-widgets"></div>
       </div>
     </section>
 
@@ -1404,6 +1412,8 @@
           <div class="todo-list" id="family-list"></div>
         </div>
         <div class="card glass" style="margin-top:14px" id="family-history"><div class="card-title"><span>📋 已完成</span></div></div>
+        <div class="page-add-widget-bar"><button class="action-btn" onclick="openWidgetLib('family')">➕ 添加小组件到本页</button></div>
+        <div class="widget-grid page-widgets" id="family-widgets"></div>
       </div>
     </section>
 
@@ -1441,6 +1451,8 @@
           </div>
         </div>
       </div>
+      <div class="page-add-widget-bar" style="margin-top:14px"><button class="action-btn" onclick="openWidgetLib('stats')">➕ 添加小组件到本页</button></div>
+      <div class="widget-grid page-widgets" id="stats-widgets"></div>
     </section>
 
     <!-- 播客列表 -->
@@ -1808,7 +1820,8 @@
         { key: 'remedy', name: '🍵 家庭偏方', items: [] },
         { key: 'skill', name: '🔧 生活技能', items: [] },
         { key: 'contact', name: '📞 紧急联系', items: [] }
-      ]}
+      ]},
+      pageWidgets: { plan: [], exam: [], self: [], ops: [], family: [], stats: [] }
     };
 
     let appState = {
@@ -1872,6 +1885,7 @@
       Object.values(appState.workbenches || {}).forEach(wb => {
         wb.widgetConfigs = wb.widgetConfigs || {};
         wb.glassNav = wb.glassNav || false;
+        wb.pageWidgets = wb.pageWidgets || { plan: [], exam: [], self: [], ops: [], family: [], stats: [] };
       });
       ensureDefaultWorkbench();
       // URL 自动打卡检测
@@ -2317,6 +2331,7 @@
       document.getElementById('fab-add').classList.toggle('visible', editMode && page === 'home');
       document.getElementById('btn-add-widget').style.display = editMode && page === 'home' ? 'flex' : 'none';
       if (page === 'stats') renderStats();
+      if (page !== 'home') { try { renderPageWidgets(page); } catch(e){} }
       window.scrollTo(0,0);
     }
 
@@ -2426,18 +2441,104 @@
       saveAppState(); renderHome();
     }
 
-    function openWidgetLib() {
+    function openWidgetLib(pageId) {
+      pageId = pageId || currentPage;
       const lib = document.getElementById('widget-lib');
       const wb = getCurrentWorkbench();
+      const list = pageId === 'home' ? wb.widgets : ((wb.pageWidgets && wb.pageWidgets[pageId]) || []);
       lib.innerHTML = '';
+      // 该页独有的: 显示「本页专属」标记
+      const pageNames = { home: '首页', plan: '计划', exam: '备考', self: '自律', ops: '运营', family: '家庭', stats: '统计' };
+      lib.innerHTML = `<div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">添加到 <b style="color:var(--tiffany-dark)">${pageNames[pageId] || pageId}</b> 页：</div>`;
+      const itemWrap = document.createElement('div');
+      itemWrap.className = 'widget-lib-grid';
       Object.entries(widgetDefs).forEach(([key, def]) => {
+        if (pageId !== 'home' && list.includes(key)) return; // 已存在则不在其他页重复加
         const div = document.createElement('div');
         div.className = 'widget-lib-item';
         div.innerHTML = `<div class="emoji">${def.title.split(' ')[0]}</div><div class="name">${def.title.split(' ').slice(1).join(' ')}</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px">${def.desc}</div>`;
-        div.onclick = () => { addWidget(key); };
-        lib.appendChild(div);
+        div.onclick = () => { addPageWidget(pageId, key); };
+        itemWrap.appendChild(div);
       });
+      lib.appendChild(itemWrap);
       document.getElementById('widget-modal').classList.add('active');
+    }
+
+    function addPageWidget(pageId, key) {
+      const wb = getCurrentWorkbench();
+      if (pageId === 'home') {
+        if (wb.widgets.includes(key)) { alert('该组件已存在'); return; }
+        wb.widgets.push(key);
+        saveAppState();
+        renderHome();
+      } else {
+        if (!wb.pageWidgets) wb.pageWidgets = { plan: [], exam: [], self: [], ops: [], family: [], stats: [] };
+        if (!wb.pageWidgets[pageId]) wb.pageWidgets[pageId] = [];
+        if (wb.pageWidgets[pageId].includes(key)) { alert('该组件已存在'); return; }
+        wb.pageWidgets[pageId].push(key);
+        saveAppState();
+        renderPageWidgets(pageId);
+      }
+      closeWidgetLib();
+    }
+
+    function deletePageWidget(pageId, idx) {
+      const wb = getCurrentWorkbench();
+      if (!wb.pageWidgets || !wb.pageWidgets[pageId]) return;
+      wb.pageWidgets[pageId].splice(idx, 1);
+      saveAppState();
+      renderPageWidgets(pageId);
+    }
+
+    function renderPageWidgets(pageId) {
+      const wb = getCurrentWorkbench();
+      if (!wb.pageWidgets) wb.pageWidgets = { plan: [], exam: [], self: [], ops: [], family: [], stats: [] };
+      if (!wb.pageWidgets[pageId]) wb.pageWidgets[pageId] = [];
+      const grid = document.getElementById(pageId + '-widgets');
+      if (!grid) return;
+      grid.innerHTML = '';
+      wb.widgetConfigs = wb.widgetConfigs || {};
+      wb.pageWidgets[pageId].forEach((key, idx) => {
+        const def = widgetDefs[key];
+        if (!def) return;
+        const cfg = wb.widgetConfigs[key] || { size: 'md' };
+        const card = document.createElement('div');
+        card.className = 'card glass size-' + cfg.size;
+        card.dataset.widget = key;
+        card.dataset.page = pageId;
+        card.dataset.pageIdx = idx;
+        card.innerHTML = `
+          <div class="card-title">
+            <span><span class="emoji">${def.title.split(' ')[0]}</span>${def.title.split(' ').slice(1).join(' ')}</span>
+            <div class="card-actions">
+              <span class="drag-handle-card" title="拖动排序">↕</span>
+              <button class="widget-config-btn" title="小组件属性" onclick="event.stopPropagation();openWidgetConfig('${key}', this)">⚙</button>
+              <button class="delete-btn" title="删除组件" onclick="event.stopPropagation();deletePageWidget('${pageId}', ${idx})">×</button>
+            </div>
+          </div>
+          <div class="widget-body"></div>
+        `;
+        def.render(card.querySelector('.widget-body'));
+        grid.appendChild(card);
+      });
+      refreshGlassClasses();
+      // 启用 sortable 拖排序
+      if (window['_pgSortable_' + pageId]) window['_pgSortable_' + pageId].destroy();
+      const Sort = window.Sortable;
+      if (Sort) {
+        window['_pgSortable_' + pageId] = new Sort(grid, {
+          handle: '.drag-handle-card',
+          animation: 150,
+          disabled: !editMode,
+          ghostClass: 'sortable-ghost',
+          dragClass: 'sortable-drag',
+          onEnd: () => {
+            const wb2 = getCurrentWorkbench();
+            wb2.pageWidgets[pageId] = [...grid.querySelectorAll('.card')].map(c => c.dataset.widget).filter(Boolean);
+            saveAppState();
+          }
+        });
+      }
     }
 
     function addWidget(key) {
