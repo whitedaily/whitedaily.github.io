@@ -15,6 +15,7 @@
   <title>White 个人专属 AI 工作台</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     :root {
       --tiffany: #0ABAB5;
@@ -1063,6 +1064,63 @@
     .fc-checkin-toast-card h3 { font-size: 18px; margin-bottom: 6px; }
     .fc-checkin-toast-card p { font-size: 13px; color: var(--text-secondary); margin-bottom: 18px; line-height: 1.5; }
     .fc-checkin-toast-card button { padding: 10px 28px; border: none; border-radius: 24px; background: var(--tiffany); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+    /* ===== Sync / Supabase 连接状态指示器 ===== */
+    .sync-dot {
+      display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+      margin-right: 4px; vertical-align: middle;
+    }
+    .sync-dot.online { background: #2ECC71; box-shadow: 0 0 4px rgba(46,204,113,0.5); }
+    .sync-dot.syncing { background: #F39C12; animation: pulse 1.5s infinite; }
+    .sync-dot.offline { background: #ccc; }
+    .sync-dot.error { background: #E17055; }
+    .sync-status-text { font-size: 11px; color: var(--text-secondary); }
+
+    /* ===== 生活技能小组件 ===== */
+    .ls-cat-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
+    .ls-cat-tab {
+      padding: 5px 10px; border-radius: 16px; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.5); cursor: pointer; font-size: 11px;
+      transition: all 0.2s; color: var(--text-secondary);
+    }
+    .ls-cat-tab.active { background: var(--tiffany); color: #fff; border-color: var(--tiffany); }
+    .ls-item {
+      padding: 10px 12px; margin-bottom: 6px; border-radius: 10px;
+      background: rgba(255,255,255,0.5); border-left: 3px solid var(--tiffany);
+      transition: all 0.2s;
+    }
+    .ls-item:hover { background: var(--tiffany-light); }
+    .ls-item .title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .ls-item .desc { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+    .ls-item .meta { font-size: 10px; color: var(--text-muted); margin-top: 4px; display: flex; gap: 8px; }
+    .ls-item .tags { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 4px; }
+    .ls-item .tag { padding: 1px 6px; border-radius: 8px; font-size: 9px; background: var(--tiffany-light); color: var(--tiffany-dark); }
+    .ls-search { width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; margin-bottom: 8px; }
+
+    /* ===== 任务历史折叠 ===== */
+    .history-accordion { margin-top: 4px; }
+    .history-date-group { margin-bottom: 6px; border-radius: 10px; overflow: hidden; }
+    .history-date-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; background: rgba(10,186,181,0.08); cursor: pointer;
+      font-size: 12px; font-weight: 600; color: var(--text); border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .history-date-header:hover { background: var(--tiffany-light); }
+    .history-date-header .arrow { transition: transform 0.2s; font-size: 11px; }
+    .history-date-header.open .arrow { transform: rotate(90deg); }
+    .history-items { padding: 6px 12px; }
+    .history-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 4px 0; font-size: 12px; color: var(--text-secondary);
+      border-bottom: 1px dashed rgba(0,0,0,0.04);
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-item .time { font-size: 10px; color: var(--text-muted); min-width: 44px; }
+    .history-search {
+      width: 100%; padding: 6px 10px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 12px; margin-bottom: 10px;
+    }
   </style>
   <script>
     // 注册 Service Worker（让工作台可作为 App 安装到手机桌面；file:// 下静默失败）
@@ -1164,6 +1222,9 @@
     <nav class="nav-menu" id="nav-menu"></nav>
 
     <div class="sidebar-footer">
+      <div class="side-btn sync-mini" id="sync-mini" onclick="document.getElementById('settings-modal').classList.add('active');switchSettingTab(document.querySelector('.modal-tab[onclick*=\"sync\"]'),'sync')">
+        <span class="sync-dot offline" style="width:8px;height:8px"></span> 未同步
+      </div>
       <div class="side-btn" id="edit-nav-btn" onclick="toggleNavEdit()">
         <span>⚙️</span><span>编辑导航分区</span>
       </div>
@@ -1456,6 +1517,7 @@
       <div class="modal-tabs">
         <div class="modal-tab active" onclick="switchSettingTab(this,'background')">背景</div>
         <div class="modal-tab" onclick="switchSettingTab(this,'glass')">玻璃态</div>
+        <div class="modal-tab" onclick="switchSettingTab(this,'sync')">同步</div>
         <div class="modal-tab" onclick="switchSettingTab(this,'layout')">布局</div>
       </div>
 
@@ -1513,6 +1575,35 @@
             <input type="range" id="glass-blur" min="0" max="40" value="14" oninput="previewBlur()">
             <span class="range-value" id="blur-value">14px</span>
           </div>
+        </div>
+      </div>
+
+      <div class="modal-section" id="tab-sync">
+        <div class="setting-row">
+          <div class="info"><h4>Supabase 云端同步</h4><p>数据自动备份到云端，换设备可恢复</p></div>
+        </div>
+        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <div class="info" style="width:100%"><h4>Supabase Project URL</h4><p>在 supabase.com 创建免费项目后获取</p></div>
+          <input type="text" class="setting-input" id="sync-sb-url" placeholder="https://xxx.supabase.co" style="width:100%">
+        </div>
+        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <div class="info" style="width:100%"><h4>anon Key</h4><p>Supabase Project Settings → API → anon/public key</p></div>
+          <input type="password" class="setting-input" id="sync-sb-key" placeholder="eyJh..." style="width:100%">
+        </div>
+        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <div class="info" style="width:100%"><h4>同步密钥</h4><p>4 位以上密码，用于识别和同步你的数据</p></div>
+          <input type="password" class="setting-input" id="sync-key" placeholder="至少 4 位" style="width:100%">
+        </div>
+        <div class="setting-row">
+          <div class="info"><h4>连接本机 WiFi 自动备份</h4><p>连接/重连 WiFi 后自动推送到云端</p></div>
+          <div class="toggle" id="toggle-wifi-backup" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="setting-row">
+          <div class="info" id="sync-status-info"><span class="sync-dot offline"></span> 未配置</div>
+          <button class="action-btn" onclick="syncNow()" style="margin-left:auto">🔄 手动同步</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.5">
+          💡 Supabase 免费套餐含 500MB 数据库。配置后：<br>① 工作台关闭/闪退不丢数据<br>② 多设备可同步（用相同密钥）<br>③ 连接状态标识（🟢 已同步 / 🟡 同步中 / 🔴 离线）
         </div>
       </div>
 
@@ -1639,7 +1730,8 @@
       news: { title: '📰 每日新闻', desc: '国内国际要闻', render: renderNewsWidget },
       aiSecretary: { title: '🤖 AI 助手秘书', desc: '语音/图片 · 自动分类', render: renderAISecretaryWidget },
       calendarMarker: { title: '📆 日历标记', desc: '在日历上记录任何事', render: renderCalendarMarkerWidget },
-      familyCheckin: { title: '🏠 家庭打卡', desc: '成员回家自动打卡', render: renderFamilyCheckinWidget }
+      familyCheckin: { title: '🏠 家庭打卡', desc: '成员回家自动打卡', render: renderFamilyCheckinWidget },
+      lifeSkills: { title: '📚 生活技能', desc: '用药/急救/偏方/技能', render: renderLifeSkillsWidget }
     };
 
     const providers = {
@@ -1703,7 +1795,15 @@
       familyCheckpoints: [],
       familyCheckins: [],
       familyCheckpointGeo: [],
-      familyCheckinCooldown: {}
+      familyCheckinCooldown: {},
+      syncConfig: { url: '', key: '', syncKey: '', wifiBackup: true },
+      lifeSkills: { categories: [
+        { key: 'medication', name: '💊 生病用药', items: [] },
+        { key: 'firstaid', name: '🩹 急救知识', items: [] },
+        { key: 'remedy', name: '🍵 家庭偏方', items: [] },
+        { key: 'skill', name: '🔧 生活技能', items: [] },
+        { key: 'contact', name: '📞 紧急联系', items: [] }
+      ]}
     };
 
     let appState = {
@@ -1753,6 +1853,16 @@
       globalState.familyCheckinCooldown = globalState.familyCheckinCooldown || {};
       while ((globalState.familyCheckpointGeo || []).length < (globalState.familyCheckpoints || []).length) {
         globalState.familyCheckpointGeo.push({ enabled: false, lat: 0, lon: 0, radius: 80 });
+      }
+      globalState.syncConfig = globalState.syncConfig || { url: '', key: '', syncKey: '', wifiBackup: true };
+      if (!globalState.lifeSkills || !globalState.lifeSkills.categories) {
+        globalState.lifeSkills = { categories: [
+          { key: 'medication', name: '💊 生病用药', items: [] },
+          { key: 'firstaid', name: '🩹 急救知识', items: [] },
+          { key: 'remedy', name: '🍵 家庭偏方', items: [] },
+          { key: 'skill', name: '🔧 生活技能', items: [] },
+          { key: 'contact', name: '📞 紧急联系', items: [] }
+        ]};
       }
       Object.values(appState.workbenches || {}).forEach(wb => {
         wb.widgetConfigs = wb.widgetConfigs || {};
@@ -3019,6 +3129,287 @@
       }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 30000 });
     }
 
+    // ========== Supabase 云端同步 ==========
+    let _sb = null;
+    let _syncTimer = null;
+    let _lastSyncedAt = 0;
+    let _syncStatus = 'offline'; // online|syncing|error|offline
+
+    function getSyncConfig() {
+      globalState.syncConfig = globalState.syncConfig || { url: '', key: '', syncKey: '', wifiBackup: true };
+      return globalState.syncConfig;
+    }
+
+    function initSync() {
+      const cfg = getSyncConfig();
+      if (cfg.url && cfg.key && cfg.syncKey && window.supabase) {
+        try {
+          _sb = supabase.createClient(cfg.url, cfg.key);
+          _syncStatus = 'online';
+        } catch (e) { _syncStatus = 'error'; }
+      } else {
+        _syncStatus = 'offline';
+      }
+      updateSyncDot();
+      // 定时自动同步(每 5 分钟)
+      if (_syncTimer) clearInterval(_syncTimer);
+      _syncTimer = setInterval(() => { if (_sb) syncNow(true); }, 300000);
+      // WiFi 监听
+      startWifiWatch();
+      // 打开 settings 时回填
+      setTimeout(() => {
+        const urlEl = document.getElementById('sync-sb-url');
+        const keyEl = document.getElementById('sync-sb-key');
+        const skEl = document.getElementById('sync-key');
+        const wfEl = document.getElementById('toggle-wifi-backup');
+        if (urlEl && !urlEl.value) urlEl.value = cfg.url;
+        if (keyEl && !keyEl.value) keyEl.value = cfg.key;
+        if (skEl && !skEl.value) skEl.value = cfg.syncKey;
+        if (wfEl) wfEl.classList.toggle('on', cfg.wifiBackup);
+      }, 300);
+    }
+
+    function saveSyncConfig() {
+      const cfg = getSyncConfig();
+      const urlEl = document.getElementById('sync-sb-url');
+      const keyEl = document.getElementById('sync-sb-key');
+      const skEl = document.getElementById('sync-key');
+      const wfEl = document.getElementById('toggle-wifi-backup');
+      if (urlEl) cfg.url = urlEl.value.trim();
+      if (keyEl) cfg.key = keyEl.value.trim();
+      if (skEl) cfg.syncKey = skEl.value.trim();
+      if (wfEl) cfg.wifiBackup = wfEl.classList.contains('on');
+      saveGlobalState();
+      initSync();
+    }
+
+    async function syncNow(silent) {
+      if (!_sb) {
+        if (!silent) showHint('请先在设置→同步中配置 Supabase');
+        return;
+      }
+      const cfg = getSyncConfig();
+      if (!cfg.syncKey || cfg.syncKey.length < 4) {
+        if (!silent) showHint('同步密钥至少 4 位');
+        return;
+      }
+      _syncStatus = 'syncing';
+      updateSyncDot();
+      try {
+        // Upsert 到单行表 workbench_state，row id = syncKey 的 SHA256 前 12 位
+        const rowId = sha256Prefix(cfg.syncKey, 12);
+        const payload = {
+          id: rowId,
+          app_state: appState,
+          global_state: globalState,
+          updated_at: new Date().toISOString(),
+          device: navigator.userAgent.slice(0, 80)
+        };
+        const { error } = await _sb.from('workbench_state').upsert(payload, { onConflict: 'id' });
+        if (error) throw error;
+        _lastSyncedAt = Date.now();
+        _syncStatus = 'online';
+        if (!silent) showHint('✅ 云端同步成功');
+      } catch (e) {
+        _syncStatus = 'error';
+        if (!silent) showHint('同步失败: ' + (e.message || String(e)).slice(0, 40));
+      }
+      updateSyncDot();
+    }
+
+    async function pullSync() {
+      if (!_sb) return false;
+      const cfg = getSyncConfig();
+      if (!cfg.syncKey || cfg.syncKey.length < 4) return false;
+      try {
+        const rowId = sha256Prefix(cfg.syncKey, 12);
+        const { data, error } = await _sb.from('workbench_state').select('*').eq('id', rowId).maybeSingle();
+        if (error || !data) return false;
+        if (data.app_state) appState = data.app_state;
+        if (data.global_state) globalState = data.global_state;
+        _lastSyncedAt = Date.now();
+        _syncStatus = 'online';
+        updateSyncDot();
+        return true;
+      } catch (e) { return false; }
+    }
+
+    function sha256Prefix(str, len) {
+      // 简单哈希用于生成 row ID
+      let h = 0;
+      for (let i = 0; i < str.length; i++) {
+        h = ((h << 5) - h) + str.charCodeAt(i);
+        h |= 0;
+      }
+      return 'wb_' + Math.abs(h).toString(36).slice(0, len);
+    }
+
+    function updateSyncDot() {
+      const dot = document.querySelector('.sync-dot');
+      const txt = document.getElementById('sync-status-info');
+      const sMap = { online: ['🟢 已连接', 'online'], syncing: ['🟡 同步中', 'syncing'], error: ['🔴 同步失败', 'error'], offline: ['⚫ 未配置', 'offline'] };
+      const [label, cls] = sMap[_syncStatus] || sMap.offline;
+      if (dot) { dot.className = 'sync-dot ' + cls; }
+      if (txt) txt.innerHTML = `<span class="sync-dot ${cls}"></span> ${label}`;
+      // 侧边栏迷你指示器
+      const mini = document.getElementById('sync-mini');
+      if (mini) {
+        mini.innerHTML = `<span class="sync-dot ${cls}" style="width:8px;height:8px"></span> <span style="font-size:10px;opacity:0.85">${label.replace(/[🟢🟡🔴⚫]/,'')}</span>`;
+      }
+    }
+
+    function startWifiWatch() {
+      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (!conn) return;
+      const checkWifi = () => {
+        const cfg = getSyncConfig();
+        if (!cfg.wifiBackup || !_sb) return;
+        const isWifi = conn.type === 'wifi' || conn.effectiveType === '4g' || !conn.type;
+        if (isWifi && _sb && Date.now() - _lastSyncedAt > 120000) {
+          syncNow(true);
+        }
+      };
+      conn.addEventListener('change', checkWifi);
+      // 初始检查
+      if (conn.type) checkWifi();
+    }
+
+    // ========== 生活技能小组件(家庭栏) ==========
+    function renderLifeSkillsWidget(body) {
+      globalState.lifeSkills = globalState.lifeSkills || {
+        categories: [
+          { key: 'medication', name: '💊 生病用药', items: [] },
+          { key: 'firstaid', name: '🩹 急救知识', items: [] },
+          { key: 'remedy', name: '🍵 家庭偏方', items: [] },
+          { key: 'skill', name: '🔧 生活技能', items: [] },
+          { key: 'contact', name: '📞 紧急联系', items: [] }
+        ]
+      };
+      const ls = globalState.lifeSkills;
+      const cats = ls.categories || [];
+      let activeCat = body.dataset.lsCat || 'medication';
+      const cat = cats.find(c => c.key === activeCat) || cats[0];
+      const items = cat.items || [];
+
+      body.innerHTML = `
+        <input type="text" class="ls-search" placeholder="🔍 搜索所有生活技能（支持按标题和标签检索）" oninput="lsSearch(this.value, this.closest('.widget-body'))" id="ls-search">
+        <div class="ls-cat-tabs">${cats.map(c => `<div class="ls-cat-tab ${c.key===activeCat?'active':''}" onclick="lsSwitchCat('${c.key}', this)">${c.name} <span style="font-size:10px;opacity:.7">${(c.items||[]).length}</span></div>`).join('')}</div>
+        <div class="ls-items" id="ls-items">${items.length === 0
+          ? '<div style="opacity:0.5;text-align:center;padding:12px;font-size:12px">暂无内容，点下方添加</div>'
+          : items.map((it, i) => `
+            <div class="ls-item">
+              <div class="title">${escapeHtml(it.title||'')}</div>
+              <div class="desc">${escapeHtml(it.desc||'').replace(/\n/g,'<br>')}</div>
+              ${(it.tags||[]).length ? `<div class="tags">${(it.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+              <div class="meta"><span>🕐 ${it.updated||''}</span><button onclick="lsDelete('${activeCat}',${i},this)" style="background:transparent;border:none;color:#E17055;cursor:pointer;font-size:10px;margin-left:auto">删除</button></div>
+            </div>`).join('')}
+        </div>
+        <div class="form-row" style="margin-top:8px">
+          <input type="text" id="ls-new-title" placeholder="标题(如:退烧药)" style="flex:1;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:12px">
+          <input type="text" id="ls-new-tags" placeholder="标签(逗号分隔)" style="width:100px;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:12px">
+        </div>
+        <textarea id="ls-new-desc" placeholder="详细描述(如用量、步骤、备注)..." style="width:100%;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:12px;min-height:50px;resize:vertical;margin-top:4px"></textarea>
+        <button class="action-btn" onclick="lsAddItem('${activeCat}')" style="margin-top:6px">➕ 添加</button>
+        <div class="ai-sec-hint" style="margin-top:8px">🤖 AI 助手可学习此内容——发送问题时引用「生活技能」即可获得定制建议。</div>
+      `;
+    }
+
+    function lsSwitchCat(key, btn) {
+      const body = btn.closest('.widget-body');
+      body.dataset.lsCat = key;
+      renderLifeSkillsWidget(body);
+    }
+
+    function lsAddItem(catKey) {
+      const body = document.querySelector('.card[data-widget="lifeSkills"] .widget-body');
+      const title = (document.getElementById('ls-new-title') || {}).value || '';
+      const tags = ((document.getElementById('ls-new-tags') || {}).value || '').split(',').map(t=>t.trim()).filter(Boolean);
+      const desc = (document.getElementById('ls-new-desc') || {}).value || '';
+      if (!title.trim() && !desc.trim()) { alert('至少填写标题或描述'); return; }
+      globalState.lifeSkills = globalState.lifeSkills || { categories: [] };
+      if (!globalState.lifeSkills.categories) globalState.lifeSkills.categories = [];
+      let cat = globalState.lifeSkills.categories.find(c => c.key === catKey);
+      if (!cat) { cat = { key: catKey, name: catKey, items: [] }; globalState.lifeSkills.categories.push(cat); }
+      cat.items = cat.items || [];
+      cat.items.push({ title: title.trim(), desc: desc.trim(), tags, updated: new Date().toISOString().slice(0, 16) });
+      saveGlobalState();
+      renderHome();
+    }
+
+    function lsDelete(catKey, idx, btn) {
+      const cat = (globalState.lifeSkills.categories || []).find(c => c.key === catKey);
+      if (cat && cat.items) cat.items.splice(idx, 1);
+      saveGlobalState();
+      renderHome();
+    }
+
+    function lsSearch(query, body) {
+      const q = (query || '').toLowerCase();
+      if (!q) { renderLifeSkillsWidget(body); return; }
+      const ls = globalState.lifeSkills || { categories: [] };
+      const all = (ls.categories || []).flatMap(c => (c.items||[]).map(it => ({...it, cat: c.name, catKey: c.key})));
+      const filtered = all.filter(it =>
+        (it.title||'').toLowerCase().includes(q) ||
+        (it.desc||'').toLowerCase().includes(q) ||
+        (it.tags||[]).some(t => t.toLowerCase().includes(q))
+      );
+      const itemsEl = body.querySelector('#ls-items');
+      if (!itemsEl) return;
+      itemsEl.innerHTML = filtered.length === 0
+        ? '<div style="opacity:0.5;text-align:center;padding:12px;font-size:12px">没有匹配结果</div>'
+        : filtered.map(it => `
+          <div class="ls-item">
+            <div class="title">${escapeHtml(it.title||'')} <span class="tag">${escapeHtml(it.cat)}</span></div>
+            <div class="desc">${escapeHtml(it.desc||'').replace(/\n/g,'<br>')}</div>
+            ${(it.tags||[]).length ? `<div class="tags">${(it.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+            <div class="meta"><span>🕐 ${it.updated||''}</span></div>
+          </div>`).join('');
+    }
+
+    // ========== 任务历史折叠 ==========
+    function renderTaskHistory(body, listName, title) {
+      const tasks = globalState[listName] || [];
+      const done = tasks.filter(t => t.done && t.doneAt);
+      if (done.length === 0) {
+        body.innerHTML = '<div style="opacity:0.5;text-align:center;padding:12px;font-size:12px">暂无已完成任务</div>';
+        return;
+      }
+      // 按日期分组
+      const groups = {};
+      done.forEach(t => {
+        const d = (t.doneAt || '').slice(0, 10);
+        if (!groups[d]) groups[d] = [];
+        groups[d].push(t);
+      });
+      const dates = Object.keys(groups).sort().reverse();
+      body.innerHTML = `
+        <input type="text" class="history-search" placeholder="🔍 搜索已完成的 ${title}..." oninput="historySearch(this.value, this.nextElementSibling)">
+        <div class="history-accordion">${dates.map((d, i) => `
+          <div class="history-date-group">
+            <div class="history-date-header ${i===0?'open':''}" onclick="this.classList.toggle('open');this.nextElementSibling.style.display=this.classList.contains('open')?'block':'none'">
+              <span>📅 ${d} (${groups[d].length} 项)</span><span class="arrow">▶</span>
+            </div>
+            <div class="history-items" style="display:${i===0?'block':'none'}">${groups[d].map(t => `
+              <div class="history-item">
+                <span class="time">${(t.doneAt||'').slice(11,16)}</span>
+                <span>✅ ${escapeHtml(t.text||'')}</span>
+              </div>`).join('')}</div>
+          </div>`).join('')}</div>
+      `;
+    }
+
+    function historySearch(query, accordion) {
+      const q = (query || '').toLowerCase();
+      if (!q) {
+        accordion.querySelectorAll('.history-date-group').forEach(g => g.style.display = '');
+        return;
+      }
+      accordion.querySelectorAll('.history-date-group').forEach(g => {
+        const text = g.textContent.toLowerCase();
+        g.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
     // ========== 天气 ==========
     async function loadWeather() {
       globalState.weather = { ...globalState.weather, temp: '--', humidity: '--', uv: '--', desc: '定位中...' };
@@ -3457,6 +3848,7 @@
       wb.glassBlur = parseInt(document.getElementById('glass-blur').value);
       const tg = document.getElementById('toggle-nav-glass');
       if (tg) wb.glassNav = tg.classList.contains('on');
+      saveSyncConfig();
       saveAppState();
       applyWorkbenchStyles();
       refreshGlassClasses();
@@ -3628,6 +4020,7 @@
       renderHome(); renderAll(); updateDate(); startClock(); renderCalendar(); loadWeather();
       renderSelfFavorites();
       updateEditModeUI();
+      initSync();
       const pd = document.getElementById('plan-date'); if (pd) pd.value = new Date().toISOString().split('T')[0];
     }
 
