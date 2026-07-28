@@ -1010,6 +1010,59 @@
     }
     .edit-mode .page-add-widget-bar { display: flex; }
     .page-add-widget-bar button { font-size: 12px; padding: 6px 12px; }
+
+    /* ===== 家庭打卡小组件 ===== */
+    .fc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 12px; }
+    .fc-member {
+      text-align: center; padding: 14px 8px; border-radius: 12px;
+      background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.2s;
+      position: relative;
+    }
+    .fc-member:hover { background: var(--tiffany-light); transform: translateY(-2px); }
+    .fc-member .avatar { font-size: 34px; margin-bottom: 6px; }
+    .fc-member .name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .fc-member .badge {
+      position: absolute; top: 6px; right: 6px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #ccc; border: 2px solid #fff;
+    }
+    .fc-member.checked-in .badge { background: #2ECC71; }
+    .fc-member .checkin-time { font-size: 10px; color: var(--text-secondary); margin-top: 4px; }
+    .fc-member .checkin-point { font-size: 10px; color: var(--tiffany-dark); font-weight: 600; }
+    .fc-points { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+    .fc-point-chip {
+      padding: 3px 8px; border-radius: 10px; font-size: 11px;
+      background: var(--tiffany-light); color: var(--tiffany-dark);
+    }
+    .fc-recent { }
+    .fc-recent-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px; margin-bottom: 4px;
+      border-radius: 8px; background: rgba(255,255,255,0.45);
+      font-size: 12px;
+    }
+    .fc-recent-item .time { color: var(--text-muted); font-size: 11px; min-width: 46px; }
+    .fc-settings-form { margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(10,186,181,0.2); }
+    .fc-settings-form .form-row { display: flex; gap: 6px; margin-bottom: 6px; }
+    .fc-settings-form input { flex: 1; padding: 5px 7px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; background: #fff; }
+    .fc-settings-form button { padding: 5px 10px; border-radius: 6px; border: none; cursor: pointer; font-size: 11px; white-space: nowrap; }
+    .fc-settings-form .fc-add { background: var(--tiffany); color: #fff; }
+    .fc-settings-form .fc-del { background: #FFF0E6; color: #E17055; }
+    .fc-link-row { display: flex; gap: 6px; margin-top: 6px; align-items: center; }
+    .fc-link-row input { flex: 1; padding: 5px 7px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; background: #fff; }
+    .fc-link-row button { padding: 5px 8px; border-radius: 6px; border: none; cursor: pointer; background: var(--tiffany-light); color: var(--tiffany-dark); font-size: 11px; }
+    .fc-checkin-toast {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999;
+      display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s;
+    }
+    .fc-checkin-toast-card {
+      background: #fff; border-radius: 20px; padding: 32px 24px;
+      text-align: center; max-width: 320px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .fc-checkin-toast-card .icon { font-size: 52px; margin-bottom: 10px; }
+    .fc-checkin-toast-card h3 { font-size: 18px; margin-bottom: 6px; }
+    .fc-checkin-toast-card p { font-size: 13px; color: var(--text-secondary); margin-bottom: 18px; line-height: 1.5; }
+    .fc-checkin-toast-card button { padding: 10px 28px; border: none; border-radius: 24px; background: var(--tiffany); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
   </style>
   <script>
     // 注册 Service Worker（让工作台可作为 App 安装到手机桌面；file:// 下静默失败）
@@ -1585,7 +1638,8 @@
       weather: { title: '🌤️ 本地天气', desc: '温度湿度紫外线', render: renderWeatherWidget },
       news: { title: '📰 每日新闻', desc: '国内国际要闻', render: renderNewsWidget },
       aiSecretary: { title: '🤖 AI 助手秘书', desc: '语音/图片 · 自动分类', render: renderAISecretaryWidget },
-      calendarMarker: { title: '📆 日历标记', desc: '在日历上记录任何事', render: renderCalendarMarkerWidget }
+      calendarMarker: { title: '📆 日历标记', desc: '在日历上记录任何事', render: renderCalendarMarkerWidget },
+      familyCheckin: { title: '🏠 家庭打卡', desc: '成员回家自动打卡', render: renderFamilyCheckinWidget }
     };
 
     const providers = {
@@ -1644,7 +1698,10 @@
       weather: { city: '北京', temp: '--', humidity: '--', uv: '--', desc: '定位中...' },
       quoteFavorites: [],
       calMarkers: [],
-      aiSecretaryItems: []
+      aiSecretaryItems: [],
+      familyMembers: [],
+      familyCheckpoints: [],
+      familyCheckins: []
     };
 
     let appState = {
@@ -1687,11 +1744,60 @@
       globalState.quoteFavorites = globalState.quoteFavorites || [];
       globalState.calMarkers = globalState.calMarkers || [];
       globalState.aiSecretaryItems = globalState.aiSecretaryItems || [];
+      globalState.familyMembers = globalState.familyMembers || ['👨 爸爸','👩 妈妈','🙋 我'];
+      globalState.familyCheckpoints = globalState.familyCheckpoints || ['🚪 家门口','🏢 单元门','🚗 车库'];
+      globalState.familyCheckins = globalState.familyCheckins || [];
       Object.values(appState.workbenches || {}).forEach(wb => {
         wb.widgetConfigs = wb.widgetConfigs || {};
         wb.glassNav = wb.glassNav || false;
       });
       ensureDefaultWorkbench();
+      // URL 自动打卡检测
+      setTimeout(autoCheckinFromURL, 200);
+    }
+
+    function autoCheckinFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      const fcm = params.get('fcm');
+      const fcp = params.get('fcp');
+      if (fcm === null || fcp === null) return;
+      const mIdx = parseInt(fcm);
+      const pIdx = parseInt(fcp);
+      if (isNaN(mIdx) || isNaN(pIdx)) return;
+      initFamilyDefaults();
+      const today = new Date().toISOString().slice(0, 10);
+      const members = globalState.familyMembers || [];
+      const points = globalState.familyCheckpoints || [];
+      if (mIdx < 0 || mIdx >= members.length) return;
+      if (pIdx < 0 || pIdx >= points.length) return;
+      const already = (globalState.familyCheckins || []).some(c => c.date === today && c.memberIdx === mIdx && c.pointIdx === pIdx);
+      if (already) {
+        const mName = (members[mIdx]||'').replace(/^[^\s]*\s/,'');
+        const pName = (points[pIdx]||'').replace(/^[^\s]*\s/,'');
+        fcShowToast('✅ 已打卡', `${mName} 在 ${pName} 今天已经打过卡啦`, false);
+        return;
+      }
+      const now = new Date();
+      const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      globalState.familyCheckins.push({ date: today, time, memberIdx: mIdx, pointIdx: pIdx });
+      saveGlobalState();
+      const mName = (members[mIdx]||'').replace(/^[^\s]*\s/,'');
+      const pName = (points[pIdx]||'').replace(/^[^\s]*\s/,'');
+      fcShowToast('🏠 打卡成功', `${mName} · ${pName} · ${time}`, true);
+      // 清除 URL 参数(不刷新)
+      if (window.history.replaceState) {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+
+    function fcShowToast(icon, msg, showConfirm) {
+      const old = document.querySelector('.fc-checkin-toast');
+      if (old) old.remove();
+      const div = document.createElement('div');
+      div.className = 'fc-checkin-toast';
+      div.innerHTML = `<div class="fc-checkin-toast-card"><div class="icon">${icon}</div><h3>${icon}</h3><p>${msg}</p><button onclick="this.closest('.fc-checkin-toast').remove()">${showConfirm ? '👍 知道了' : '关闭'}</button></div>`;
+      document.body.appendChild(div);
+      div.onclick = e => { if (e.target === div) div.remove(); };
     }
 
     // 双模：连上服务端走 /api/state，否则本地 localStorage
@@ -2665,6 +2771,149 @@
       saveGlobalState();
       const body = document.querySelector('.widget-grid .card[data-widget="aiSecretary"] .widget-body');
       if (body) aiSecRenderPending(body);
+    }
+
+    // ========== Feature 6 · 家庭打卡小组件 ==========
+    function initFamilyDefaults() {
+      if (!globalState.familyMembers || globalState.familyMembers.length === 0) {
+        globalState.familyMembers = ['👨 爸爸', '👩 妈妈', '🙋 我'];
+      }
+      if (!globalState.familyCheckpoints || globalState.familyCheckpoints.length === 0) {
+        globalState.familyCheckpoints = ['🚪 家门口', '🏢 单元门', '🚗 车库'];
+      }
+      globalState.familyCheckins = globalState.familyCheckins || [];
+    }
+
+    function renderFamilyCheckinWidget(body) {
+      initFamilyDefaults();
+      const today = new Date().toISOString().slice(0, 10);
+      const members = globalState.familyMembers || [];
+      const points = globalState.familyCheckpoints || [];
+      const checkins = (globalState.familyCheckins || []).filter(c => c.date === today);
+
+      const memberCards = members.map((m, idx) => {
+        const parts = (m || '').split(/\s+/);
+        const emoji = parts[0] || '👤';
+        const name = parts.slice(1).join(' ') || m;
+        const todayCheckin = checkins.filter(c => c.memberIdx === idx);
+        const checkedIn = todayCheckin.length > 0;
+        const last = checkedIn ? todayCheckin[todayCheckin.length - 1] : null;
+        const lastTime = last ? last.time : '';
+        const lastPoint = last ? (points[last.pointIdx] || '').replace(/^[^\s]*\s/, '') : '';
+        return `<div class="fc-member ${checkedIn ? 'checked-in' : ''}" onclick="fcDoCheckin(${idx})">
+          <div class="badge"></div>
+          <div class="avatar">${escapeHtml(emoji)}</div>
+          <div class="name">${escapeHtml(name)}</div>
+          ${checkedIn ? `<div class="checkin-point">📍 ${escapeHtml(lastPoint)}</div><div class="checkin-time">${escapeHtml(lastTime)}</div>` : '<div class="checkin-time" style="opacity:0.5;margin-top:6px">尚未打卡</div>'}
+        </div>`;
+      }).join('');
+
+      const pointsHTML = points.map(p => `<span class="fc-point-chip">${escapeHtml(p)}</span>`).join('');
+
+      const recent = (globalState.familyCheckins || []).sort((a,b) => (b.date+(b.time||'')).localeCompare(a.date+(a.time||''))).slice(0, 8);
+      const recentHTML = recent.length === 0
+        ? '<div style="opacity:0.5;text-align:center;padding:8px;font-size:12px">暂无打卡记录 — 为成员生成打卡链接后即可使用</div>'
+        : recent.map(r => {
+            const mPart = members[r.memberIdx] || '未知';
+            const mName = (mPart.split(/\s+/).slice(1).join(' ') || mPart);
+            const pPart = points[r.pointIdx] || '未知';
+            const pName = (pPart.split(/\s+/).slice(1).join(' ') || pPart);
+            return `<div class="fc-recent-item"><span class="time">${(r.date||'').slice(5)} ${r.time||''}</span><span>${escapeHtml(mName)}</span><span style="color:var(--tiffany-dark);font-size:11px">📍 ${escapeHtml(pName)}</span></div>`;
+          }).join('');
+
+      body.innerHTML = `<div class="fc-grid">${memberCards}</div>
+        <div class="fc-points">${pointsHTML}</div>
+        <div class="fc-recent"><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📋 最近打卡</div>${recentHTML}</div>
+        <div class="fc-settings-form">
+          <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">⚙ 成员 / 打卡点设置</div>
+          <div class="form-row">
+            <input type="text" id="fc-new-member" placeholder="成员名...">
+            <input type="text" id="fc-new-emoji" placeholder="emoji" maxlength="3" style="flex:0;width:50px">
+            <button class="fc-add" onclick="fcAddMember()">+</button>
+          </div>
+          <div class="form-row">
+            <input type="text" id="fc-new-point" placeholder="打卡点...">
+            <input type="text" id="fc-new-point-emoji" placeholder="emoji" maxlength="3" style="flex:0;width:50px">
+            <button class="fc-add" onclick="fcAddPoint()">+</button>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:6px">💡 点击成员头像可手动选择打卡点打卡；下方按钮可生成该成员的快捷打卡链接。</div>
+          <div class="fc-link-row" style="margin-top:8px">
+            <select id="fc-link-member" style="flex:1;padding:5px;border:1px solid var(--border);border-radius:6px;font-size:11px">
+              ${members.map((m,i)=>`<option value="${i}">${escapeHtml(m)}</option>`).join('')}
+            </select>
+            <select id="fc-link-point" style="flex:1;padding:5px;border:1px solid var(--border);border-radius:6px;font-size:11px">
+              ${points.map((p,i)=>`<option value="${i}">${escapeHtml(p)}</option>`).join('')}
+            </select>
+            <button onclick="fcGenLink()">🔗 生成链接</button>
+          </div>
+          <div style="display:none" id="fc-link-result"></div>
+        </div>`;
+    }
+
+    function fcDoCheckin(memberIdx) {
+      const points = globalState.familyCheckpoints || [];
+      const today = new Date().toISOString().slice(0, 10);
+      const todayCheckins = (globalState.familyCheckins || []).filter(c => c.date === today && c.memberIdx === memberIdx);
+      if (todayCheckins.length > 0) {
+        const last = todayCheckins[todayCheckins.length - 1];
+        const pName = (points[last.pointIdx] || '').split(/\s+/).slice(1).join(' ') || '未知';
+        alert(`✅ 已打卡 —— ${pName} @ ${last.time}`);
+        return;
+      }
+      // 打卡点选择
+      const choices = points.map((p,i) => `${i}: ${p}`).join('\n');
+      const sel = prompt(`为「${(globalState.familyMembers[memberIdx]||'').replace(/^[^\s]*\s/,'')}」选择打卡点:\n\n${choices}\n\n输入数字编号:`, '0');
+      if (sel === null) return;
+      const ptIdx = parseInt(sel) || 0;
+      if (ptIdx < 0 || ptIdx >= points.length) { alert('无效编号'); return; }
+      const now = new Date();
+      const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      globalState.familyCheckins = globalState.familyCheckins || [];
+      globalState.familyCheckins.push({ date: today, time, memberIdx, pointIdx: ptIdx });
+      saveGlobalState();
+      renderHome();
+    }
+
+    function fcAddMember() {
+      const name = (document.getElementById('fc-new-member') || {}).value;
+      const emoji = (document.getElementById('fc-new-emoji') || {}).value || '👤';
+      if (!name || !name.trim()) { alert('请输入成员名'); return; }
+      globalState.familyMembers = globalState.familyMembers || [];
+      globalState.familyMembers.push(emoji.trim() + ' ' + name.trim());
+      saveGlobalState();
+      renderHome();
+    }
+
+    function fcAddPoint() {
+      const name = (document.getElementById('fc-new-point') || {}).value;
+      const emoji = (document.getElementById('fc-new-point-emoji') || {}).value || '📍';
+      if (!name || !name.trim()) { alert('请输入打卡点名称'); return; }
+      globalState.familyCheckpoints = globalState.familyCheckpoints || [];
+      globalState.familyCheckpoints.push(emoji.trim() + ' ' + name.trim());
+      saveGlobalState();
+      renderHome();
+    }
+
+    function fcGenLink() {
+      const mEl = document.getElementById('fc-link-member');
+      const pEl = document.getElementById('fc-link-point');
+      if (!mEl || !pEl) return;
+      const mIdx = parseInt(mEl.value) || 0;
+      const pIdx = parseInt(pEl.value) || 0;
+      const memberName = (globalState.familyMembers[mIdx] || '').replace(/^[^\s]*\s/, '');
+      const pointName = (globalState.familyCheckpoints[pIdx] || '').replace(/^[^\s]*\s/, '');
+      const link = `${window.location.origin}${window.location.pathname}?fcm=${mIdx}&fcp=${pIdx}`;
+      const resultEl = document.getElementById('fc-link-result');
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = `
+        <div style="padding:10px;background:var(--tiffany-light);border-radius:8px;margin-top:4px;font-size:11px">
+          <div style="font-weight:600;margin-bottom:4px">${escapeHtml(memberName)} · ${escapeHtml(pointName)} 打卡链接：</div>
+          <input type="text" readonly value="${escapeHtml(link)}" style="width:100%;padding:5px;border:1px solid var(--border);border-radius:4px;font-size:10px;background:#fff;margin-bottom:6px" onclick="this.select()">
+          <div style="display:flex;gap:4px">
+            <button onclick="navigator.clipboard.writeText('${escapeHtml(link).replace(/'/g,"\\'")}');alert('已复制链接')" style="padding:4px 10px;border:none;border-radius:4px;background:var(--tiffany);color:#fff;font-size:11px;cursor:pointer">📋 复制链接</button>
+            <span style="font-size:10px;color:var(--text-muted);line-height:2">→ 发给成员或生成 QR 码，打开链接即自动打卡</span>
+          </div>
+        </div>`;
     }
 
     // ========== 天气 ==========
