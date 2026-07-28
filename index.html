@@ -1701,7 +1701,9 @@
       aiSecretaryItems: [],
       familyMembers: [],
       familyCheckpoints: [],
-      familyCheckins: []
+      familyCheckins: [],
+      familyCheckpointGeo: [],
+      familyCheckinCooldown: {}
     };
 
     let appState = {
@@ -1747,6 +1749,11 @@
       globalState.familyMembers = globalState.familyMembers || ['👨 爸爸','👩 妈妈','🙋 我'];
       globalState.familyCheckpoints = globalState.familyCheckpoints || ['🚪 家门口','🏢 单元门','🚗 车库'];
       globalState.familyCheckins = globalState.familyCheckins || [];
+      globalState.familyCheckpointGeo = globalState.familyCheckpointGeo || [];
+      globalState.familyCheckinCooldown = globalState.familyCheckinCooldown || {};
+      while ((globalState.familyCheckpointGeo || []).length < (globalState.familyCheckpoints || []).length) {
+        globalState.familyCheckpointGeo.push({ enabled: false, lat: 0, lon: 0, radius: 80 });
+      }
       Object.values(appState.workbenches || {}).forEach(wb => {
         wb.widgetConfigs = wb.widgetConfigs || {};
         wb.glassNav = wb.glassNav || false;
@@ -2782,14 +2789,28 @@
         globalState.familyCheckpoints = ['🚪 家门口', '🏢 单元门', '🚗 车库'];
       }
       globalState.familyCheckins = globalState.familyCheckins || [];
+      globalState.familyCheckpointGeo = globalState.familyCheckpointGeo || [];
+      globalState.familyCheckinCooldown = globalState.familyCheckinCooldown || {};
+      // 补齐 geo 数组长度
+      while (globalState.familyCheckpointGeo.length < globalState.familyCheckpoints.length) {
+        globalState.familyCheckpointGeo.push({ enabled: false, lat: 0, lon: 0, radius: 80 });
+      }
     }
 
+    let _fcWatchId = null;
     function renderFamilyCheckinWidget(body) {
       initFamilyDefaults();
       const today = new Date().toISOString().slice(0, 10);
       const members = globalState.familyMembers || [];
       const points = globalState.familyCheckpoints || [];
+      const geo = globalState.familyCheckpointGeo || [];
       const checkins = (globalState.familyCheckins || []).filter(c => c.date === today);
+
+      // 地理围栏状态
+      const anyGeoActive = geo.some(g => g && g.enabled && g.lat !== 0);
+      const geoStatus = anyGeoActive
+        ? '<span style="color:#2ECC71;font-size:11px">🟢 GPS 围栏监控中</span>'
+        : '<span style="color:#ccc;font-size:11px">⚫ 未配置 GPS 坐标</span>';
 
       const memberCards = members.map((m, idx) => {
         const parts = (m || '').split(/\s+/);
@@ -2808,11 +2829,15 @@
         </div>`;
       }).join('');
 
-      const pointsHTML = points.map(p => `<span class="fc-point-chip">${escapeHtml(p)}</span>`).join('');
+      const pointsHTML = points.map((p, i) => {
+        const g = geo[i] || {};
+        const hasGeo = g.enabled && g.lat !== 0;
+        return `<span class="fc-point-chip" style="${hasGeo ? 'border:1.5px solid #2ECC71;font-weight:600' : ''}" title="${hasGeo ? 'GPS: ' + g.lat.toFixed(5) + ', ' + g.lon.toFixed(5) + ' r=' + (g.radius || 80) + 'm' : '未设坐标'}">${escapeHtml(p)} ${hasGeo ? '📍' : ''}</span>`;
+      }).join('');
 
       const recent = (globalState.familyCheckins || []).sort((a,b) => (b.date+(b.time||'')).localeCompare(a.date+(a.time||''))).slice(0, 8);
       const recentHTML = recent.length === 0
-        ? '<div style="opacity:0.5;text-align:center;padding:8px;font-size:12px">暂无打卡记录 — 为成员生成打卡链接后即可使用</div>'
+        ? '<div style="opacity:0.5;text-align:center;padding:8px;font-size:12px">暂无打卡记录 — 设置 GPS 坐标后到达即自动打卡</div>'
         : recent.map(r => {
             const mPart = members[r.memberIdx] || '未知';
             const mName = (mPart.split(/\s+/).slice(1).join(' ') || mPart);
@@ -2823,20 +2848,42 @@
 
       body.innerHTML = `<div class="fc-grid">${memberCards}</div>
         <div class="fc-points">${pointsHTML}</div>
-        <div class="fc-recent"><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📋 最近打卡</div>${recentHTML}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:600;color:var(--text-secondary)">📋 最近打卡</div>
+          ${geoStatus}
+        </div>
+        <div class="fc-recent">${recentHTML}</div>
         <div class="fc-settings-form">
-          <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">⚙ 成员 / 打卡点设置</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">⚙ 成员 / 打卡点设置（支持 GPS 坐标）</div>
           <div class="form-row">
             <input type="text" id="fc-new-member" placeholder="成员名...">
             <input type="text" id="fc-new-emoji" placeholder="emoji" maxlength="3" style="flex:0;width:50px">
             <button class="fc-add" onclick="fcAddMember()">+</button>
           </div>
           <div class="form-row">
-            <input type="text" id="fc-new-point" placeholder="打卡点...">
+            <input type="text" id="fc-new-point" placeholder="打卡点名...">
             <input type="text" id="fc-new-point-emoji" placeholder="emoji" maxlength="3" style="flex:0;width:50px">
-            <button class="fc-add" onclick="fcAddPoint()">+</button>
+            <button class="fc-add" onclick="fcAddPointWithGeo()">+GPS</button>
           </div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:6px">💡 点击成员头像可手动选择打卡点打卡；下方按钮可生成该成员的快捷打卡链接。</div>
+          ${points.map((p, i) => {
+            const g = geo[i] || {};
+            return `<div style="padding:8px 10px;margin-top:6px;border-radius:8px;background:rgba(255,255,255,0.5);font-size:11px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <span style="font-weight:600">${escapeHtml(p)}</span>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+                  <input type="checkbox" ${g.enabled ? 'checked' : ''} onchange="fcToggleGeo(${i}, this.checked)" style="transform:scale(1.1)">
+                  <span style="${g.enabled && g.lat ? 'color:#2ECC71' : 'color:#ccc'}">GPS 围栏</span>
+                </label>
+              </div>
+              <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+                <input type="text" value="${g.lat || ''}" placeholder="纬度 lat" onchange="fcSetGeo(${i},'lat',parseFloat(this.value))" style="flex:1;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:10px">
+                <input type="text" value="${g.lon || ''}" placeholder="经度 lon" onchange="fcSetGeo(${i},'lon',parseFloat(this.value))" style="flex:1;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:10px">
+                <input type="number" value="${g.radius || 80}" placeholder="半径(m)" onchange="fcSetGeo(${i},'radius',parseInt(this.value))" style="width:55px;padding:3px 4px;border:1px solid var(--border);border-radius:4px;font-size:10px">
+              </div>
+              <button onclick="fcUseCurrentPos(${i})" style="padding:3px 8px;border:none;border-radius:4px;background:var(--tiffany-light);color:var(--tiffany-dark);font-size:10px;cursor:pointer">📍 获取当前位置</button>
+              ${g.lastSeen ? `<span style="margin-left:6px;font-size:9px;color:var(--text-muted)">距 ${g.lastSeen}</span>` : ''}
+            </div>`;
+          }).join('')}
           <div class="fc-link-row" style="margin-top:8px">
             <select id="fc-link-member" style="flex:1;padding:5px;border:1px solid var(--border);border-radius:6px;font-size:11px">
               ${members.map((m,i)=>`<option value="${i}">${escapeHtml(m)}</option>`).join('')}
@@ -2848,72 +2895,128 @@
           </div>
           <div style="display:none" id="fc-link-result"></div>
         </div>`;
+      // 启动/重启围栏监控
+      fcStartGeofence();
     }
 
-    function fcDoCheckin(memberIdx) {
-      const points = globalState.familyCheckpoints || [];
-      const today = new Date().toISOString().slice(0, 10);
-      const todayCheckins = (globalState.familyCheckins || []).filter(c => c.date === today && c.memberIdx === memberIdx);
-      if (todayCheckins.length > 0) {
-        const last = todayCheckins[todayCheckins.length - 1];
-        const pName = (points[last.pointIdx] || '').split(/\s+/).slice(1).join(' ') || '未知';
-        alert(`✅ 已打卡 —— ${pName} @ ${last.time}`);
-        return;
+    // ---- GPS 围栏 ----
+    function fcSetGeo(idx, field, val) {
+      initFamilyDefaults();
+      globalState.familyCheckpointGeo = globalState.familyCheckpointGeo || [];
+      if (idx >= globalState.familyCheckpointGeo.length) {
+        for (let j = globalState.familyCheckpointGeo.length; j <= idx; j++) globalState.familyCheckpointGeo.push({ enabled: false, lat: 0, lon: 0, radius: 80 });
       }
-      // 打卡点选择
-      const choices = points.map((p,i) => `${i}: ${p}`).join('\n');
-      const sel = prompt(`为「${(globalState.familyMembers[memberIdx]||'').replace(/^[^\s]*\s/,'')}」选择打卡点:\n\n${choices}\n\n输入数字编号:`, '0');
-      if (sel === null) return;
-      const ptIdx = parseInt(sel) || 0;
-      if (ptIdx < 0 || ptIdx >= points.length) { alert('无效编号'); return; }
-      const now = new Date();
-      const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-      globalState.familyCheckins = globalState.familyCheckins || [];
-      globalState.familyCheckins.push({ date: today, time, memberIdx, pointIdx: ptIdx });
+      globalState.familyCheckpointGeo[idx][field] = val;
+      saveGlobalState();
+    }
+    function fcToggleGeo(idx, enabled) {
+      initFamilyDefaults();
+      globalState.familyCheckpointGeo = globalState.familyCheckpointGeo || [];
+      if (idx >= globalState.familyCheckpointGeo.length) {
+        for (let j = globalState.familyCheckpointGeo.length; j <= idx; j++) globalState.familyCheckpointGeo.push({ enabled: false, lat: 0, lon: 0, radius: 80 });
+      }
+      globalState.familyCheckpointGeo[idx].enabled = enabled;
       saveGlobalState();
       renderHome();
     }
-
-    function fcAddMember() {
-      const name = (document.getElementById('fc-new-member') || {}).value;
-      const emoji = (document.getElementById('fc-new-emoji') || {}).value || '👤';
-      if (!name || !name.trim()) { alert('请输入成员名'); return; }
-      globalState.familyMembers = globalState.familyMembers || [];
-      globalState.familyMembers.push(emoji.trim() + ' ' + name.trim());
-      saveGlobalState();
-      renderHome();
+    function fcUseCurrentPos(idx) {
+      if (!navigator.geolocation) { alert('浏览器不支持定位'); return; }
+      navigator.geolocation.getCurrentPosition(pos => {
+        fcSetGeo(idx, 'lat', pos.coords.latitude);
+        fcSetGeo(idx, 'lon', pos.coords.longitude);
+        renderHome();
+      }, () => { alert('获取位置失败，请检查定位权限'); }, { enableHighAccuracy: true, timeout: 15000 });
     }
-
-    function fcAddPoint() {
+    function fcAddPointWithGeo() {
       const name = (document.getElementById('fc-new-point') || {}).value;
       const emoji = (document.getElementById('fc-new-point-emoji') || {}).value || '📍';
       if (!name || !name.trim()) { alert('请输入打卡点名称'); return; }
+      initFamilyDefaults();
       globalState.familyCheckpoints = globalState.familyCheckpoints || [];
       globalState.familyCheckpoints.push(emoji.trim() + ' ' + name.trim());
-      saveGlobalState();
-      renderHome();
+      globalState.familyCheckpointGeo = globalState.familyCheckpointGeo || [];
+      const idx = globalState.familyCheckpoints.length - 1;
+      // 自动获取当前位置
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          globalState.familyCheckpointGeo[idx] = { enabled: true, lat: pos.coords.latitude, lon: pos.coords.longitude, radius: 80 };
+          saveGlobalState();
+          renderHome();
+        }, () => {
+          globalState.familyCheckpointGeo[idx] = { enabled: false, lat: 0, lon: 0, radius: 80 };
+          saveGlobalState();
+          renderHome();
+        }, { enableHighAccuracy: true, timeout: 15000 });
+      } else {
+        globalState.familyCheckpointGeo[idx] = { enabled: false, lat: 0, lon: 0, radius: 80 };
+        saveGlobalState();
+        renderHome();
+      }
     }
 
-    function fcGenLink() {
-      const mEl = document.getElementById('fc-link-member');
-      const pEl = document.getElementById('fc-link-point');
-      if (!mEl || !pEl) return;
-      const mIdx = parseInt(mEl.value) || 0;
-      const pIdx = parseInt(pEl.value) || 0;
-      const memberName = (globalState.familyMembers[mIdx] || '').replace(/^[^\s]*\s/, '');
-      const pointName = (globalState.familyCheckpoints[pIdx] || '').replace(/^[^\s]*\s/, '');
-      const link = `${window.location.origin}${window.location.pathname}?fcm=${mIdx}&fcp=${pIdx}`;
-      const resultEl = document.getElementById('fc-link-result');
-      resultEl.style.display = 'block';
-      resultEl.innerHTML = `
-        <div style="padding:10px;background:var(--tiffany-light);border-radius:8px;margin-top:4px;font-size:11px">
-          <div style="font-weight:600;margin-bottom:4px">${escapeHtml(memberName)} · ${escapeHtml(pointName)} 打卡链接：</div>
-          <input type="text" readonly value="${escapeHtml(link)}" style="width:100%;padding:5px;border:1px solid var(--border);border-radius:4px;font-size:10px;background:#fff;margin-bottom:6px" onclick="this.select()">
-          <div style="display:flex;gap:4px">
-            <button onclick="navigator.clipboard.writeText('${escapeHtml(link).replace(/'/g,"\\'")}');alert('已复制链接')" style="padding:4px 10px;border:none;border-radius:4px;background:var(--tiffany);color:#fff;font-size:11px;cursor:pointer">📋 复制链接</button>
-            <span style="font-size:10px;color:var(--text-muted);line-height:2">→ 发给成员或生成 QR 码，打开链接即自动打卡</span>
-          </div>
-        </div>`;
+    // Haversine 公式计算两点距离(米)
+    function fcDistanceM(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function fcStartGeofence() {
+      // 停止旧监控
+      if (_fcWatchId !== null) { navigator.geolocation.clearWatch(_fcWatchId); _fcWatchId = null; }
+      initFamilyDefaults();
+      const geo = globalState.familyCheckpointGeo || [];
+      const hasActive = geo.some(g => g && g.enabled && g.lat !== 0);
+      if (!hasActive || !navigator.geolocation) return;
+      _fcWatchId = navigator.geolocation.watchPosition(pos => {
+        const now = Date.now();
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        const today = new Date().toISOString().slice(0, 10);
+        initFamilyDefaults();
+        const points = globalState.familyCheckpoints || [];
+        const geoArr = globalState.familyCheckpointGeo || [];
+        const members = globalState.familyMembers || [];
+        let anyHit = false;
+        geoArr.forEach((g, idx) => {
+          if (!g || !g.enabled || g.lat === 0) return;
+          const dist = fcDistanceM(lat, lon, g.lat, g.lon);
+          // 更新显示距离
+          const pts = document.querySelectorAll('.fc-points .fc-point-chip');
+          if (pts[idx]) g.lastSeen = dist < 10 ? '0m' : dist < 1000 ? Math.round(dist) + 'm' : (dist/1000).toFixed(1) + 'km';
+          if (dist <= (g.radius || 80)) {
+            // 冷却检查(h)
+            const cooldownKey = 'fc_cd_' + idx;
+            const cd = globalState.familyCheckinCooldown = globalState.familyCheckinCooldown || {};
+            const lastTs = cd[cooldownKey] || 0;
+            if (now - lastTs < 4 * 3600000) return; // 4h 冷却
+            // 自动打卡——所有已配置的成员
+            const autoMembers = g.autoMembers || [0, 1, 2]; // 默认所有成员
+            autoMembers.forEach(mIdx => {
+              if (mIdx >= members.length) return;
+              globalState.familyCheckins = globalState.familyCheckins || [];
+              const time = new Date().toTimeString().slice(0, 5);
+              const todayCheckins = (globalState.familyCheckins || []).filter(c => c.date === today);
+              const exists = todayCheckins.some(c => c.memberIdx === mIdx && c.pointIdx === idx);
+              if (exists) return;
+              globalState.familyCheckins.push({ date: today, time, memberIdx: mIdx, pointIdx: idx });
+            });
+            cd[cooldownKey] = now;
+            saveGlobalState();
+            fcStartGeofence(); // 关闭旧 watcher 重启
+            anyHit = true;
+            const pName = (points[idx] || '').replace(/^[^\s]*\s/, '');
+            fcShowToast('🏠 自动打卡', `已进入 ${pName} 范围(${Math.round(dist)}m)\n已为所有成员自动签到`, true);
+          }
+        });
+        if (anyHit) renderHome();
+      }, err => {
+        // 定位失败静默
+      }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 30000 });
     }
 
     // ========== 天气 ==========
