@@ -812,6 +812,204 @@
       .modal { padding: 18px; }
       .widget-lib { grid-template-columns: repeat(2, 1fr); }
     }
+
+    /* ===== Feature 1 · 日期 + 时钟 + 每日双语励志语 ===== */
+    .date-quote-wrap {
+      background: rgba(255,255,255,var(--card-opacity));
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 14px;
+      padding: 12px 16px;
+      margin-top: 10px;
+      max-width: 580px;
+    }
+    .dq-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .dq-time {
+      font-size: 24px; font-weight: 700; color: var(--tiffany-dark);
+      font-variant-numeric: tabular-nums; letter-spacing: 0.5px;
+    }
+    .dq-date { font-size: 13px; color: var(--text-secondary); }
+    .dq-greeting { font-size: 14px; color: var(--tiffany-dark); font-weight: 600; }
+    .dq-quote { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(10,186,181,0.2); font-size: 12.5px; }
+    .dq-zh { color: var(--text); font-weight: 500; }
+    .dq-en { color: var(--text-secondary); font-style: italic; opacity: 0.9; }
+    .dq-fav {
+      background: transparent; border: none; cursor: pointer;
+      font-size: 16px; padding: 4px 8px; border-radius: 8px;
+      transition: all 0.2s; color: var(--tiffany);
+    }
+    .dq-fav:hover { background: rgba(255,236,179,0.5); transform: scale(1.15); }
+    .dq-fav.faved { background: rgba(255,236,179,0.6); color: #FFA500; }
+
+    /* ===== Feature 2 · 小组件尺寸/属性配置 ===== */
+    .widget-grid { grid-auto-flow: dense; }
+    .card.size-sm { grid-column: span 1; }
+    .card.size-md { grid-column: span 2; }
+    .card.size-lg { grid-column: span 3; }
+    .card.size-full { grid-column: 1 / -1; }
+    .widget-config-btn {
+      width: 28px; height: 28px;
+      border: none; background: rgba(255,255,255,0.5); color: var(--text-secondary);
+      border-radius: 8px; cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .widget-config-btn:hover { background: var(--tiffany-light); color: var(--tiffany-dark); }
+    .widget-config-popover {
+      position: absolute; top: 46px; right: 10px;
+      background: rgba(255,255,255,0.98); border-radius: 12px;
+      padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+      z-index: 100; min-width: 220px;
+    }
+    .wcp-row { margin-bottom: 10px; }
+    .wcp-row label { display: block; font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; font-weight: 600; }
+    .wcp-row select, .wcp-row input { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; background: #fff; }
+    .wcp-close { position: absolute; top: 6px; right: 6px; background: transparent; border: none; cursor: pointer; color: var(--text-secondary); font-size: 16px; }
+    @media (max-width: 768px) {
+      .card.size-md, .card.size-lg { grid-column: span 1; }
+    }
+
+    /* ===== Feature 3 · 导航栏玻璃态与增删分区 ===== */
+    .sidebar.glass-mode {
+      background: rgba(15,207,201,0.55);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    }
+    .nav-add-item {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px; border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.18); color: #fff;
+      cursor: pointer; font-size: 13px; margin: 8px 0;
+      transition: background 0.2s;
+    }
+    .nav-add-item:hover { background: rgba(255,255,255,0.3); }
+    .nav-add-form {
+      background: rgba(255,255,255,0.95); border-radius: 10px;
+      padding: 10px; margin: 8px 0;
+    }
+    .nav-add-form input {
+      width: 100%; padding: 6px; border: 1px solid var(--border);
+      border-radius: 6px; font-size: 12px; margin-bottom: 6px;
+    }
+    .nav-add-form .form-row { display: flex; gap: 4px; }
+    .nav-add-form button { font-size: 12px; padding: 4px 10px; border-radius: 6px; border: none; cursor: pointer; }
+    .nav-add-form .nav-cancel { background: #EEE; color: #666; }
+    .nav-add-form .nav-confirm { background: var(--tiffany); color: #fff; }
+
+    /* ===== Feature 4 · 日历标记小组件 ===== */
+    .cal-marker-widget { }
+    .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; color: var(--text-secondary); }
+    .cal-head button { background: transparent; border: none; cursor: pointer; padding: 2px 8px; color: var(--tiffany-dark); font-size: 14px; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 10px; }
+    .cal-day-head { font-size: 10px; text-align: center; color: var(--text-muted); padding: 4px 0; font-weight: 600; }
+    .cal-day {
+      position: relative; aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; background: rgba(255,255,255,0.55);
+      font-size: 12px; color: var(--text);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .cal-day:hover { background: var(--tiffany-light); transform: scale(1.05); }
+    .cal-day.today { background: var(--tiffany); color: #fff; font-weight: 700; }
+    .cal-day.has-marker { background: rgba(10,186,181,0.18); font-weight: 600; color: var(--tiffany-dark); }
+    .cal-day.has-marker.today { background: var(--tiffany-dark); color: #fff; }
+    .cal-day.other-month { opacity: 0.35; }
+    .cal-day .marker-badge {
+      position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+      font-size: 8px; line-height: 1; padding: 1px 3px;
+      background: rgba(255,107,107,0.85); color: #fff; border-radius: 4px;
+      max-width: 90%; overflow: hidden;
+    }
+    .cal-stats {
+      margin-top: 12px; padding-top: 10px;
+      border-top: 1px dashed rgba(10,186,181,0.2);
+      font-size: 12px; color: var(--text-secondary);
+    }
+    .cal-stats-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .cal-stats-row .num { color: var(--tiffany-dark); font-weight: 700; }
+    .cal-marker-list {
+      margin-top: 8px; max-height: 120px; overflow-y: auto;
+      font-size: 11px;
+    }
+    .cal-marker-row {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 6px; margin-bottom: 3px;
+      background: rgba(255,255,255,0.5); border-radius: 6px;
+    }
+    .cal-marker-row .date { font-weight: 600; color: var(--tiffany-dark); }
+    .cal-marker-row .text { flex: 1; }
+    .cal-marker-row button { background: transparent; border: none; cursor: pointer; color: #E17055; font-size: 12px; }
+
+    /* ===== Feature 5 · AI 助手秘书(语音+图片) ===== */
+    .ai-sec-widget {}
+    .ai-sec-mode-row { display: flex; gap: 4px; margin-bottom: 8px; }
+    .ai-sec-mode {
+      flex: 1; padding: 5px; text-align: center;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: rgba(255,255,255,0.5); cursor: pointer; font-size: 11px;
+      transition: all 0.2s; color: var(--text-secondary);
+    }
+    .ai-sec-mode.active { background: var(--tiffany); color: #fff; border-color: var(--tiffany); }
+    .ai-sec-text {
+      width: 100%; padding: 8px 10px; font-size: 12px;
+      border: 1px solid var(--border); border-radius: 8px;
+      resize: vertical; min-height: 50px; max-height: 120px; outline: none;
+      background: rgba(255,255,255,0.6);
+    }
+    .ai-sec-controls { display: flex; gap: 6px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+    .ai-sec-btn {
+      padding: 6px 10px; border-radius: 8px; cursor: pointer;
+      border: 1px solid var(--border); background: rgba(255,255,255,0.5);
+      font-size: 11px; transition: all 0.2s; color: var(--text);
+    }
+    .ai-sec-btn:hover { background: var(--tiffany-light); color: var(--tiffany-dark); }
+    .ai-sec-btn.recording { background: #FF6B6B !important; color: #fff !important; border-color: #FF6B6B !important; animation: pulse 1.2s infinite; }
+    .ai-sec-btn.primary { background: var(--tiffany); color: #fff; border-color: var(--tiffany); }
+    .ai-sec-attach-row { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .ai-sec-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 8px; background: var(--tiffany-light);
+      border-radius: 8px; font-size: 11px; max-width: 100%;
+    }
+    .ai-sec-chip audio { height: 24px; }
+    .ai-sec-chip img { max-width: 70px; max-height: 50px; border-radius: 4px; object-fit: cover; }
+    .ai-sec-chip .remove-chip {
+      background: transparent; border: none; cursor: pointer; color: #E17055;
+      font-size: 13px; margin-left: 2px;
+    }
+    .ai-sec-hint { font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+    .ai-sec-arrange {
+      margin-top: 10px; padding: 10px;
+      background: rgba(10,186,181,0.1); border-radius: 10px; font-size: 12px;
+    }
+    .ai-sec-arrange-title { font-weight: 600; color: var(--tiffany-dark); margin-bottom: 4px; font-size: 12px; }
+    .ai-sec-arr-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 8px; margin-top: 4px;
+      background: rgba(255,255,255,0.7); border-radius: 6px;
+      font-size: 11px;
+    }
+    .ai-sec-arr-item .text { flex: 1; }
+    .ai-sec-arr-item .cat {
+      font-size: 10px; padding: 2px 6px; border-radius: 4px; margin: 0 6px;
+      background: var(--tiffany-soft); color: var(--tiffany-dark); font-weight: 600;
+    }
+    .ai-sec-arr-item button {
+      background: transparent; border: none; cursor: pointer;
+      color: #E17055; font-size: 12px; padding: 0 4px;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,107,0.5); }
+      50% { box-shadow: 0 0 0 6px rgba(255,107,107,0); }
+    }
+
+    /* 通用小组件添加按钮(用于扩展到所有页面) */
+    .page-add-widget-bar {
+      display: none; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .edit-mode .page-add-widget-bar { display: flex; }
+    .page-add-widget-bar button { font-size: 12px; padding: 6px 12px; }
   </style>
   <script>
     // 注册 Service Worker（让工作台可作为 App 安装到手机桌面；file:// 下静默失败）
@@ -936,7 +1134,22 @@
     <!-- 首页：总览 -->
     <section class="page active" id="home">
       <div class="page-header">
-        <div class="page-title"><h1>总览仪表盘</h1><p id="date-greeting">欢迎回来</p></div>
+        <div class="page-title">
+          <h1>总览仪表盘</h1>
+          <p id="date-greeting" style="display:none">欢迎回来</p>
+          <div class="date-quote-wrap" id="date-quote-wrap">
+            <div class="dq-row">
+              <span class="dq-time" id="dq-time">--:--:--</span>
+              <span class="dq-date" id="dq-date">--</span>
+              <span class="dq-greeting" id="dq-greeting">欢迎回来</span>
+            </div>
+            <div class="dq-quote">
+              <span class="dq-zh" id="dq-zh">坚持每天进步一点点</span>
+              <span class="dq-en" id="dq-en">Small progress every day.</span>
+              <button class="dq-fav" id="dq-fav" onclick="favoriteQuote()" title="收藏到自律栏">☆</button>
+            </div>
+          </div>
+        </div>
         <div class="header-actions">
           <button class="action-btn" onclick="openWidgetLib()" id="btn-add-widget">➕ 添加小组件</button>
           <button class="action-btn" onclick="aiAsk('生成本周整体时间分配计划')">⚡ AI 生成本周计划</button>
@@ -1009,6 +1222,13 @@
               <button class="action-btn" onclick="changeWater(1)">+</button>
             </div>
           </div>
+        </div>
+        <div class="card glass">
+          <div class="card-title">
+            <span><span class="emoji">⭐</span>每日励志收藏</span>
+            <span style="font-size:11px;color:var(--text-muted);font-weight:400">来自首页 ☆</span>
+          </div>
+          <div id="self-favorites" style="font-size:13px"></div>
         </div>
       </div>
     </section>
@@ -1217,6 +1437,10 @@
 
       <div class="modal-section" id="tab-glass">
         <div class="setting-row">
+          <div class="info"><h4>导航栏玻璃态一致</h4><p>让左侧导航使用与小组件相同的玻璃/磨砂效果</p></div>
+          <div class="toggle" id="toggle-nav-glass" onclick="toggleNavGlass(this)"></div>
+        </div>
+        <div class="setting-row">
           <div class="info"><h4>玻璃形态</h4><p>磨砂玻璃或透明玻璃</p></div>
           <select id="glass-type" onchange="previewGlass()" style="width:140px;flex:0">
             <option value="frosted">磨砂玻璃</option>
@@ -1359,7 +1583,9 @@
       family: { title: '🏡 家庭事务', desc: '宠物与家庭待办', render: renderFamilyWidget },
       messages: { title: '🔔 消息提醒', desc: '重要消息汇总', render: renderMessagesWidget },
       weather: { title: '🌤️ 本地天气', desc: '温度湿度紫外线', render: renderWeatherWidget },
-      news: { title: '📰 每日新闻', desc: '国内国际要闻', render: renderNewsWidget }
+      news: { title: '📰 每日新闻', desc: '国内国际要闻', render: renderNewsWidget },
+      aiSecretary: { title: '🤖 AI 助手秘书', desc: '语音/图片 · 自动分类', render: renderAISecretaryWidget },
+      calendarMarker: { title: '📆 日历标记', desc: '在日历上记录任何事', render: renderCalendarMarkerWidget }
     };
 
     const providers = {
@@ -1415,7 +1641,10 @@
       plans: [{ date: '2026-07-27', text: '完成备考周计划' }],
       water: 4,
       provider: 'doubao',
-      weather: { city: '北京', temp: '--', humidity: '--', uv: '--', desc: '定位中...' }
+      weather: { city: '北京', temp: '--', humidity: '--', uv: '--', desc: '定位中...' },
+      quoteFavorites: [],
+      calMarkers: [],
+      aiSecretaryItems: []
     };
 
     let appState = {
@@ -1454,6 +1683,14 @@
       if (savedGlobal) {
         try { globalState = JSON.parse(savedGlobal); } catch(e) {}
       }
+      // 旧数据补默认值
+      globalState.quoteFavorites = globalState.quoteFavorites || [];
+      globalState.calMarkers = globalState.calMarkers || [];
+      globalState.aiSecretaryItems = globalState.aiSecretaryItems || [];
+      Object.values(appState.workbenches || {}).forEach(wb => {
+        wb.widgetConfigs = wb.widgetConfigs || {};
+        wb.glassNav = wb.glassNav || false;
+      });
       ensureDefaultWorkbench();
     }
 
@@ -1533,7 +1770,94 @@
 
     function updateDate() {
       const d = new Date();
-      document.getElementById('date-greeting').textContent = d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }) + ' · 欢迎回来';
+      const greetingEl = document.getElementById('date-greeting');
+      const timeEl = document.getElementById('dq-time');
+      const dateEl = document.getElementById('dq-date');
+      const greetEl = document.getElementById('dq-greeting');
+      // 兼容旧 ID(若模板还在用)
+      if (greetingEl) greetingEl.textContent = d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }) + ' · 欢迎回来';
+      if (timeEl) timeEl.textContent = d.toTimeString().slice(0, 8);
+      if (dateEl) dateEl.textContent = d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+      // 早/中/晚 问候
+      const h = d.getHours();
+      if (greetEl) greetEl.textContent = h < 6 ? '深夜了，注意休息' : h < 11 ? '早上好' : h < 13 ? '中午好' : h < 18 ? '下午好' : h < 22 ? '晚上好' : '夜深了，记得早点休息';
+      renderDailyQuote();
+    }
+    // 双语励志语库(每日按日期选一句,24 小时变更)
+    const dailyQuotes = [
+      { zh: '坚持每天进步一点点', en: 'Small progress every day.' },
+      { zh: '你比你想象的更强大', en: 'You are stronger than you think.' },
+      { zh: '自律即自由', en: 'Discipline equals freedom.' },
+      { zh: '专注是成功的捷径', en: 'Focus is the shortcut to success.' },
+      { zh: '今天比昨天好,就是胜利', en: 'Better than yesterday is victory.' },
+      { zh: '把每一件小事都做到极致', en: 'Do every small thing with excellence.' },
+      { zh: '行动是治愈恐惧的良药', en: 'Action is the antidote to fear.' },
+      { zh: '慢即是快,稳即是赢', en: 'Slow is smooth, smooth is fast.' },
+      { zh: '把时间留给重要的事', en: 'Save time for what matters.' },
+      { zh: '向阳而生,逐光而行', en: 'Grow towards the sun.' },
+      { zh: '持续努力,静待花开', en: 'Keep going, let things bloom.' },
+      { zh: '今天的目标,今天的努力', en: 'Today\'s target, today\'s effort.' },
+      { zh: '别让未来的你,讨厌现在的自己', en: 'Don\'t disappoint your future self.' },
+      { zh: '凡事预则立,不预则废', en: 'Plan ahead, win ahead.' },
+      { zh: '不积跬步,无以至千里', en: 'A thousand miles begin with a single step.' },
+      { zh: '山再高,往上攀总能登顶', en: 'No mountain too high to climb.' },
+      { zh: '把注意力放在你能改变的事上', en: 'Focus on what you can change.' },
+      { zh: '休息是为了走更远的路', en: 'Rest to go further.' },
+      { zh: '今日事,今日毕', en: 'Never put off until tomorrow.' },
+      { zh: '保持热爱,奔赴山海', en: 'Stay passionate, chase your dream.' },
+      { zh: '简单的事重复做,重复的事用心做', en: 'Repeat the simple things with heart.' },
+      { zh: '心怀热爱,眼里有光', en: 'Love in your heart, light in your eyes.' },
+      { zh: '越努力,越幸运', en: 'The harder you work, the luckier you get.' },
+      { zh: '你只管努力,时间自会给你答案', en: 'Do your best, time will tell.' },
+      { zh: '别放弃,胜利就在下一个转弯', en: 'Don\'t quit, victory is just ahead.' },
+      { zh: '生活明朗,万物可爱', en: 'Life is bright, everything is lovely.' },
+      { zh: '把平凡的日子过成诗', en: 'Turn ordinary days into poetry.' },
+      { zh: '稳扎稳打,步步为营', en: 'Steady steps, planned moves.' },
+      { zh: '保持好奇,持续探索', en: 'Stay curious, keep exploring.' },
+      { zh: '心中有数,脚下有路', en: 'Plan in mind, path under feet.' },
+      { zh: '今天也要加油呀', en: 'You got this today!' }
+    ];
+    function getTodayQuote() {
+      const d = new Date();
+      // 用 YYYYMMDD 数字做索引,24 小时固定一句
+      const key = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+      return dailyQuotes[key % dailyQuotes.length];
+    }
+    function renderDailyQuote() {
+      const q = getTodayQuote();
+      const zh = document.getElementById('dq-zh');
+      const en = document.getElementById('dq-en');
+      const fav = document.getElementById('dq-fav');
+      if (!zh || !en) return;
+      zh.textContent = q.zh;
+      en.textContent = q.en;
+      if (fav) {
+        const today = new Date().toISOString().slice(0, 10);
+        const isFaved = (globalState.quoteFavorites || []).some(f => f.date === today);
+        fav.textContent = isFaved ? '★' : '☆';
+        fav.classList.toggle('faved', isFaved);
+      }
+    }
+    function favoriteQuote() {
+      const q = getTodayQuote();
+      const today = new Date().toISOString().slice(0, 10);
+      globalState.quoteFavorites = globalState.quoteFavorites || [];
+      const exists = globalState.quoteFavorites.findIndex(f => f.date === today);
+      if (exists >= 0) {
+        globalState.quoteFavorites.splice(exists, 1);
+        if (typeof showHint === 'function') showHint('已取消收藏');
+      } else {
+        globalState.quoteFavorites.push({ date: today, zh: q.zh, en: q.en, ts: Date.now() });
+        if (typeof showHint === 'function') showHint('已收藏到自律栏 ⭐');
+      }
+      saveGlobalState();
+      renderDailyQuote();
+      // 自律栏更新
+      if (typeof renderSelfFavorites === 'function') renderSelfFavorites();
+    }
+    function startClock() {
+      if (window._wb_clock_timer) clearInterval(window._wb_clock_timer);
+      window._wb_clock_timer = setInterval(updateDate, 1000);
     }
 
     // ========== 工作台样式应用 ==========
@@ -1627,22 +1951,37 @@
           <span class="drag-handle">≡</span>
           <span class="icon">${item.icon}</span>
           <input type="text" class="text" value="${escapeHtml(item.name)}" readonly onchange="renameNav('${item.id}', this.value)">
-          <div class="nav-actions"><span onclick="event.stopPropagation();renameNavStart('${item.id}', this)">✎</span><span onclick="event.stopPropagation();deleteNav('${item.id}')">×</span></div>
+          <div class="nav-actions"><span onclick="event.stopPropagation();renameNavStart('${item.id}', this)" title="重命名">✎</span><span onclick="event.stopPropagation();deleteNav('${item.id}')" title="删除">×</span></div>
         `;
         div.onclick = () => { if (!navEditMode) goPage(item.id); };
         menu.appendChild(div);
       });
+      // 导航编辑模式: 加一个"添加分区"按钮
+      if (navEditMode) {
+        const addDiv = document.createElement('div');
+        addDiv.className = 'nav-add-item';
+        addDiv.id = 'nav-add-trigger';
+        addDiv.innerHTML = '<span>＋</span><span>添加新分区</span>';
+        addDiv.onclick = showNavAddForm;
+        menu.appendChild(addDiv);
+      } else {
+        const form = document.getElementById('nav-add-form-wrap');
+        if (form) form.remove();
+      }
       if (navSortable) navSortable.destroy();
       navSortable = new Sortable(menu, {
         handle: '.drag-handle',
         animation: 150,
         disabled: !navEditMode,
+        filter: '#nav-add-trigger',
         onEnd: () => {
           const wb = getCurrentWorkbench();
-          wb.nav = [...menu.querySelectorAll('.nav-item')].map(el => {
+          const liveItems = [...menu.querySelectorAll('.nav-item')].map(el => {
             const id = el.dataset.page;
             return wb.nav.find(n => n.id === id);
           }).filter(Boolean);
+          // 去重
+          wb.nav = [...new Set(liveItems)];
           saveAppState();
           renderMobileNav();
         }
@@ -1652,6 +1991,50 @@
         const input = item.querySelector('.text');
         input.readOnly = !navEditMode;
       });
+      // 应用导航玻璃态
+      applyNavGlass();
+    }
+
+    function applyNavGlass() {
+      const wb = getCurrentWorkbench();
+      const sidebar = document.getElementById('sidebar');
+      if (!sidebar) return;
+      sidebar.classList.toggle('glass-mode', !!wb.glassNav);
+    }
+
+    function showNavAddForm() {
+      const old = document.getElementById('nav-add-form-wrap');
+      if (old) { old.remove(); return; }
+      const wrap = document.createElement('div');
+      wrap.id = 'nav-add-form-wrap';
+      wrap.className = 'nav-add-form';
+      wrap.innerHTML = `
+        <input type="text" id="nav-add-name" placeholder="分区名称,如 投资">
+        <input type="text" id="nav-add-icon" placeholder="emoji,如 💰" maxlength="3">
+        <div style="font-size:11px;color:var(--text-secondary);margin:6px 0">分区 ID: <input type="text" id="nav-add-id" placeholder="可选,英文/拼音,如 invest" style="margin-bottom:0"></div>
+        <div class="form-row">
+          <button class="nav-cancel" onclick="document.getElementById('nav-add-form-wrap').remove()">取消</button>
+          <button class="nav-confirm" onclick="addNavItem()">添加</button>
+        </div>
+      `;
+      const trigger = document.getElementById('nav-add-trigger');
+      trigger.insertAdjacentElement('afterend', wrap);
+      setTimeout(() => document.getElementById('nav-add-name').focus(), 0);
+    }
+
+    function addNavItem() {
+      const name = (document.getElementById('nav-add-name') || {}).value || '';
+      const icon = (document.getElementById('nav-add-icon') || {}).value || '📌';
+      let id = (document.getElementById('nav-add-id') || {}).value || '';
+      if (!name.trim()) { alert('请输入名称'); return; }
+      if (!id.trim()) id = 'p_' + Date.now();
+      // 检查重复
+      const wb = getCurrentWorkbench();
+      if (wb.nav.find(n => n.id === id)) { alert('分区 ID 已存在'); return; }
+      wb.nav.push({ id, name: name.trim(), icon: icon.trim() || '📌' });
+      saveAppState();
+      document.getElementById('nav-add-form-wrap')?.remove();
+      renderNav(); renderMobileNav();
     }
 
     function renderMobileNav() {
@@ -1722,17 +2105,20 @@
       const grid = document.getElementById('home-grid');
       grid.innerHTML = '';
       const wb = getCurrentWorkbench();
+      wb.widgetConfigs = wb.widgetConfigs || {};
       wb.widgets.forEach(key => {
         const def = widgetDefs[key];
         if (!def) return;
+        const cfg = wb.widgetConfigs[key] || { size: 'md' };
         const card = document.createElement('div');
-        card.className = 'card glass';
+        card.className = 'card glass size-' + cfg.size;
         card.dataset.widget = key;
         card.innerHTML = `
           <div class="card-title">
             <span><span class="emoji">${def.title.split(' ')[0]}</span>${def.title.split(' ').slice(1).join(' ')}</span>
             <div class="card-actions">
               <span class="drag-handle-card" title="拖动排序">↕</span>
+              <button class="widget-config-btn" title="小组件属性" onclick="event.stopPropagation();openWidgetConfig('${key}', this)">⚙</button>
               <button class="delete-btn" title="删除组件" onclick="event.stopPropagation();deleteWidget('${key}')">×</button>
             </div>
           </div>
@@ -1756,6 +2142,54 @@
       });
       updateEditModeUI();
       refreshGlassClasses();
+    }
+
+    function openWidgetConfig(key, btn) {
+      // 关闭已打开的
+      document.querySelectorAll('.widget-config-popover').forEach(p => p.remove());
+      const wb = getCurrentWorkbench();
+      wb.widgetConfigs = wb.widgetConfigs || {};
+      const cfg = wb.widgetConfigs[key] || { size: 'md' };
+      const pop = document.createElement('div');
+      pop.className = 'widget-config-popover';
+      pop.onclick = e => e.stopPropagation();
+      pop.innerHTML = `
+        <button class="wcp-close" onclick="this.parentNode.remove()">×</button>
+        <div style="font-weight:700;color:var(--tiffany-dark);margin-bottom:8px">小组件属性</div>
+        <div class="wcp-row">
+          <label>尺寸</label>
+          <select onchange="setWidgetConfig('${key}','size',this.value)">
+            <option value="sm" ${cfg.size==='sm'?'selected':''}>小(1格)</option>
+            <option value="md" ${cfg.size==='md'?'selected':''}>中(2格)</option>
+            <option value="lg" ${cfg.size==='lg'?'selected':''}>大(3格)</option>
+            <option value="full" ${cfg.size==='full'?'selected':''}>通栏</option>
+          </select>
+        </div>
+        <div class="wcp-row">
+          <label>显示数量上限</label>
+          <input type="number" min="1" max="50" value="${cfg.maxItems||10}" onchange="setWidgetConfig('${key}','maxItems',parseInt(this.value)||10)">
+        </div>
+        <div class="wcp-row">
+          <label>标题前缀 emoji</label>
+          <input type="text" maxlength="2" value="${cfg.emoji||''}" placeholder="可改" onchange="setWidgetConfig('${key}','emoji',this.value)">
+        </div>
+      `;
+      btn.parentNode.parentNode.parentNode.appendChild(pop);
+      setTimeout(() => {
+        const close = (ev) => {
+          if (!pop.contains(ev.target)) { pop.remove(); document.removeEventListener('click', close); }
+        };
+        document.addEventListener('click', close);
+      }, 0);
+    }
+
+    function setWidgetConfig(key, field, val) {
+      const wb = getCurrentWorkbench();
+      wb.widgetConfigs = wb.widgetConfigs || {};
+      wb.widgetConfigs[key] = wb.widgetConfigs[key] || { size: 'md' };
+      wb.widgetConfigs[key][field] = val;
+      saveAppState();
+      renderHome();
     }
 
     function deleteWidget(key) {
@@ -1905,6 +2339,334 @@
       renderNewsList(type);
     }
 
+    // ========== Feature 4 · 日历标记小组件 ==========
+    function renderCalendarMarkerWidget(body) {
+      const widget = body.closest('.card');
+      const widgetKey = widget && widget.dataset.widget;
+      body.innerHTML = `
+        <div class="cal-head">
+          <button onclick="calPrevMonth(this)">‹</button>
+          <span class="cal-title"></span>
+          <button onclick="calNextMonth(this)">›</button>
+        </div>
+        <div class="cal-grid cal-day-heads"></div>
+        <div class="cal-grid cal-days"></div>
+        <div class="cal-stats"></div>
+        <div class="cal-marker-list"></div>
+      `;
+      body.dataset.calOffset = body.dataset.calOffset || '0';
+      calRenderGrid(body);
+    }
+    function calRenderGrid(body) {
+      const widget = body.closest('.card');
+      const offset = parseInt(body.dataset.calOffset || '0');
+      const now = new Date();
+      const view = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+      const year = view.getFullYear(), month = view.getMonth();
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const monthNames = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+      body.querySelector('.cal-title').textContent = `${year} 年 ${monthNames[month]}`;
+      const heads = body.querySelector('.cal-day-heads');
+      heads.innerHTML = ['日','一','二','三','四','五','六'].map(d => `<div class="cal-day-head">${d}</div>`).join('');
+      const grid = body.querySelector('.cal-days');
+      const todayStr = new Date().toISOString().slice(0, 10);
+      let html = '';
+      // 上月尾部
+      const prevDays = new Date(year, month, 0).getDate();
+      for (let i = firstDay - 1; i >= 0; i--) {
+        html += `<div class="cal-day other-month" data-date="${year}-${String(month).padStart(2,'0')}-${String(prevDays-i).padStart(2,'0')}">${prevDays-i}</div>`;
+      }
+      // 本月
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const marks = (globalState.calMarkers || []).filter(m => m.date === dateStr);
+        const classes = ['cal-day'];
+        if (dateStr === todayStr) classes.push('today');
+        if (marks.length) classes.push('has-marker');
+        const badge = marks.length ? `<span class="marker-badge">${marks.length}</span>` : '';
+        html += `<div class="${classes.join(' ')}" data-date="${dateStr}" onclick="calAddMarker('${dateStr}', this)">${d}${badge}</div>`;
+      }
+      // 下月开头
+      const totalCells = firstDay + daysInMonth;
+      const nextDays = (Math.ceil(totalCells / 7) * 7) - totalCells;
+      for (let d = 1; d <= nextDays; d++) {
+        const nm = month + 2 > 12 ? 0 : month + 1;
+        const ny = nm === 0 ? year + 1 : year;
+        html += `<div class="cal-day other-month" data-date="${ny}-${String(nm+1).padStart(2,'0')}-${String(d).padStart(2,'0')}">${d}</div>`;
+      }
+      grid.innerHTML = html;
+      calRenderStats(body);
+      calRenderMarkerList(body);
+    }
+    function calPrevMonth(btn) {
+      const body = btn.closest('.widget-body');
+      body.dataset.calOffset = (parseInt(body.dataset.calOffset || '0') - 1).toString();
+      calRenderGrid(body);
+    }
+    function calNextMonth(btn) {
+      const body = btn.closest('.widget-body');
+      body.dataset.calOffset = (parseInt(body.dataset.calOffset || '0') + 1).toString();
+      calRenderGrid(body);
+    }
+    function calAddMarker(dateStr, el) {
+      const text = prompt(`为 ${dateStr} 添加一条标记：`, '');
+      if (text === null) return;
+      globalState.calMarkers = globalState.calMarkers || [];
+      if (text.trim() === '') {
+        // 删除该日所有
+        globalState.calMarkers = globalState.calMarkers.filter(m => m.date !== dateStr);
+      } else {
+        globalState.calMarkers.push({
+          id: Date.now(),
+          date: dateStr,
+          text: text.trim(),
+          ts: Date.now()
+        });
+      }
+      saveGlobalState();
+      calRenderGrid(el.closest('.widget-body'));
+    }
+    function calRemoveMarker(id, btn) {
+      globalState.calMarkers = (globalState.calMarkers || []).filter(m => m.id !== id);
+      saveGlobalState();
+      calRenderGrid(btn.closest('.widget-body'));
+    }
+    function calRenderStats(body) {
+      const marks = globalState.calMarkers || [];
+      const offset = parseInt(body.dataset.calOffset || '0');
+      const now = new Date();
+      const view = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+      const m = view.getMonth(), y = view.getFullYear();
+      const monthMarks = marks.filter(mk => {
+        const [yy, mm] = mk.date.split('-').map(Number);
+        return yy === y && (mm - 1) === m;
+      });
+      const totalAll = marks.length;
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const todayCount = marks.filter(mk => mk.date === todayStr).length;
+      body.querySelector('.cal-stats').innerHTML = `
+        <div class="cal-stats-row"><span>本月标记</span><span class="num">${monthMarks.length}</span></div>
+        <div class="cal-stats-row"><span>今日标记</span><span class="num">${todayCount}</span></div>
+        <div class="cal-stats-row"><span>累计标记</span><span class="num">${totalAll}</span></div>
+      `;
+    }
+    function calRenderMarkerList(body) {
+      const offset = parseInt(body.dataset.calOffset || '0');
+      const now = new Date();
+      const view = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+      const y = view.getFullYear(), m = view.getMonth();
+      const list = (globalState.calMarkers || [])
+        .filter(mk => {
+          const [yy, mm] = mk.date.split('-').map(Number);
+          return yy === y && (mm - 1) === m;
+        })
+        .sort((a, b) => a.date.localeCompare(b.date));
+      const html = list.length === 0
+        ? '<div style="opacity:0.5;text-align:center;padding:8px">当月无标记，点击日期添加</div>'
+        : list.map(mk => `
+          <div class="cal-marker-row">
+            <span class="date">${mk.date.slice(5)}</span>
+            <span class="text">${escapeHtml(mk.text)}</span>
+            <button onclick="calRemoveMarker(${mk.id}, this)">×</button>
+          </div>`).join('');
+      body.querySelector('.cal-marker-list').innerHTML = html;
+    }
+
+    // ========== Feature 5 · AI 助手秘书(语音+图片) ==========
+    function renderAISecretaryWidget(body) {
+      globalState.aiSecretaryItems = globalState.aiSecretaryItems || [];
+      body.innerHTML = `
+        <div class="ai-sec-mode-row">
+          <button class="ai-sec-mode active" data-mode="text" onclick="aiSecSetMode(this)">📝 文字</button>
+          <button class="ai-sec-mode" data-mode="voice" onclick="aiSecSetMode(this)">🎤 语音</button>
+          <button class="ai-sec-mode" data-mode="image" onclick="aiSecSetMode(this)">🖼 图片</button>
+        </div>
+        <textarea class="ai-sec-text" placeholder="告诉我今天要做啥，或要分类的文本…"></textarea>
+        <div class="ai-sec-controls">
+          <button class="ai-sec-btn" id="aiSecVoiceBtn" onclick="aiSecToggleVoice()">🎤 开始录音</button>
+          <label class="ai-sec-btn" style="cursor:pointer">📎 图片<input type="file" accept="image/*" style="display:none" onchange="aiSecHandleImage(event)"></label>
+          <button class="ai-sec-btn primary" onclick="aiSecSend()">✨ 让 AI 分类</button>
+        </div>
+        <div class="ai-sec-attach-row" id="aiSecAttach"></div>
+        <div class="ai-sec-arrange" id="aiSecArrange"></div>
+        <div class="ai-sec-hint">💡 语音直接录入,图片选好后由 AI 自动识别并归类到对应分区(今日待办/备考/自律/运营/家庭/计划)。</div>
+      `;
+      aiSecRenderPending(body);
+    }
+    function aiSecSetMode(btn) {
+      btn.parentNode.querySelectorAll('.ai-sec-mode').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    let _aiSecRecorder = null;
+    let _aiSecChunks = [];
+    async function aiSecToggleVoice() {
+      const btn = document.getElementById('aiSecVoiceBtn');
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('当前浏览器不支持语音录制,请用 Chrome/Edge 或 Safari');
+        return;
+      }
+      if (_aiSecRecorder && _aiSecRecorder.state === 'recording') {
+        _aiSecRecorder.stop();
+        btn.textContent = '🎤 开始录音';
+        btn.classList.remove('recording');
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        _aiSecChunks = [];
+        _aiSecRecorder = new MediaRecorder(stream);
+        _aiSecRecorder.ondataavailable = e => { if (e.data.size) _aiSecChunks.push(e.data); };
+        _aiSecRecorder.onstop = async () => {
+          const blob = new Blob(_aiSecChunks, { type: 'audio/webm' });
+          stream.getTracks().forEach(t => t.stop());
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            aiSecAddAttachment('voice', reader.result, null);
+            const txt = document.querySelector('.ai-sec-text');
+            if (txt && !txt.value.trim()) txt.value = '[一段语音] 请帮我分类到合适分区';
+          };
+          reader.readAsDataURL(blob);
+        };
+        _aiSecRecorder.start();
+        btn.textContent = '⏸ 停止录音';
+        btn.classList.add('recording');
+      } catch (e) {
+        alert('无法访问麦克风:' + (e.message || e));
+      }
+    }
+    function aiSecHandleImage(ev) {
+      const f = ev.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        aiSecAddAttachment('image', null, e.target.result, f.name);
+        const txt = document.querySelector('.ai-sec-text');
+        if (txt && !txt.value.trim()) txt.value = '[一张图片] 请识别并分类到合适分区';
+      };
+      reader.readAsDataURL(f);
+      ev.target.value = '';
+    }
+    function aiSecAddAttachment(type, voiceUrl, imageUrl, name) {
+      const row = document.getElementById('aiSecAttach');
+      if (!row) return;
+      const chip = document.createElement('div');
+      chip.className = 'ai-sec-chip';
+      if (type === 'voice') {
+        chip.innerHTML = `<audio controls src="${voiceUrl}"></audio><button class="remove-chip" onclick="this.parentNode.remove()">×</button>`;
+        chip.dataset.voice = voiceUrl;
+      } else {
+        chip.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(name||'图片')}"><button class="remove-chip" onclick="this.parentNode.remove()">×</button>`;
+        chip.dataset.image = imageUrl;
+      }
+      row.appendChild(chip);
+    }
+    function aiSecGetAttachments() {
+      const row = document.getElementById('aiSecAttach');
+      if (!row) return { voice: null, image: null };
+      let voice = null, image = null;
+      row.querySelectorAll('.ai-sec-chip').forEach(c => {
+        if (c.dataset.voice) voice = c.dataset.voice;
+        if (c.dataset.image) image = c.dataset.image;
+      });
+      return { voice, image };
+    }
+    // 启发式分类: 关键词 → 分区
+    const AI_CAT_RULES = [
+      { key: 'exam', cat: '备考', label: '📚 备考', list: 'examTasks',
+        kw: ['备考','公考','行测','申论','笔试','面试','上岸','模考','真题','专项','错题','资料分析','常识','言语','数量','判断推理'] },
+      { key: 'plan', cat: '计划', label: '📅 计划', list: 'plans',
+        kw: ['计划','安排','预约','会议','出差','行程','下周','本周','日程'] },
+      { key: 'self', cat: '自律', label: '🏃 自律', list: 'selfTasks',
+        kw: ['锻炼','运动','跑步','健身','瑜伽','冥想','饮水','喝水','睡眠','早起','阅读','读书','减脂','体重','戒','打卡'] },
+      { key: 'ops', cat: '运营', label: '💼 运营', list: 'opsTasks',
+        kw: ['小红书','抖音','运营','发布','笔记','排期','回复','合集','品牌','文案','素材','账号','数据','涨粉'] },
+      { key: 'family', cat: '家庭', label: '🏡 家庭', list: 'familyTasks',
+        kw: ['宠物','狗','猫','棉花糖','疫苗','驱虫','家人','家长','父母','孩子','家庭','买房','装修'] },
+      { key: 'todo', cat: '今日待办', label: '📝 待办', list: 'todos',
+        kw: [] } // 默认
+    ];
+    function aiSecClassify(text) {
+      const t = (text || '').toLowerCase();
+      for (const rule of AI_CAT_RULES) {
+        if (rule.kw.some(k => t.includes(k.toLowerCase()))) return rule;
+      }
+      return AI_CAT_RULES[AI_CAT_RULES.length - 1]; // 默认待办
+    }
+    function aiSecSend() {
+      const body = document.querySelector('.page.active .widget-grid .card[data-widget="aiSecretary"] .widget-body');
+      const txt = body.querySelector('.ai-sec-text').value.trim();
+      const att = aiSecGetAttachments();
+      if (!txt && !att.voice && !att.image) {
+        alert('请输入文字、录音或选一张图片');
+        return;
+      }
+      const rule = aiSecClassify(txt);
+      const item = {
+        id: Date.now(),
+        text: txt || (att.voice ? '[语音] 自动归类' : '[图片] 自动归类'),
+        category: rule.cat,
+        list: rule.list,
+        voice: att.voice,
+        image: att.image,
+        ts: Date.now(),
+        confirmed: false
+      };
+      globalState.aiSecretaryItems = globalState.aiSecretaryItems || [];
+      globalState.aiSecretaryItems.unshift(item);
+      saveGlobalState();
+      // 暂不直接加入分区,让用户确认
+      body.querySelector('.ai-sec-text').value = '';
+      // 清附件
+      const row = document.getElementById('aiSecAttach');
+      if (row) row.innerHTML = '';
+      aiSecRenderPending(body);
+    }
+    function aiSecRenderPending(body) {
+      const arr = document.querySelectorAll('.widget-grid .card[data-widget="aiSecretary"] .widget-body');
+      arr.forEach(b => {
+        const wrap = b.querySelector('#aiSecArrange');
+        if (!wrap) return;
+        const items = (globalState.aiSecretaryItems || []).slice(0, 6);
+        if (items.length === 0) {
+          wrap.innerHTML = '<div class="ai-sec-arrange-title">📥 待确认</div><div style="opacity:0.5;text-align:center;padding:8px;font-size:11px">暂无待办,试试点上面的 ✨ 让 AI 分类</div>';
+          return;
+        }
+        wrap.innerHTML = '<div class="ai-sec-arrange-title">📥 待确认(点击 ✅ 加入对应分区)</div>' + items.map(it => `
+          <div class="ai-sec-arr-item">
+            <span class="text">${escapeHtml(it.text.length > 36 ? it.text.slice(0, 36) + '…' : it.text)}</span>
+            <span class="cat">${escapeHtml(it.category)}</span>
+            <button onclick="aiSecConfirm(${it.id})">✅</button>
+            <button onclick="aiSecSkip(${it.id})">×</button>
+          </div>
+        `).join('');
+      });
+    }
+    function aiSecConfirm(id) {
+      const items = globalState.aiSecretaryItems || [];
+      const idx = items.findIndex(x => x.id === id);
+      if (idx < 0) return;
+      const it = items[idx];
+      const list = globalState[it.list] = globalState[it.list] || [];
+      list.push({ id: Date.now(), text: it.text, done: false });
+      // 标记已确认
+      it.confirmed = true;
+      saveGlobalState();
+      // 触发对应刷新
+      if (typeof renderHome === 'function') renderHome();
+      // 移除已确认
+      globalState.aiSecretaryItems = items.filter(x => x.id !== id);
+      saveGlobalState();
+      const body = document.querySelector('.widget-grid .card[data-widget="aiSecretary"] .widget-body');
+      if (body) aiSecRenderPending(body);
+    }
+    function aiSecSkip(id) {
+      globalState.aiSecretaryItems = (globalState.aiSecretaryItems || []).filter(x => x.id !== id);
+      saveGlobalState();
+      const body = document.querySelector('.widget-grid .card[data-widget="aiSecretary"] .widget-body');
+      if (body) aiSecRenderPending(body);
+    }
+
     // ========== 天气 ==========
     async function loadWeather() {
       globalState.weather = { ...globalState.weather, temp: '--', humidity: '--', uv: '--', desc: '定位中...' };
@@ -1990,6 +2752,50 @@
     function deleteExam(id) { deleteItem(globalState.examTasks, id, () => { renderExam(); updateProgress(); }); }
 
     function addSelfTask() { addItem('self-input', globalState.selfTasks, () => { renderSelf(); updateProgress(); }); }
+
+    function renderSelfFavorites() {
+      const el = document.getElementById('self-favorites');
+      if (!el) return;
+      const favs = globalState.quoteFavorites || [];
+      if (favs.length === 0) {
+        el.innerHTML = '<div style="opacity:0.55;padding:12px;text-align:center;font-size:12px">还没有收藏的励志语 — 去首页 <b style="color:var(--tiffany-dark)">☆</b> 一下你喜欢的每日一句吧</div>';
+        return;
+      }
+      el.innerHTML = favs.slice().reverse().slice(0, 20).map(f => {
+        const date = f.date ? f.date.slice(5) : '';
+        return `
+          <div style="padding:10px 12px;margin-bottom:8px;border-radius:10px;background:rgba(10,186,181,0.06);border-left:3px solid var(--tiffany)">
+            <div style="font-size:13px;color:var(--text);font-weight:500;margin-bottom:3px">${escapeHtml(f.zh || '')}</div>
+            <div style="font-size:11px;color:var(--text-secondary);font-style:italic;margin-bottom:6px">${escapeHtml(f.en || '')}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-muted)">
+              <span>${date ? '📅 ' + date : ''}</span>
+              <button onclick="removeQuoteFav('${f.date}')" style="background:transparent;border:none;cursor:pointer;color:#E17055;font-size:12px">移除</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function removeQuoteFav(date) {
+      globalState.quoteFavorites = (globalState.quoteFavorites || []).filter(f => f.date !== date);
+      saveGlobalState();
+      renderSelfFavorites();
+      renderDailyQuote();
+    }
+
+    function showHint(msg) {
+      let h = document.getElementById('wb-toast');
+      if (!h) {
+        h = document.createElement('div');
+        h.id = 'wb-toast';
+        h.style.cssText = 'position:fixed;top:74px;left:50%;transform:translateX(-50%);padding:10px 20px;background:rgba(15,15,15,0.85);color:#fff;border-radius:24px;font-size:13px;z-index:9999;backdrop-filter:blur(8px);opacity:0;transition:opacity 0.25s;pointer-events:none';
+        document.body.appendChild(h);
+      }
+      h.textContent = msg;
+      requestAnimationFrame(() => h.style.opacity = '1');
+      clearTimeout(window._wb_toast_t);
+      window._wb_toast_t = setTimeout(() => h.style.opacity = '0', 1800);
+    }
     function toggleSelf(id) { toggleItem(globalState.selfTasks, id, () => { renderSelf(); updateProgress(); }); }
     function deleteSelf(id) { deleteItem(globalState.selfTasks, id, () => { renderSelf(); updateProgress(); }); }
 
@@ -2204,8 +3010,18 @@
       document.getElementById('opacity-value').textContent = Math.round(wb.cardOpacity * 100) + '%';
       document.getElementById('glass-blur').value = wb.glassBlur;
       document.getElementById('blur-value').textContent = wb.glassBlur + 'px';
+      const tg = document.getElementById('toggle-nav-glass');
+      if (tg) tg.classList.toggle('on', !!wb.glassNav);
       onBgTypeChange();
       document.getElementById('settings-modal').classList.add('active');
+    }
+
+    function toggleNavGlass(el) {
+      el.classList.toggle('on');
+      const wb = getCurrentWorkbench();
+      wb.glassNav = el.classList.contains('on');
+      saveAppState();
+      applyNavGlass();
     }
 
     function closeSettings() {
@@ -2287,9 +3103,12 @@
       wb.glassType = document.getElementById('glass-type').value;
       wb.cardOpacity = parseInt(document.getElementById('card-opacity').value) / 100;
       wb.glassBlur = parseInt(document.getElementById('glass-blur').value);
+      const tg = document.getElementById('toggle-nav-glass');
+      if (tg) wb.glassNav = tg.classList.contains('on');
       saveAppState();
       applyWorkbenchStyles();
       refreshGlassClasses();
+      applyNavGlass();
       closeSettings();
     }
 
@@ -2454,7 +3273,8 @@
     function bootApp(){
       applyWorkbenchStyles();
       renderNav(); renderMobileNav();
-      renderHome(); renderAll(); updateDate(); startCountdown(); renderCalendar(); loadWeather();
+      renderHome(); renderAll(); updateDate(); startClock(); renderCalendar(); loadWeather();
+      renderSelfFavorites();
       updateEditModeUI();
       const pd = document.getElementById('plan-date'); if (pd) pd.value = new Date().toISOString().split('T')[0];
     }
