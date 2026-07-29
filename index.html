@@ -2911,10 +2911,25 @@
         <div class="filter-tabs" style="margin-bottom:12px">
           <div class="filter-tab active" onclick="switchNews(this,'national')">国内新闻</div>
           <div class="filter-tab" onclick="switchNews(this,'international')">国际新闻</div>
+          <div class="filter-tab" style="margin-left:auto" onclick="refreshNewsList(this)" title="刷新新闻（重新打乱顺序）">🔄 刷新</div>
         </div>
         <div class="news-list" id="news-list"></div>
+        <div class="news-refresh-ts" id="news-refresh-ts" style="font-size:11px;color:var(--text-muted);text-align:right;margin-top:6px"></div>
       `;
       renderNewsList('national');
+    }
+
+    function refreshNewsList(btn) {
+      // Fisher-Yates 洗牌
+      const shuf = (arr) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+      newsData.national = shuf(newsData.national);
+      newsData.international = shuf(newsData.international);
+      const ts = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+      const el = document.getElementById('news-refresh-ts');
+      if (el) el.textContent = '🔄 已刷新 · ' + ts;
+      const active = btn && btn.parentNode.querySelector('.filter-tab.active');
+      renderNewsList(active && active.getAttribute('onclick') && active.getAttribute('onclick').includes('national') ? 'national' : 'international');
+      if (typeof showHint === 'function') showHint('🔄 新闻已刷新');
     }
 
     function renderNewsList(type) {
@@ -2922,16 +2937,71 @@
       if (!list) return;
       list.innerHTML = '';
       newsData[type].forEach((n, i) => {
-        const a = document.createElement('a');
-        a.className = 'news-item';
-        a.href = n.url; a.target = '_blank';
-        a.innerHTML = `<div class="news-rank">${i + 1}</div><div class="news-text"><div class="news-title">${escapeHtml(n.title)}</div><div class="news-source">${escapeHtml(n.source)}</div></div>`;
-        list.appendChild(a);
+        const div = document.createElement('div');
+        div.className = 'news-item';
+        div.ondblclick = () => openNewsDetail(type, i);
+        div.innerHTML = `
+          <div class="news-rank">${i + 1}</div>
+          <div class="news-text">
+            <div class="news-title">${escapeHtml(n.title)}</div>
+            <div class="news-source">${escapeHtml(n.source)} · ${escapeHtml(n.url)}</div>
+          </div>
+          <div class="news-actions">
+            <button title="单点击在外部打开" onclick="event.stopPropagation();window.open('${escapeHtml(n.url)}','_blank')">🔗</button>
+          </div>`;
+        list.appendChild(div);
       });
     }
 
+    function openNewsDetail(filterType, focusIdx) {
+      const old = document.getElementById('news-detail-modal');
+      if (old) old.remove();
+      const modal = document.createElement('div');
+      modal.id = 'news-detail-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;z-index:10000;';
+      const card = document.createElement('div');
+      card.style.cssText = 'background:#fff;border-radius:18px;padding:24px 28px;max-width:760px;width:92%;max-height:86vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+      const allNews = [];
+      ['national', 'international'].forEach(t => {
+        (newsData[t] || []).forEach((n, i) => allNews.push({ ...n, type: t, typeLabel: t === 'national' ? '🇨🇳 国内' : '🌍 国际', idx: i + 1 }));
+      });
+      const focused = allNews.find(n => n.type === filterType && n.idx - 1 === focusIdx);
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h2 style="font-size:20px;font-weight:700;color:var(--tiffany-dark);margin:0">📰 今日新闻全览</h2>
+          <div onclick="document.getElementById('news-detail-modal').remove()" style="cursor:pointer;font-size:22px;color:var(--text-secondary)">×</div>
+        </div>
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">双击弹窗里任意一条 → 单击"打开原文"在外部阅读</p>
+        ${focused ? `<div style="background:var(--tiffany-light);border-left:4px solid var(--tiffany);padding:12px;border-radius:10px;margin-bottom:14px">
+          <div style="font-size:11px;color:var(--tiffany-dark);font-weight:600;margin-bottom:4px">当前选中 · ${focused.typeLabel}</div>
+          <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">${escapeHtml(focused.title)}</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">${escapeHtml(focused.source)} · ${escapeHtml(focused.url)}</div>
+          <button onclick="window.open('${escapeHtml(focused.url)}','_blank')" style="padding:6px 14px;border:none;border-radius:8px;background:var(--tiffany);color:#fff;font-size:12px;cursor:pointer">🔗 打开原文</button>
+        </div>` : ''}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <h3 style="font-size:13px;font-weight:700;color:var(--tiffany-dark);margin-bottom:8px">🇨🇳 国内新闻（${(newsData.national||[]).length}）</h3>
+            ${newsData.national.map((n, i) => `<div class="news-item" style="margin-bottom:6px">
+              <div class="news-rank">${i + 1}</div>
+              <div class="news-text"><div class="news-title">${escapeHtml(n.title)}</div><div class="news-source">${escapeHtml(n.source)}</div></div>
+            </div>`).join('')}
+          </div>
+          <div>
+            <h3 style="font-size:13px;font-weight:700;color:var(--tiffany-dark);margin-bottom:8px">🌍 国际新闻（${(newsData.international||[]).length}）</h3>
+            ${newsData.international.map((n, i) => `<div class="news-item" style="margin-bottom:6px">
+              <div class="news-rank">${i + 1}</div>
+              <div class="news-text"><div class="news-title">${escapeHtml(n.title)}</div><div class="news-source">${escapeHtml(n.source)}</div></div>
+            </div>`).join('')}
+          </div>
+        </div>
+      `;
+      modal.appendChild(card);
+      modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+      document.body.appendChild(modal);
+    }
+
     function switchNews(tab, type) {
-      tab.parentElement.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.parentNode.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       renderNewsList(type);
     }
@@ -5155,7 +5225,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=14').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=15').catch(function () {});
       });
     }
   </script>
