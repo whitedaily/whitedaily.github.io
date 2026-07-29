@@ -1252,6 +1252,16 @@
     }
 .ai-chat-actions button:hover { background: var(--tiffany-light); color: var(--tiffany-dark); }
 .ai-chat-actions button.pasted { border-color: var(--tiffany); background: var(--tiffany-light); color: var(--tiffany-dark); }
+    .card-title.editable-title { cursor: text; padding: 2px 6px; border-radius: 4px; transition: background 0.15s; }
+    .card-title.editable-title:hover { background: var(--tiffany-light); }
+    .card-title.editable-title::before { content: '✏️ '; opacity: 0.5; font-size: 11px; }
+
+    /* 倒计时/纪念日 */
+    .pc-type-tabs { display: flex; gap: 4px; margin-bottom: 6px; }
+    .pc-type-tab { flex: 1; text-align: center; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 11px; cursor: pointer; background: rgba(255,255,255,0.5); transition: all 0.2s; }
+    .pc-type-tab.active { background: var(--tiffany); color: #fff; border-color: var(--tiffany); }
+    .pc-annual-toggle { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 4px 0; color: var(--text-secondary); }
+    .pc-annual-toggle input { transform: scale(1.1); accent-color: var(--tiffany); }
 
 /* ===== 每日记账小组件 ===== */
 .exp-form { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -2836,6 +2846,25 @@
     }
 
     // ========== 首页小组件 ==========
+    // ========== 小组件标题通用改名 ==========
+    function widgetTitleHtml(key, def) {
+      const custom = (getCurrentWorkbench().widgetConfigs || {})[key];
+      const t = (custom && custom.title) ? custom.title : def.title;
+      return t;
+    }
+    function editWidgetTitle(key, defaultTitle, el) {
+      const cur = widgetTitleHtml(key, { title: defaultTitle });
+      const next = prompt('修改小组件标题：', cur);
+      if (next === null) return;
+      const wb = getCurrentWorkbench();
+      wb.widgetConfigs = wb.widgetConfigs || {};
+      wb.widgetConfigs[key] = wb.widgetConfigs[key] || { size: 'md' };
+      wb.widgetConfigs[key].title = next.trim() || defaultTitle;
+      saveAppState();
+      // 直接更新当前 DOM,避免全重渲染
+      const span = el.querySelector('.widget-custom-title');
+      if (span) span.textContent = wb.widgetConfigs[key].title;
+    }
     function renderHome() {
       const grid = document.getElementById('home-grid');
       grid.innerHTML = '';
@@ -2848,9 +2877,12 @@
         const card = document.createElement('div');
         card.className = 'card glass size-' + cfg.size;
         card.dataset.widget = key;
+        const customTitle = cfg.title || def.title;
+        const emoji = def.title.split(' ')[0];
+        const restTitle = def.title.split(' ').slice(1).join(' ');
         card.innerHTML = `
-          <div class="card-title">
-            <span><span class="emoji">${def.title.split(' ')[0]}</span>${def.title.split(' ').slice(1).join(' ')}</span>
+          <div class="card-title editable-title" title="点击修改标题" onclick="event.stopPropagation();editWidgetTitle('${key}', '${escapeHtml(def.title).replace(/'/g, "\\'")}', this)">
+            <span><span class="emoji">${emoji}</span><span class="widget-custom-title">${escapeHtml(customTitle.replace(/^[\S]+ /, ''))}</span></span>
             <div class="card-actions">
               <span class="drag-handle-card" title="拖动排序">↕</span>
               <button class="widget-config-btn" title="小组件属性" onclick="event.stopPropagation();openWidgetConfig('${key}', this)">⚙</button>
@@ -2999,9 +3031,12 @@
         card.dataset.widget = key;
         card.dataset.page = pageId;
         card.dataset.pageIdx = idx;
+        const customTitle = cfg.title || def.title;
+        const emoji = def.title.split(' ')[0];
+        const restTitle = def.title.split(' ').slice(1).join(' ');
         card.innerHTML = `
-          <div class="card-title">
-            <span><span class="emoji">${def.title.split(' ')[0]}</span>${def.title.split(' ').slice(1).join(' ')}</span>
+          <div class="card-title editable-title" title="点击修改标题" onclick="event.stopPropagation();editWidgetTitle('${key}', '${escapeHtml(def.title).replace(/'/g, "\\'")}', this)">
+            <span><span class="emoji">${emoji}</span><span class="widget-custom-title">${escapeHtml(customTitle.replace(/^[\S]+ /, ''))}</span></span>
             <div class="card-actions">
               <span class="drag-handle-card" title="拖动排序">↕</span>
               <button class="widget-config-btn" title="小组件属性" onclick="event.stopPropagation();openWidgetConfig('${key}', this)">⚙</button>
@@ -4894,36 +4929,102 @@
       globalState.planCountdowns = globalState.planCountdowns || [];
       const list = globalState.planCountdowns.sort((a,b) => (a.date||'').localeCompare(b.date||''));
       const now = new Date(); now.setHours(0,0,0,0);
+      body.dataset.pcType = body.dataset.pcType || 'countdown';
+      const t = body.dataset.pcType;
+
       body.innerHTML = `
+        <div class="pc-type-tabs">
+          <div class="pc-type-tab ${t==='countdown'?'active':''}" onclick="pcSetType('countdown', this)">⏰ 倒计时</div>
+          <div class="pc-type-tab ${t==='anniversary'?'active':''}" onclick="pcSetType('anniversary', this)">💝 纪念日</div>
+        </div>
         <div class="todo-input-wrap">
-          <input type="text" id="pc-title" placeholder="倒计时名称（如：交报告、项目管理评审）">
-          <input type="date" id="pc-date" value="${new Date(Date.now()+7*86400000).toISOString().slice(0,10)}">
+          <input type="text" id="pc-title" placeholder="${t==='anniversary'?'纪念日名（如：相识周年）':'倒计时名称（如：交报告）'}">
+          <input type="date" id="pc-date" value="${new Date(Date.now()+(t==='anniversary'?-100:7)*86400000).toISOString().slice(0,10)}">
           <button class="icon-btn" onclick="addPlanCountdown()">+</button>
         </div>
+        ${t === 'anniversary' ? `<div class="pc-annual-toggle"><input type="checkbox" id="pc-annual" ${body.dataset.pcAnnual === '1' ? 'checked' : ''} onchange="body.dataset.pcAnnual=this.checked?'1':'0'">每年这天自动循环（每年纪念日）</div>` : ''}
         <div class="countdown-list" id="plan-countdown-list">${list.length === 0
-          ? '<div style="opacity:0.5;text-align:center;padding:16px;font-size:12px">还没有倒计时</div>'
-          : list.map(c => {
-            const target = new Date(c.date); target.setHours(0,0,0,0);
-            const diffMs = target - now;
-            const days = Math.ceil(diffMs / 86400000);
-            const urgent = days <= 7;
-            return `<div class="countdown-item" style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;border-radius:10px;background:${urgent?'rgba(255,236,179,0.5)':'rgba(255,255,255,0.45)'};border-left:4px solid ${urgent?'#FFA500':'var(--tiffany)'}">
-              <div style="flex:1;font-size:13px;font-weight:600">${escapeHtml(c.title||'')}</div>
-              <div style="font-size:10px;color:var(--text-muted);min-width:70px;text-align:right">${escapeHtml(c.date||'').slice(5)}</div>
-              <div style="font-size:20px;font-weight:700;color:${urgent?'#E17055':'var(--tiffany-dark)'};min-width:60px;text-align:right">${days} 天</div>
-              <button onclick="deletePlanCountdown(${c.id})" style="background:transparent;border:none;color:#E17055;cursor:pointer;font-size:14px">×</button>
-            </div>`;
-          }).join('')}</div>
+          ? '<div style="opacity:0.5;text-align:center;padding:16px;font-size:12px">还没有记录</div>'
+          : list.map(c => pcRenderItem(c, now)).join('')}</div>
         ${checkUrgentCountdowns() ? `<div class="exp-alert show" style="margin-top:6px"><span style="font-size:16px;margin-right:4px">🔔</span> ${checkUrgentCountdowns()}</div>` : ''}
       `;
     }
 
+    function pcSetType(type, btn) {
+      const body = btn.closest('.widget-body');
+      body.dataset.pcType = type;
+      renderPlanCountdownWidget(body);
+    }
+
+    function pcRenderItem(c, now) {
+      const target = new Date(c.date); target.setHours(0,0,0,0);
+      const isAnniv = c.type === 'anniversary';
+      let main, sub, cls;
+      if (isAnniv) {
+        // 纪念日：今天到那年差多少；过去/未来分别显示
+        const diff = Math.round((now - target) / 86400000);
+        const yearDiff = now.getFullYear() - target.getFullYear();
+        // 未来
+        if (diff < 0) {
+          const absDays = Math.abs(diff);
+          main = '<span style="color:var(--tiffany-dark)">还有 ' + absDays + ' 天</span>';
+          sub = '→ ' + target.getFullYear() + ' 年 ' + (target.getMonth()+1) + ' 月 ' + target.getDate() + ' 日';
+          cls = 'rgba(255,236,179,0.4)';
+        } else {
+          // 已经发生：纪念日计算「已过去 X 天」或「X 周年」
+          if (c.annual) {
+            // 每年循环：计算下一次同一日期
+            const thisYear = new Date(target); thisYear.setFullYear(now.getFullYear());
+            if (thisYear < now) thisYear.setFullYear(now.getFullYear() + 1);
+            const daysToNext = Math.ceil((thisYear - now) / 86400000);
+            main = '<span style="color:#E17055">下一个' + (thisYear.getFullYear() - target.getFullYear() + 1) + '周年</span>';
+            sub = '→ 还有 ' + daysToNext + ' 天 · ' + thisYear.getFullYear() + '/' + (thisYear.getMonth()+1) + '/' + thisYear.getDate();
+            cls = 'rgba(255,236,179,0.5)';
+          } else {
+            main = '<span style="color:var(--tiffany-dark)">已经过去 ' + diff + ' 天</span>';
+            sub = '→ ' + (yearDiff >= 1 ? yearDiff + ' 周年' : '不到 1 年') + ' · 距今 ' + new Date(target).toLocaleDateString('zh-CN');
+            cls = 'rgba(200,200,200,0.3)';
+          }
+        }
+      } else {
+        // 倒计时：标准未来/今天/过去
+        const diff = Math.ceil((target - now) / 86400000);
+        if (diff > 0) {
+          main = '<span style="color:#E17055">还有 ' + diff + ' 天</span>';
+          sub = '→ ' + c.date + ' · ' + new Date(target).toLocaleDateString('zh-CN', { weekday: 'long' });
+          cls = diff <= 7 ? 'rgba(255,236,179,0.5)' : 'rgba(255,255,255,0.45)';
+        } else if (diff === 0) {
+          main = '<span style="color:#E17055">⏰ 今天就是</span>';
+          sub = c.date;
+          cls = 'rgba(255,200,150,0.6)';
+        } else {
+          main = '<span style="color:var(--text-muted)">已过期 ' + Math.abs(diff) + ' 天</span>';
+          sub = c.date;
+          cls = 'rgba(200,200,200,0.3)';
+        }
+      }
+      const typeTag = isAnniv ? (c.annual ? '🎂 每年' : '💝 纪念') : '⏰ 倒计';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;border-radius:10px;background:${cls};border-left:4px solid ${isAnniv?'#FF6B95':'var(--tiffany)'}">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(c.title||'')} <span style="font-size:9px;padding:1px 4px;border-radius:4px;background:rgba(0,0,0,0.06);color:var(--text-muted);margin-left:2px">${typeTag}</span></div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${sub}</div>
+        </div>
+        <div style="font-size:14px;font-weight:700;text-align:right;min-width:90px">${main}</div>
+        <button onclick="deletePlanCountdown(${c.id})" style="background:transparent;border:none;color:#E17055;cursor:pointer;font-size:14px;padding:0 2px">×</button>
+      </div>`;
+    }
+
     function addPlanCountdown() {
+      const body = document.querySelector('.card[data-widget="planCountdown"] .widget-body');
       const title = (document.getElementById('pc-title')||{}).value || '';
       const date = (document.getElementById('pc-date')||{}).value || '';
+      const annualEl = document.getElementById('pc-annual');
       if (!title.trim() || !date) { alert('请输入名称和日期'); return; }
       globalState.planCountdowns = globalState.planCountdowns || [];
-      globalState.planCountdowns.push({ id: Date.now(), title: title.trim(), date: date });
+      const type = (body && body.dataset.pcType) || 'countdown';
+      const item = { id: Date.now(), title: title.trim(), date: date, type: type };
+      if (type === 'anniversary' && annualEl && annualEl.checked) item.annual = true;
+      globalState.planCountdowns.push(item);
       saveGlobalState();
       renderHome();
     }
@@ -5745,7 +5846,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=25').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=27').catch(function () {});
       });
     }
   </script>
