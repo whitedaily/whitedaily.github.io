@@ -1583,9 +1583,13 @@
         </div>
         <div class="card glass">
           <div class="card-title"><span><span class="emoji">🎙️</span>播客收听</span></div>
-          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">合规采集小宇宙免费公开播客 · 碎片化学习</p>
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">合规采集小宇宙免费公开播客 · 碎片化学习</p>
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <input type="text" id="xima-uid-input" placeholder="喜马拉雅 UID（手机点击 = 跳你账号）" value="${globalState.ximaUid||''}" onchange="globalState.ximaUid=this.value.trim();saveGlobalState()" style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:11px">
+          </div>
           <div class="filter-tabs" style="margin-bottom:0">
-            <div class="filter-tab active" onclick="aiOpen('https://www.xiaoyuzhoufm.com/')">打开小宇宙</div>
+            <div class="filter-tab active" onclick="openXimaHub()">🎧 打开小宇宙</div>
+            <div class="filter-tab" onclick="openXimaContinue()">▶️ 继续收听</div>
             <div class="filter-tab" onclick="goPage('podcast')">查看播客列表</div>
           </div>
         </div>
@@ -1655,7 +1659,7 @@
     <section class="page" id="podcast">
       <div class="page-header">
         <div class="page-title"><h1>播客收听</h1><p>合规采集小宇宙免费公开播客 · 三大分类 · 文稿收藏</p></div>
-        <button class="action-btn" onclick="aiOpen('https://www.xiaoyuzhoufm.com/')">📡 采集最新播客</button>
+        <button class="action-btn" onclick="openXimaContinue()">▶️ 继续收听</button>
       </div>
       <div class="category-grid">
         <div class="category-card glass active"><div class="icon">📚</div><h3>公考备考</h3><p>上岸经验 · 申论技巧 · 行测策略</p></div>
@@ -2040,7 +2044,8 @@
         ops: '小红书自媒体运营 · 内容排期与数据追踪',
         family: '宠物专属专栏 · 家庭事务管理',
         stats: '今日数据汇总 · 实时同步各分区进度'
-      }
+      },
+      ximaUid: ''
     };
 
     let appState = {
@@ -4137,6 +4142,38 @@
     }
     function aiAsk(text) { document.getElementById('ai-input').value = text; aiSend(); }
     function aiOpen(url) { window.open(url, '_blank'); }
+
+    // ========== 喜马拉雅个人链接 ==========
+    function _ximaUid() { globalState.ximaUid = globalState.ximaUid || ''; return globalState.ximaUid; }
+    function openXimaHub() {
+      const uid = _ximaUid();
+      const webUrl = uid ? ('https://www.ximalaya.com/personal/home?uid=' + uid) : 'https://www.ximalaya.com/';
+      const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      // 移动端优先尝试 deep link 打开 app,失败回退 web
+      if (isMobile) {
+        const appUrl = 'xima://xima.podcast/personalHub?uid=' + (uid || '');
+        const start = Date.now();
+        window.location.href = appUrl;
+        setTimeout(() => { if (Date.now() - start < 2200) window.open(webUrl, '_blank'); }, 1800);
+      } else {
+        window.open(webUrl, '_blank');
+      }
+    }
+    function openXimaContinue() {
+      const uid = _ximaUid();
+      const webUrl = uid ? ('https://www.ximalaya.com/personal/history?uid=' + uid) : 'https://www.ximalaya.com/personal/history';
+      const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile) {
+        // 喜马拉雅 app 内部"继续播放"页面 deep link
+        const appUrl = 'xima://xima.podcast/continue';
+        const start = Date.now();
+        window.location.href = appUrl;
+        // 2.2 秒内没拉起就回退到 web 历史页
+        setTimeout(() => { if (Date.now() - start < 2200) window.open(webUrl, '_blank'); }, 1800);
+      } else {
+        window.open(webUrl, '_blank');
+      }
+    }
     function aiSend() {
       const input = document.getElementById('ai-input');
       const text = (input ? input.value : '').trim();
@@ -5079,7 +5116,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=12').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=13').catch(function () {});
       });
     }
   </script>
