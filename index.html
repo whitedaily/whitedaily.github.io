@@ -3864,9 +3864,13 @@
       list.forEach(item => {
         const div = document.createElement('div');
         div.className = 'todo-item' + (item.done ? ' completed' : '');
+        const catChip = item.section && item.section !== 'todos'
+          ? '<span class="todo-cat-chip" style="font-size:10px;padding:2px 6px;border-radius:6px;background:var(--tiffany-light);color:var(--tiffany-dark);margin-left:6px">' + escapeHtml(item.sectionLabel || '') + '</span>'
+          : '';
         div.innerHTML = `
           <input type="checkbox" ${item.done ? 'checked' : ''} onchange="${onToggle}(${item.id})">
           <span class="text">${escapeHtml(item.text)}</span>
+          ${catChip}
           <span class="del" onclick="${onDelete}(${item.id})">×</span>
         `;
         el.appendChild(div);
@@ -3899,7 +3903,42 @@
       if (idx > -1) { list.splice(idx, 1); renderFn(); saveGlobalState(); }
     }
 
-    function addTodo() { addItem('todo-input', globalState.todos, () => { renderTodos(); updateProgress(); }); }
+    // 自动分类: 文本 → 目标分区
+    function smartCategorizeTodo(text) {
+      const t = (text || '').toLowerCase();
+      const rules = [
+        { section: 'examTasks', label: '📚 备考', kw: ['备考','公考','行测','申论','笔试','面试','上岸','模考','真题','专项','错题','资料分析','常识','言语','数量','判断','申论'] },
+        { section: 'familyTasks', label: '🏡 家庭', kw: ['宠物','狗','猫','驱虫','疫苗','家人','父母','孩子','家庭','装修','买房'] },
+        { section: 'opsTasks', label: '💼 运营', kw: ['小红书','抖音','运营','发布','笔记','排期','回复','合集','品牌','文案','素材','账号','数据','涨粉','视频','剪辑'] },
+        { section: 'selfTasks', label: '🏃 自律', kw: ['锻炼','运动','跑步','健身','瑜伽','冥想','喝水','睡眠','早起','阅读','读书','减脂','体重','戒','打卡','有氧','力量','拉伸'] },
+        { section: 'selfTasks', label: '📖 英语', kw: ['英语','单词','口语','跟读','听写','english','english'] },
+        { section: 'plans', label: '📅 计划', kw: ['计划','安排','预约','会议','出差','行程','下周','本周','日程'] },
+        { section: 'expenses', label: '🛍 消费', kw: ['买','购买','下单','付款','充值','外卖','吃饭','午餐','晚餐','早餐'] }
+      ];
+      for (const r of rules) {
+        if (r.kw.some(k => t.includes(k.toLowerCase()))) return { section: r.section, label: r.label };
+      }
+      return null;
+    }
+
+    function addTodo() {
+      const input = document.getElementById('todo-input');
+      const text = (input.value || '').trim();
+      if (!text) return;
+      const cat = smartCategorizeTodo(text);
+      const item = { id: Date.now(), text, done: false };
+      if (cat) { item.section = cat.section; item.sectionLabel = cat.label; }
+      globalState.todos.push(item);
+      // 自动镜像到对应分区
+      if (cat && globalState[cat.section] && Array.isArray(globalState[cat.section])) {
+        globalState[cat.section].push({ id: Date.now() + 1, text: text, done: false });
+      }
+      input.value = '';
+      renderTodos();
+      updateProgress();
+      saveGlobalState();
+      if (cat && typeof showHint === 'function') showHint('✅ 已分类到 ' + cat.label);
+    }
     function toggleTodo(id) { toggleItem(globalState.todos, id, () => { renderTodos(); updateProgress(); }); }
     function deleteTodo(id) { deleteItem(globalState.todos, id, () => { renderTodos(); updateProgress(); }); }
 
@@ -5116,7 +5155,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=13').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=14').catch(function () {});
       });
     }
   </script>
