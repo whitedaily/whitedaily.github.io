@@ -497,14 +497,33 @@
     }
     .play-btn:hover { transform: scale(1.08); box-shadow: 0 4px 14px rgba(10,186,181,0.35); }
 
-    /* 右侧 AI 助手 */
+    /* 右侧 AI 助手（默认隐藏，点击星回展开） */
     .right-panel {
       width: 320px;
       border-left: 1px solid var(--border);
       padding: 24px 20px;
-      display: flex; flex-direction: column;
+      display: none; flex-direction: column;
       flex-shrink: 0;
+      position: relative;
+      background: rgba(255,255,255,0.95);
     }
+    .right-panel.show { display: flex; animation: panelSlideIn 0.3s ease; }
+    @keyframes panelSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .right-panel-close {
+      position: absolute; top: 10px; right: 12px;
+      width: 28px; height: 28px;
+      border-radius: 8px; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.7); color: var(--text-secondary);
+      cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .right-panel-close:hover { background: var(--tiffany-light); color: var(--tiffany-dark); }
+    @media (max-width: 900px) {
+      .right-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 88%; max-width: 360px; box-shadow: -4px 0 20px rgba(0,0,0,0.15); z-index: 1000; }
+      .right-panel.show { display: flex; }
+    }
+    body.ai-panel-open::after { content: ''; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 999; display: none; }
+    @media (max-width: 900px) { body.ai-panel-open::after { display: block; } }
     .ai-header {
       display: flex; align-items: center; gap: 12px;
       margin-bottom: 18px;
@@ -1681,8 +1700,9 @@
     </section>
   </main>
 
-  <!-- 右侧 AI 助手 -->
+  <!-- 右侧 AI 助手（默认隐藏，点击星回展开） -->
   <aside class="right-panel glass" id="right-panel">
+    <div class="right-panel-close" onclick="toggleAIPanel(false)" title="关闭">×</div>
     <div class="ai-header">
       <div class="ai-avatar">✨</div>
       <div><h3>星回</h3><p>● 在线 · 你若有需要，我就在这里</p></div>
@@ -2618,8 +2638,18 @@
     }
 
     // ========== 侧栏迷你卡片跳转 ==========
+    function toggleAIPanel(show) {
+      const panel = document.getElementById('right-panel');
+      if (!panel) return;
+      const willShow = (show === undefined) ? !panel.classList.contains('show') : show;
+      panel.classList.toggle('show', willShow);
+      document.body.classList.toggle('ai-panel-open', willShow);
+      if (willShow && typeof renderAIChat === 'function') renderAIChat();
+    }
     function miniGo(pageId, targetKey) {
       goPage(pageId);
+      // 星回小组件：跳到首页后展开右栏
+      if (targetKey === 'aiSecretary') toggleAIPanel(true);
       setTimeout(() => {
         const card = document.querySelector('.card[data-widget="' + targetKey + '"]');
         if (card) {
@@ -2627,11 +2657,9 @@
           card.classList.add('mini-highlight');
           setTimeout(() => card.classList.remove('mini-highlight'), 1400);
         } else if (targetKey === 'todo' || targetKey === 'exam-list' || targetKey === 'self-list') {
-          // 列表元素直接滚到
           const el = document.getElementById(targetKey);
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-        // AI 助手秘书：自动加入首页(如未添加)并打开右栏
         if (targetKey === 'aiSecretary') {
           const wb = getCurrentWorkbench();
           if (!wb.widgets.includes('aiSecretary')) {
@@ -2639,8 +2667,6 @@
             saveAppState();
             renderHome();
             setTimeout(() => miniGo('home','aiSecretary'), 200);
-          } else if (window.innerWidth > 900) {
-            document.body.classList.add('show-ai-panel');
           }
         }
       }, 120);
@@ -5229,6 +5255,11 @@
         const card = e.target.closest('.card[data-widget="aiSecretary"]');
         if (card) { openStarDialog(); }
       });
+      // 单击星回卡片标题 → 开关右栏
+      document.addEventListener('click', (e) => {
+        const title = e.target.closest('.card[data-widget="aiSecretary"] .card-title');
+        if (title) { toggleAIPanel(); }
+      });
       const pd = document.getElementById('plan-date'); if (pd) pd.value = new Date().toISOString().split('T')[0];
     }
 
@@ -5604,7 +5635,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=23').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=24').catch(function () {});
       });
     }
   </script>
