@@ -3037,27 +3037,66 @@
     // ========== Feature 5 · AI 助手秘书(语音+图片) ==========
     function renderAISecretaryWidget(body) {
       globalState.aiSecretaryItems = globalState.aiSecretaryItems || [];
+      const mode = body.dataset.aiMode || 'text';
       body.innerHTML = `
         <div class="ai-sec-mode-row">
-          <button class="ai-sec-mode active" data-mode="text" onclick="aiSecSetMode(this)">📝 文字</button>
-          <button class="ai-sec-mode" data-mode="voice" onclick="aiSecSetMode(this)">🎤 语音</button>
-          <button class="ai-sec-mode" data-mode="image" onclick="aiSecSetMode(this)">🖼 图片</button>
+          <button class="ai-sec-mode ${mode==='text'?'active':''}" data-mode="text" onclick="aiSecSetMode(this)">📝 文字</button>
+          <button class="ai-sec-mode ${mode==='voice'?'active':''}" data-mode="voice" onclick="aiSecSetMode(this)">🎤 语音</button>
+          <button class="ai-sec-mode ${mode==='image'?'active':''}" data-mode="image" onclick="aiSecSetMode(this)">🖼 图片</button>
+          <button class="ai-sec-mode ${mode==='link'?'active':''}" data-mode="link" onclick="aiSecSetMode(this)">🔗 链接</button>
         </div>
-        <textarea class="ai-sec-text" placeholder="告诉我今天要做啥，或要分类的文本…"></textarea>
-        <div class="ai-sec-controls">
-          <button class="ai-sec-btn" id="aiSecVoiceBtn" onclick="aiSecToggleVoice()">🎤 开始录音</button>
-          <label class="ai-sec-btn" style="cursor:pointer">📎 图片<input type="file" accept="image/*" style="display:none" onchange="aiSecHandleImage(event)"></label>
-          <button class="ai-sec-btn primary" onclick="aiSecSend()">✨ 让 AI 分类</button>
-        </div>
+        ${mode === 'link'
+          ? `<input type="url" class="ai-sec-text" id="aiSecUrl" placeholder="粘贴链接（如 https://xiaohongshu.com/...）" style="min-height:32px;max-height:40px;margin-bottom:6px">
+             <input type="text" class="ai-sec-text" placeholder="备注（可选）" style="min-height:32px;max-height:40px;margin-bottom:6px">
+             <div class="ai-sec-controls"><button class="ai-sec-btn primary" onclick="aiSecSendLink()">🔗 分类此链接</button></div>`
+          : `<textarea class="ai-sec-text" placeholder="告诉我今天要做啥，或要分类的文本…"></textarea>
+             <div class="ai-sec-controls">
+               <button class="ai-sec-btn" id="aiSecVoiceBtn" onclick="aiSecToggleVoice()">🎤 开始录音</button>
+               <label class="ai-sec-btn" style="cursor:pointer">📎 图片<input type="file" accept="image/*" style="display:none" onchange="aiSecHandleImage(event)"></label>
+               <button class="ai-sec-btn primary" onclick="aiSecSend()">✨ 让 AI 分类</button>
+             </div>`}
         <div class="ai-sec-attach-row" id="aiSecAttach"></div>
         <div class="ai-sec-arrange" id="aiSecArrange"></div>
-        <div class="ai-sec-hint">💡 语音直接录入,图片选好后由 AI 自动识别并归类到对应分区(今日待办/备考/自律/运营/家庭/计划)。</div>
+        <div class="ai-sec-hint">💡 文字/语音/图片/链接都行，AI 自动识别关键词或域名分类到对应分区。</div>
       `;
       aiSecRenderPending(body);
     }
     function aiSecSetMode(btn) {
-      btn.parentNode.querySelectorAll('.ai-sec-mode').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      const body = btn.closest('.widget-body');
+      body.dataset.aiMode = btn.dataset.mode;
+      renderAISecretaryWidget(body);
+    }
+    function aiSecSendLink() {
+      const url = ((document.getElementById('aiSecUrl') || {}).value || '').trim();
+      if (!url || !url.startsWith('http')) { alert('请粘贴有效链接'); return; }
+      const note = document.querySelector('.card[data-widget="aiSecretary"] .ai-sec-text:nth-child(2)')?.value?.trim() || '';
+      const rule = aiSecClassifyLink(url, note);
+      const item = { id: Date.now(), text: `[链接] ${rule.label} - ${url}`, category: rule.cat, list: rule.list, ts: Date.now(), confirmed: false };
+      globalState.aiSecretaryItems = globalState.aiSecretaryItems || [];
+      globalState.aiSecretaryItems.unshift(item);
+      saveGlobalState();
+      const body = document.querySelector('.card[data-widget="aiSecretary"] .widget-body');
+      if (body) aiSecRenderPending(body);
+    }
+    // 链接域名 → 分区分类规则
+    function aiSecClassifyLink(url, note) {
+      const full = (url + ' ' + (note || '')).toLowerCase();
+      // 运营
+      if (full.includes('xiaohongshu') || full.includes('douyin') || full.includes('kuaishou') || full.includes('weibo') || full.includes('bilibili') || full.includes('公众号') || full.includes('mp.weixin')) return { cat: '运营', label: '💼 运营', list: 'opsTasks' };
+      // 备考
+      if (full.includes('zhihu') || full.includes('csdn') || full.includes('jianshu') || full.includes('leetcode') || full.includes('nowcoder') || full.includes('gongkao') || full.includes('exam') || full.includes('study') || full.includes('course') || full.includes('edu')) return { cat: '备考', label: '📚 备考', list: 'examTasks' };
+      // 自律
+      if (full.includes('keep') || full.includes('nike') || full.includes('fitness') || full.includes('health') || full.includes('run') || full.includes('diet') || full.includes('food') || full.includes('recipe') || full.includes('exercise')) return { cat: '自律', label: '🏃 自律', list: 'selfTasks' };
+      // 家庭
+      if (full.includes('pet') || full.includes('dog') || full.includes('cat') || full.includes('family') || full.includes('house') || full.includes('home')) return { cat: '家庭', label: '🏡 家庭', list: 'familyTasks' };
+      // 购物
+      if (full.includes('taobao') || full.includes('jd.com') || full.includes('pdd') || full.includes('tmall') || full.includes('vip.com') || full.includes('amazon')) return { cat: '购物', label: '🛍 记账', list: 'expenses' };
+      // 购物(expenses 不是 task list,所以存为待办)
+      if (full.includes('shop') || full.includes('buy') || full.includes('mall')) return { cat: '今日待办', label: '📝 待办', list: 'todos' };
+      // 学习
+      if (full.includes('english') || full.includes('word') || full.includes('dict') || full.includes('youdao') || full.includes('cambridge') || full.includes('language')) return { cat: '自律', label: '📖 英语', list: 'selfTasks' };
+      // 默认
+      return { cat: '计划', label: '📅 计划', list: 'plans' };
     }
     let _aiSecRecorder = null;
     let _aiSecChunks = [];
@@ -5001,7 +5040,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=8').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=9').catch(function () {});
       });
     }
   </script>
