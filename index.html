@@ -1689,11 +1689,13 @@
     </div>
     <div class="ai-intro">你好，我是星回。无论备考、工作还是生活，我都会陪在你身边。试试下方的快捷指令，或者直接跟我说你想做什么。</div>
 
-    <div class="quick-title">选择 AI 平台</div>
-    <div class="ai-providers">
-      <div class="ai-provider active" data-provider="doubao" onclick="selectProvider('doubao')"><div class="logo">🌟</div><div>豆包</div></div>
-      <div class="ai-provider" data-provider="gpt" onclick="selectProvider('gpt')"><div class="logo">🤖</div><div>ChatGPT</div></div>
-      <div class="ai-provider" data-provider="deepseek" onclick="selectProvider('deepseek')"><div class="logo">🐋</div><div>DeepSeek</div></div>
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:rgba(10,186,181,0.1);border:1px solid var(--tiffany-light);margin-bottom:12px;cursor:pointer" onclick="openStarDialog()" title="点击展开独立对话框">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--tiffany),#5EE7E3);display:flex;align-items:center;justify-content:center;font-size:18px">🌟</div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:600;color:var(--tiffany-dark)">打开独立对话框</div>
+        <div style="font-size:10px;color:var(--text-secondary)">💬 大窗口聊 · 历史滚动更顺畅</div>
+      </div>
+      <div style="font-size:16px;color:var(--tiffany)">↗</div>
     </div>
 
     <div class="quick-title">快捷指令</div>
@@ -5455,7 +5457,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=19').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=20').catch(function () {});
       });
     }
   </script>
