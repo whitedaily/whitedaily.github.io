@@ -1223,12 +1223,34 @@
 .fit-photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .fit-photo-viewer { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .fit-photo-viewer img { max-width: 92vw; max-height: 92vh; border-radius: 12px; }
+
+/* ===== 英语学习小组件 ===== */
+.eng-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+.eng-tab { flex: 1; text-align: center; padding: 6px 4px; border-radius: 8px; border: 1px solid var(--border); font-size: 11px; cursor: pointer; background: rgba(255,255,255,0.5); transition: all 0.2s; }
+.eng-tab.active { background: var(--tiffany); color: #fff; border-color: var(--tiffany); }
+.eng-word-form { display: flex; gap: 6px; margin-bottom: 8px; }
+.eng-word-form input { flex: 1; padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; }
+.eng-word-form button { padding: 6px 12px; border: none; border-radius: 8px; background: var(--tiffany); color: #fff; font-size: 12px; cursor: pointer; }
+.eng-word-bar { height: 6px; background: var(--border); border-radius: 3px; margin: 8px 0; overflow: hidden; }
+.eng-word-fill { height: 100%; background: linear-gradient(90deg, var(--tiffany), #5EE7E3); border-radius: 3px; transition: width 0.3s; }
+.eng-word-today { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
+.eng-word-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 8px; background: rgba(255,255,255,0.45); font-size: 12px; }
+.eng-word-item .word { font-weight: 700; color: var(--tiffany-dark); min-width: 80px; }
+.eng-word-item .meaning { flex: 1; color: var(--text-secondary); font-size: 11px; }
+.eng-word-item button { background: transparent; border: none; color: #E17055; cursor: pointer; font-size: 12px; }
+.eng-oral-form { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; align-items: center; }
+.eng-oral-form input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; }
+.eng-oral-form button { padding: 6px 12px; border: none; border-radius: 8px; background: var(--tiffany); color: #fff; font-size: 11px; cursor: pointer; }
+.eng-oral-list { max-height: 200px; overflow-y: auto; }
+.eng-oral-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 8px; background: rgba(255,255,255,0.45); margin-bottom: 4px; font-size: 12px; }
+.eng-oral-item .oral-date { font-size: 10px; color: var(--text-muted); min-width: 38px; }
+.eng-oral-item .oral-dur { font-weight: 700; color: var(--tiffany-dark); min-width: 36px; }
   </style>
   <script>
     // 注册 Service Worker（让工作台可作为 App 安装到手机桌面；file:// 下静默失败）
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=6').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=7').catch(function () {});
       });
     }
   </script>
@@ -1854,7 +1876,8 @@
       familyCheckin: { title: '🏠 家庭打卡', desc: '成员回家自动打卡', render: renderFamilyCheckinWidget },
       lifeSkills: { title: '📚 生活技能', desc: '用药/急救/偏方/技能', render: renderLifeSkillsWidget },
       expenseTracker: { title: '💰 每日记账', desc: '消费分类·收支汇总·超支提醒', render: renderExpenseTrackerWidget },
-      fitnessTracker: { title: '💪 健身打卡', desc: '训练计划·围度记录·相册', render: renderFitnessTrackerWidget }
+      fitnessTracker: { title: '💪 健身打卡', desc: '训练计划·围度记录·相册', render: renderFitnessTrackerWidget },
+      englishLearning: { title: '📖 英语学习', desc: '单词打卡·口语跟读练习', render: renderEnglishLearningWidget }
     };
 
     const providers = {
@@ -1933,7 +1956,10 @@
       expenseBudget: { monthly: 5000, alertAt: 80 },
       fitnessGoal: { goal: 'lose', targetWeight: 60, currentWeight: 68 },
       fitnessMeasurements: [],
-      fitnessPhotos: []
+      fitnessPhotos: [],
+      englishWords: [],
+      englishOral: [],
+      englishWordGoal: 30
     };
 
     let appState = {
@@ -2005,6 +2031,9 @@
       globalState.fitnessGoal = globalState.fitnessGoal || { goal: 'lose', targetWeight: 60, currentWeight: 68 };
       globalState.fitnessMeasurements = globalState.fitnessMeasurements || [];
       globalState.fitnessPhotos = globalState.fitnessPhotos || [];
+      globalState.englishWords = globalState.englishWords || [];
+      globalState.englishOral = globalState.englishOral || [];
+      globalState.englishWordGoal = globalState.englishWordGoal || 30;
       ensureDefaultWorkbench();
       // URL 自动打卡检测
       setTimeout(autoCheckinFromURL, 200);
@@ -4136,6 +4165,107 @@
       viewer.innerHTML = '<img src="' + url + '" alt="训练照">';
       viewer.onclick = () => viewer.remove();
       document.body.appendChild(viewer);
+    }
+
+    // ========== 英语学习小组件 ==========
+    function renderEnglishLearningWidget(body) {
+      globalState.englishWords = globalState.englishWords || [];
+      globalState.englishOral = globalState.englishOral || [];
+      globalState.englishWordGoal = globalState.englishWordGoal || 30;
+      const today = new Date().toISOString().slice(0, 10);
+      const todayWords = (globalState.englishWords || []).filter(w => w.date === today);
+      const todayOral = (globalState.englishOral || []).filter(o => o.date === today);
+      const wordGoal = globalState.englishWordGoal;
+      const wordPct = Math.min(100, Math.round(todayWords.length / wordGoal * 100));
+
+      const tab = body.dataset.engTab || 'word';
+      const wordHTML = `
+        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px">🎯 今日目标: <b style="color:var(--tiffany-dark)">${todayWords.length}</b> / <b>${wordGoal}</b> 词</div>
+        <div class="eng-word-bar"><div class="eng-word-fill" style="width:${wordPct}%;${wordPct>=100?'background:linear-gradient(90deg,#2ECC71,#27AE60)':''}"></div></div>
+        <div class="eng-word-form">
+          <input type="text" id="eng-word" placeholder="英文单词" onkeypress="if(event.key==='Enter')engAddWord()">
+          <input type="text" id="eng-meaning" placeholder="中文含义" onkeypress="if(event.key==='Enter')engAddWord()" style="flex:1">
+          <button onclick="engAddWord()">+</button>
+        </div>
+        <div class="eng-word-today">${todayWords.length === 0
+          ? '<div style="opacity:0.5;text-align:center;padding:10px;font-size:11px">今天还没背单词哦</div>'
+          : todayWords.map(w => `
+            <div class="eng-word-item">
+              <span class="word">${escapeHtml(w.word||'')}</span>
+              <span class="meaning">${escapeHtml(w.meaning||'')}</span>
+              <button onclick="engDelWord(${w.id})">×</button>
+            </div>`).join('')}</div>
+        <div class="exp-budget-row" style="margin-top:4px">
+          <span>每日目标(词):</span><input type="number" id="eng-goal-val" value="${wordGoal}" onchange="engSetGoal(parseInt(this.value)||30)" min="1" max="500">
+        </div>`;
+
+      const oralHTML = `
+        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px">🎙️ 今日跟读: <b style="color:var(--tiffany-dark)">${todayOral.length}</b> 次</div>
+        <div class="eng-oral-form">
+          <input type="text" id="eng-oral-content" placeholder="练习内容（如: VOA常速 3min）" style="flex:1" onkeypress="if(event.key==='Enter')engAddOral()">
+          <input type="number" id="eng-oral-dur" placeholder="分钟" style="width:60px" min="1" onkeypress="if(event.key==='Enter')engAddOral()">
+          <button onclick="engAddOral()">记录</button>
+        </div>
+        <div class="eng-oral-list">${todayOral.length === 0
+          ? '<div style="opacity:0.5;text-align:center;padding:10px;font-size:11px">今天还没跟读练习</div>'
+          : todayOral.map(o => `
+            <div class="eng-oral-item">
+              <span class="oral-date">${(o.time||'--:--')}</span>
+              <span style="flex:1">${escapeHtml(o.content||'')}</span>
+              <span class="oral-dur">${o.dur||0} min</span>
+              <button onclick="engDelOral(${o.id})">×</button>
+            </div>`).join('')}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:6px">📊 历史: 本周 ${(globalState.englishOral||[]).filter(o => {
+          const d = new Date(); d.setHours(0,0,0,0);
+          const start = new Date(d); start.setDate(d.getDate()-d.getDay());
+          return o.date >= start.toISOString().slice(0,10) && o.date <= d.toISOString().slice(0,10);
+        }).length} 次 / 累计 ${(globalState.englishOral||[]).length} 次</div>`;
+
+      body.innerHTML = `
+        <div class="eng-tabs">
+          <div class="eng-tab ${tab==='word'?'active':''}" onclick="engSwitchTab('word', this)">📝 单词打卡</div>
+          <div class="eng-tab ${tab==='oral'?'active':''}" onclick="engSwitchTab('oral', this)">🎙️ 口语跟读</div>
+        </div>
+        <div id="eng-panel">${tab === 'word' ? wordHTML : oralHTML}</div>`;
+    }
+
+    function engSwitchTab(tab, btn) {
+      const body = btn.closest('.widget-body');
+      body.dataset.engTab = tab;
+      renderEnglishLearningWidget(body);
+    }
+    function engAddWord() {
+      const word = (document.getElementById('eng-word')||{}).value || '';
+      const meaning = (document.getElementById('eng-meaning')||{}).value || '';
+      if (!word.trim()) { alert('请输入单词'); return; }
+      globalState.englishWords = globalState.englishWords || [];
+      globalState.englishWords.push({ id: Date.now(), word: word.trim(), meaning: meaning.trim(), date: new Date().toISOString().slice(0,10), ts: Date.now() });
+      saveGlobalState();
+      renderHome();
+    }
+    function engDelWord(id) {
+      globalState.englishWords = (globalState.englishWords || []).filter(w => w.id !== id);
+      saveGlobalState();
+      renderHome();
+    }
+    function engAddOral() {
+      const content = (document.getElementById('eng-oral-content')||{}).value || '';
+      const dur = parseInt((document.getElementById('eng-oral-dur')||{}).value) || 0;
+      if (!content.trim() && !dur) { alert('请填写练习内容和时长'); return; }
+      globalState.englishOral = globalState.englishOral || [];
+      globalState.englishOral.push({ id: Date.now(), content: content.trim(), dur, date: new Date().toISOString().slice(0,10), time: new Date().toTimeString().slice(0,5), ts: Date.now() });
+      saveGlobalState();
+      renderHome();
+    }
+    function engDelOral(id) {
+      globalState.englishOral = (globalState.englishOral || []).filter(o => o.id !== id);
+      saveGlobalState();
+      renderHome();
+    }
+    function engSetGoal(val) {
+      globalState.englishWordGoal = val;
+      saveGlobalState();
+      renderHome();
     }
 
     // ========== 设置面板 ==========
