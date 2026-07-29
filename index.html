@@ -1121,12 +1121,67 @@
       width: 100%; padding: 6px 10px; border: 1px solid var(--border);
       border-radius: 8px; font-size: 12px; margin-bottom: 10px;
     }
+
+    /* ===== AI 内嵌对话记录 ===== */
+    .ai-chat-log {
+      margin-top: 10px;
+      max-height: 380px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 10px;
+    }
+    .ai-chat-item {
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.4);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .ai-chat-meta {
+      font-size: 10px; color: var(--text-muted);
+      margin-bottom: 6px; display: flex; gap: 8px;
+    }
+    .ai-bubble {
+      padding: 7px 10px; border-radius: 10px;
+      font-size: 12px; line-height: 1.55;
+      margin-bottom: 5px; word-break: break-word;
+      white-space: pre-wrap;
+    }
+    .ai-bubble.q-bubble {
+      background: rgba(255,255,255,0.75);
+      color: var(--text);
+      border-left: 3px solid var(--tiffany);
+    }
+    .ai-bubble.a-bubble {
+      background: rgba(10,186,181,0.12);
+      color: var(--text);
+      border-left: 3px solid var(--tiffany-dark);
+    }
+    .ai-bubble.a-bubble.pending {
+      opacity: 0.65;
+      background: rgba(255,236,179,0.4);
+      font-style: italic;
+      border-left-color: #FFA500;
+    }
+    .ai-chat-actions {
+      display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px;
+    }
+    .ai-chat-actions button {
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.55);
+      border-radius: 6px;
+      font-size: 10px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .ai-chat-actions button:hover { background: var(--tiffany-light); color: var(--tiffany-dark); }
+    .ai-chat-actions button.pasted { border-color: var(--tiffany); background: var(--tiffany-light); color: var(--tiffany-dark); }
   </style>
   <script>
     // 注册 Service Worker（让工作台可作为 App 安装到手机桌面；file:// 下静默失败）
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=4').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=5').catch(function () {});
       });
     }
   </script>
@@ -1514,6 +1569,8 @@
       <div class="quick-chip" onclick="aiAsk('生成棉花糖喂食菜单')">生成棉花糖喂食菜单</div>
     </div>
 
+    <div class="ai-chat-log" id="ai-chat-log"></div>
+
     <div class="ai-input-wrap">
       <textarea class="ai-input" id="ai-input" placeholder="输入指令，如：生成今日备考计划..."></textarea>
       <div class="ai-send"><button onclick="aiSend()">发送</button></div>
@@ -1821,7 +1878,8 @@
         { key: 'skill', name: '🔧 生活技能', items: [] },
         { key: 'contact', name: '📞 紧急联系', items: [] }
       ]},
-      pageWidgets: { plan: [], exam: [], self: [], ops: [], family: [], stats: [] }
+      pageWidgets: { plan: [], exam: [], self: [], ops: [], family: [], stats: [] },
+      aiChatHistory: []
     };
 
     let appState = {
@@ -1887,6 +1945,7 @@
         wb.glassNav = wb.glassNav || false;
         wb.pageWidgets = wb.pageWidgets || { plan: [], exam: [], self: [], ops: [], family: [], stats: [] };
       });
+      globalState.aiChatHistory = globalState.aiChatHistory || [];
       ensureDefaultWorkbench();
       // URL 自动打卡检测
       setTimeout(autoCheckinFromURL, 200);
@@ -3843,16 +3902,88 @@
     function aiAsk(text) { document.getElementById('ai-input').value = text; aiSend(); }
     function aiOpen(url) { window.open(url, '_blank'); }
     function aiSend() {
-      const text = document.getElementById('ai-input').value.trim();
+      const input = document.getElementById('ai-input');
+      const text = (input ? input.value : '').trim();
       if (!text) return;
-      const p = providers[globalState.provider];
+      globalState.aiChatHistory = globalState.aiChatHistory || [];
+      globalState.aiChatHistory.unshift({
+        id: Date.now(),
+        q: text,
+        a: '',
+        provider: globalState.provider,
+        ts: new Date().toISOString()
+      });
+      if (input) input.value = '';
+      saveGlobalState();
+      renderAIChat();
+    }
+
+    function renderAIChat() {
+      const log = document.getElementById('ai-chat-log');
+      if (!log) return;
+      const list = globalState.aiChatHistory || [];
+      if (list.length === 0) {
+        log.innerHTML = '<div style="opacity:0.5;text-align:center;padding:18px;font-size:11px">还没有对话 👇 输入或选一个快捷指令开始</div>';
+        return;
+      }
+      log.innerHTML = list.slice(0, 30).map(c => {
+        const p = providers[c.provider] || providers.doubao;
+        const ts = (c.ts || '').slice(5, 16).replace('T', ' ');
+        const hasAnswer = !!(c.a && c.a.trim());
+        return `
+          <div class="ai-chat-item" data-id="${c.id}">
+            <div class="ai-chat-meta"><span>${ts}</span><span>📡 ${escapeHtml(p.name)}</span><span style="margin-left:auto;cursor:pointer;color:var(--text-muted)" onclick="aiDel(${c.id})" title="删除">🗑️</span></div>
+            <div class="ai-bubble q-bubble">❓ ${escapeHtml(c.q)}</div>
+            ${hasAnswer
+              ? `<div class="ai-bubble a-bubble">${escapeHtml(c.a).replace(/\n/g,'<br>')}</div>`
+              : `<div class="ai-bubble a-bubble pending">⏳ 等待回答... 打开外部 AI 后粘贴回来</div>`}
+            <div class="ai-chat-actions">
+              <button onclick="aiCopyQ(${c.id})">📋 复制问题</button>
+              <button onclick="aiOpenForChat(${c.id})">🔗 打开 ${escapeHtml(p.name)}</button>
+              ${hasAnswer
+                ? `<button class="pasted" onclick="aiPasteAnswer(${c.id})">✏️ 改回答</button>`
+                : `<button onclick="aiPasteAnswer(${c.id})">📥 粘贴回答</button>`}
+              ${hasAnswer ? `<button onclick="aiCopyA(${c.id})">📋 复制回答</button>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function aiCopyQ(id) {
+      const c = (globalState.aiChatHistory || []).find(x => x.id === id);
+      if (!c) return;
+      try { await navigator.clipboard.writeText(c.q); showHint('✅ 问题已复制'); }
+      catch(e) { prompt('复制失败,请手动复制:', c.q); }
+    }
+    async function aiCopyA(id) {
+      const c = (globalState.aiChatHistory || []).find(x => x.id === id);
+      if (!c || !c.a) return;
+      try { await navigator.clipboard.writeText(c.a); showHint('✅ 回答已复制'); }
+      catch(e) { prompt('复制失败,请手动复制:', c.a); }
+    }
+    function aiOpenForChat(id) {
+      const c = (globalState.aiChatHistory || []).find(x => x.id === id);
+      if (!c) return;
+      const p = providers[c.provider] || providers.doubao;
       let url = p.url;
-      if (globalState.provider === 'doubao' || globalState.provider === 'deepseek') {
-        url = p.url + '?' + p.param + '=' + encodeURIComponent(text);
-      } else {
-        url = p.url + '?temporary-chat=true';
+      if (c.provider === 'doubao' || c.provider === 'deepseek') {
+        url = p.url + '?' + p.param + '=' + encodeURIComponent(c.q);
       }
       window.open(url, '_blank');
+    }
+    function aiPasteAnswer(id) {
+      const c = (globalState.aiChatHistory || []).find(x => x.id === id);
+      if (!c) return;
+      const text = prompt('粘贴 AI 回答到这里:', c.a || '');
+      if (text === null) return;
+      c.a = text.trim();
+      saveGlobalState();
+      renderAIChat();
+    }
+    function aiDel(id) {
+      globalState.aiChatHistory = (globalState.aiChatHistory || []).filter(x => x.id !== id);
+      saveGlobalState();
+      renderAIChat();
     }
 
     // ========== 设置面板 ==========
@@ -4132,6 +4263,7 @@
       renderNav(); renderMobileNav();
       renderHome(); renderAll(); updateDate(); startClock(); renderCalendar(); loadWeather();
       renderSelfFavorites();
+      renderAIChat();
       updateEditModeUI();
       initSync();
       const pd = document.getElementById('plan-date'); if (pd) pd.value = new Date().toISOString().split('T')[0];
