@@ -1710,11 +1710,74 @@
 
     <div class="ai-chat-log" id="ai-chat-log"></div>
 
-    <div class="ai-input-wrap">
-      <textarea class="ai-input" id="ai-input" placeholder="输入指令，如：生成今日备考计划..."></textarea>
-      <div class="ai-send"><button onclick="aiSend()">发送</button></div>
+    <div class="ai-input-wrap" id="right-input-wrap" style="margin-top:8px">
+      <div class="ai-sec-mode-row" style="display:flex;gap:4px;margin-bottom:6px">
+        <button class="ai-sec-mode active" data-mode="text" onclick="rightPanelMode(this)">📝 文字</button>
+        <button class="ai-sec-mode" data-mode="voice" onclick="rightPanelMode(this)">🎤 语音</button>
+        <button class="ai-sec-mode" data-mode="image" onclick="rightPanelMode(this)">🖼 图片</button>
+        <button class="ai-sec-mode" data-mode="link" onclick="rightPanelMode(this)">🔗 链接</button>
+      </div>
+      <textarea class="ai-input ai-sec-text" id="ai-input" placeholder="输入文本，按回车..." style="min-height:36px;max-height:80px;font-size:12px"></textarea>
+      <input type="url" class="ai-input ai-sec-text" id="rp-url" placeholder="粘贴链接..." style="display:none;min-height:0;font-size:12px">
+      <div class="ai-sec-controls" style="display:flex;gap:6px;margin-top:6px;align-items:center">
+        <button class="ai-sec-btn" id="rp-voice-btn" onclick="aiSecToggleVoice()" style="font-size:11px">🎤 开始录音</button>
+        <label class="ai-sec-btn" style="cursor:pointer;font-size:11px">📎 图片<input type="file" accept="image/*" style="display:none" onchange="aiSecHandleImage(event)"></label>
+        <button class="ai-sec-btn primary" onclick="aiSend()" style="font-size:11px;margin-left:auto">✨ 发送</button>
+      </div>
     </div>
+    <div class="ai-sec-attach-row" id="aiSecAttach" style="margin-top:6px"></div>
+    <div class="ai-sec-arrange" id="aiSecArrange" style="margin-top:8px"></div>
+
+    <div class="quick-title">📨 对话记录</div>
+    <div class="ai-chat-log" id="ai-chat-log"></div>
+
+    <div class="ai-sec-hint" style="font-size:10px;color:var(--text-muted);margin-top:6px;line-height:1.4">💡 文字/语音/图片/链接都支持，AI 自动识别关键词或域名分类到对应分区。下方「待确认」列表可一键加入待办/备考/自律/运营/家庭。</div>
   </aside>
+
+  <script>
+    // 右栏 4 模式切换
+    function rightPanelMode(btn) {
+      btn.parentNode.querySelectorAll('.ai-sec-mode').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const mode = btn.dataset.mode;
+      const wrap = document.getElementById('right-input-wrap');
+      const text = document.getElementById('ai-input');
+      const url = document.getElementById('rp-url');
+      const voiceBtn = document.getElementById('rp-voice-btn');
+      const sendBtn = wrap.querySelector('.primary');
+      if (mode === 'text') {
+        text.style.display = ''; text.placeholder = '输入文本，按回车...';
+        url.style.display = 'none';
+        voiceBtn.style.display = ''; sendBtn.textContent = '✨ 发送';
+      } else if (mode === 'voice') {
+        text.style.display = ''; text.placeholder = '（语音将自动转写到这里）';
+        url.style.display = 'none';
+        voiceBtn.style.display = ''; sendBtn.textContent = '🎤 录完发送';
+      } else if (mode === 'image') {
+        text.style.display = ''; text.placeholder = '图片描述（可选），选图后自动附加...';
+        url.style.display = 'none';
+        voiceBtn.style.display = 'none'; sendBtn.textContent = '🖼 发送图片';
+      } else if (mode === 'link') {
+        text.style.display = 'none';
+        url.style.display = '';
+        voiceBtn.style.display = 'none'; sendBtn.textContent = '🔗 分类链接';
+      }
+    }
+    // 右栏"链接模式"发送处理
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlInput = document.getElementById('rp-url');
+      if (urlInput) urlInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          const url = urlInput.value.trim();
+          if (!url || !url.startsWith('http')) { alert('请粘贴有效链接'); return; }
+          // 复用 aiSecSendLink：把链接写入 ai-input + 走链接模式分支
+          const ta = document.getElementById('ai-input');
+          ta.value = url; ta.dataset.linkMode = '1';
+          aiSecSendLink();
+          urlInput.value = '';
+        }
+      });
+    });
 
   <!-- 编辑模式：添加小组件浮动按钮 -->
   <button class="fab" id="fab-add" onclick="openWidgetLib()">+</button>
@@ -3372,6 +3435,23 @@
           </div>
         `).join('');
       });
+      // 同步到右栏待确认区
+      const rp = document.getElementById('aiSecArrange');
+      if (rp) {
+        const items = (globalState.aiSecretaryItems || []).slice(0, 6);
+        if (items.length === 0) {
+          rp.innerHTML = '<div class="ai-sec-arrange-title">📥 待确认</div><div style="opacity:0.5;text-align:center;padding:8px;font-size:11px">暂无待办,试试点上面的 ✨ 让 AI 分类</div>';
+          return;
+        }
+        rp.innerHTML = '<div class="ai-sec-arrange-title">📥 待确认(点击 ✅ 加入对应分区)</div>' + items.map(it => `
+          <div class="ai-sec-arr-item">
+            <span class="text">${escapeHtml(it.text.length > 36 ? it.text.slice(0, 36) + '…' : it.text)}</span>
+            <span class="cat">${escapeHtml(it.category)}</span>
+            <button onclick="aiSecConfirm(${it.id})">✅</button>
+            <button onclick="aiSecSkip(${it.id})">×</button>
+          </div>
+        `).join('');
+      }
     }
     function aiSecConfirm(id) {
       const items = globalState.aiSecretaryItems || [];
@@ -5457,7 +5537,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=20').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=21').catch(function () {});
       });
     }
   </script>
