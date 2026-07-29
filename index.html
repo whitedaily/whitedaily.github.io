@@ -4519,13 +4519,80 @@
       globalState.aiChatHistory.unshift({
         id: Date.now(),
         q: text,
-        a: '',
+        a: smartAIRespond(text, aiSecGetAttachments()),
         provider: globalState.provider,
         ts: new Date().toISOString()
       });
       if (input) input.value = '';
       saveGlobalState();
       renderAIChat();
+    }
+
+    // ========== 星回智能回复（不依赖后端） ==========
+    function smartAIRespond(text, att) {
+      const t = (text || '').toLowerCase();
+      const hasImg = !!(att && att.image);
+      const hasVoice = !!(att && att.voice);
+      const head = hasImg ? '🖼️ [附带图片]\n' : (hasVoice ? '🎤 [附带语音]\n' : '');
+
+      // 1. 链接分类（aiSecClassifyLink 已跑过）
+      if (/^https?:\/\//i.test(text)) {
+        const rule = aiSecClassifyLink(text, '');
+        return head + '链接已识别\n\n📌 域名分析后归类到：' + rule.label + '\n📦 已加入「待确认」→ 点 ✅ 即落入对应分区\n\n如需更精准分类（同时涉及两个分区），告诉我哪两个区。';
+      }
+
+      // 2. 周计划 / 时间分配
+      if (t.includes('本周') && (t.includes('计划') || t.includes('时间分配'))) {
+        return head + '本周时间分配建议（基于常见模式）：\n\n📅 工作日（周一~五）\n  • 早晨 30 分钟：英语单词打卡\n  • 上午 2 小时：备考（行测/申论专项）\n  • 下午 1 小时：运营任务（小红书笔记）\n  • 晚间 30 分钟：自律打卡 + 复盘\n\n📅 周末（周六/日）\n  • 上午 2 小时：周模考或错题复盘\n  • 下午：家庭 + 兴趣 + 休息\n\n🎯 建议：先用 3 天试运行，根据精力微调。需要我帮你拆成更细的每日 todo 吗？';
+      }
+
+      // 3. 公考素材
+      if (t.includes('公考') || (t.includes('素材') && t.includes('热门'))) {
+        return head + '公考热门素材方向（本周可关注）：\n\n🔥 时政热点\n  • 政府工作报告新提法（数字经济/新质生产力）\n  • 最新政策文件解读\n\n📚 申论素材\n  • 基层治理典型案例\n  • 科技创新/民生保障案例\n  • 优秀青年榜样人物\n\n📐 行测热点\n  • 数学资料分析最新题型\n  • 言语理解高频成语\n\n💡 建议：每天 20 分钟读「人民日报评论员文章」，积累 3 个金句。';
+      }
+
+      // 4. 小红书标题
+      if (t.includes('小红书') && (t.includes('标题') || t.includes('5组') || t.includes('生成'))) {
+        return head + '5 组小红书爆款标题（请把 [选题] 替换成你的主题）：\n\n1️⃣ 「[选题]」的5个隐藏好处，最后1个90%人不知道\n2️⃣ 每天坚持[选题]30天，我从xxx变成了xxx\n3️⃣ 别再[错误做法]！教你3招正确[选题]\n4️⃣ 普通人都能学的[选题]攻略（附步骤图）\n5️⃣ [选题]前vs后，变化大到朋友以为我去整容\n\n💡 替换 [选题] 成你具体主题，配高质量图片，互动率通常 ≥ 8%。';
+      }
+
+      // 5. 备考效率分析
+      if (t.includes('备考') && (t.includes('效率') || t.includes('分析'))) {
+        return head + '备考效率自检清单：\n\n⏱ 学习时长\n  • 本周实际有效学习时间 vs 目标时长\n  • 番茄钟完成数 / 计划数\n\n📊 正确率\n  • 行测模考正确率（建议 ≥ 75%）\n  • 申论批改平均得分（建议 ≥ 65）\n\n🧠 状态\n  • 错题复盘完成度\n  • 模考时间分配是否合理\n\n💡 优化：把行测做题时间从平均 60s/题压到 50s/题，多出的 10 分钟给资料分析。';
+      }
+
+      // 6. 减脂食谱
+      if (t.includes('减脂') || (t.includes('食谱') && t.includes('下周'))) {
+        return head + '下周减脂食谱模板（1500 kcal/日参考）：\n\n🌅 早餐\n  • 周一-三：燕麦+水煮蛋+小番茄\n  • 周四-日：全麦面包+牛油果+牛奶\n\n☀️ 午餐\n  • 周一/三：糙米饭+西兰花+蒸鱼\n  • 周二/五：藜麦+鸡胸肉+彩椒\n  • 周四/六：荞麦面+番茄牛肉\n  • 周日：自由日（别暴食就行）\n\n🌙 晚餐\n  • 周一-六：杂粮粥+水煮菜+豆腐\n\n💧 日饮水 2000ml，戒含糖饮料。';
+      }
+
+      // 7. 宠物
+      if (t.includes('猫') || t.includes('狗') || t.includes('棉花糖') || t.includes('喂食')) {
+        return head + '宠物每日食谱建议（成猫/中型犬参考）：\n\n🍗 主粮：50-80g 干粮 / 日（分 2-3 餐）\n🥩 湿粮：每周 2-3 次（补水+口味变化）\n💧 饮水：常备清洁水 200ml+\n🥫 零食：训练奖励用，每周 ≤ 10% 总热量\n\n⚠️ 禁忌\n  • 巧克力、葡萄、洋葱、木糖醇\n  • 人类牛奶（乳糖不耐）\n  • 生鱼/生鸡蛋（沙门氏菌）\n\n需要按体重/品种精确计算，告诉我宠物体重。';
+      }
+
+      // 8. 英语学习
+      if (t.includes('英语') || t.includes('english') || t.includes('单词')) {
+        return head + '英语学习建议：\n\n📅 每日节奏（30 分钟）\n  • 10 分钟：背诵单词（艾宾浩斯复习法）\n  • 10 分钟：跟读练习（VOA 常速或 BBC）\n  • 10 分钟：听力 + 输出（用语音复述）\n\n💡 工具\n  • 单词：墨墨背单词 / Anki\n  • 跟读：喜马拉雅「每日英语听力」\n  • 口语：HelloTalk（找语伴）\n\n🎯 每天 30 个新词 + 90% 跟读准确率 = 3 个月可见效。';
+      }
+
+      // 9. 计划 / 安排
+      if (t.includes('下周') || t.includes('本周') || t.includes('安排')) {
+        return head + '周计划建议结构：\n\n📋 必备模块\n  • 核心工作（按优先级 1-2-3 排序）\n  • 自我提升（备考/学习/技能）\n  • 健康运动（每日 30+ 分钟）\n  • 家庭社交（每周至少 1 次）\n  • 复盘时间（周五/周六晚）\n\n⏰ 时间分配（建议）\n  • 60% 核心工作\n  • 20% 自我提升\n  • 10% 健康/家庭\n  • 10% 缓冲/复盘\n\n需要我帮你把周计划拆成每日 todo 吗？';
+      }
+
+      // 10. 阅读 / 读书
+      if (t.includes('阅读') || t.includes('读书')) {
+        return head + '每日阅读建议：\n\n📚 选书策略\n  • 主体 70%：专业/工作相关\n  • 调节 20%：传记/纪实\n  • 放松 10%：小说/散文\n\n⏰ 节奏\n  • 早起 20 分钟：纯文学/日记\n  • 睡前 30 分钟：专业书籍\n  • 周末 2 小时：长篇\n\n💡 笔记法：康奈尔笔记（关键词 + 摘要 + 思考），每周日复盘 30 分钟。';
+      }
+
+      // 11. 数据/涨粉
+      if (t.includes('收益') || t.includes('涨粉') || t.includes('数据')) {
+        return head + '小红书/抖音数据参考：\n\n📊 健康涨粉速率\n  • 新账号：100-500/周\n  • 成长期：500-2000/周\n  • 成熟期：稳定期持平\n\n🎯 关键指标\n  • 完播率 ≥ 35%\n  • 互动率 ≥ 5%\n  • 涨粉率 ≥ 2%\n\n💡 提升策略\n  • 标题前 8 字吸引力\n  • 封面：主色 ≤ 2 种 + 大字\n  • 前 3 秒钩子（留存关键）\n\n需要按你具体账号诊断吗？';
+      }
+
+      // 12. 默认回复（兜底）
+      return head + '收到你的输入 ✅\n\n🤖 星回已记录到对话历史。\n\n💡 下一步：\n  • 点击气泡下「🔗 打开 豆包/ChatGPT」→ 跳外部 AI 取深度回答\n  • 取到答案后回这里点击「✏️ 改回答」粘贴\n  • 或直接告诉我具体卡在哪，我给你拆 step-by-step\n\n💭 星回能开箱即用的提问模板：\n  • "本周时间分配" → 周计划\n  • "5 组小红书标题" → 标题模板\n  • "公考素材" → 时政热点\n  • "减脂食谱" → 一周菜单\n  • "英语学习" → 30 分钟日常\n\n来，让我陪你把每一件事落地。';
     }
 
     function renderAIChat() {
@@ -5537,7 +5604,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=22').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=23').catch(function () {});
       });
     }
   </script>
