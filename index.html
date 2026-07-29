@@ -1600,14 +1600,6 @@
       <div class="page-header"><div class="page-title"><h1 data-h1="family">家庭</h1><p class="editable-sub" data-sub="family" onclick="editPageSubtitle('family', this)" title="点击编辑副标题">宠物专属专栏 · 家庭事务管理</p></div></div>
       <div class="widget-grid">
         <div class="card glass">
-          <div class="card-title"><span><span class="emoji">🐶</span>宠物事项</span></div>
-          <div class="info-list">
-            <div class="info-item"><span class="left">第三针疫苗（四联+狂犬）</span><span class="tag">2025-08-15</span></div>
-            <div class="info-item"><span class="left">体内驱虫</span><span class="tag">2025-08-10</span></div>
-            <div class="info-item"><span class="left">体外驱虫</span><span class="tag">2025-08-10</span></div>
-          </div>
-        </div>
-        <div class="card glass">
           <div class="card-title"><span><span class="emoji">🏠</span>家庭待办</span></div>
           <div class="todo-input-wrap">
             <input type="text" class="todo-input" id="family-input" placeholder="添加家庭待办..." onkeypress="if(event.key==='Enter') addFamilyTask()">
@@ -5087,7 +5079,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=11').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=12').catch(function () {});
       });
     }
   </script>
