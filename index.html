@@ -1596,18 +1596,30 @@
     <section class="page" id="self">
       <div class="page-header"><div class="page-title"><h1 data-h1="self">自律</h1><p class="editable-sub" data-sub="self" onclick="editPageSubtitle('self', this)" title="点击编辑副标题">健康打卡 · 记录体重、热量与运动</p></div></div>
       <div class="widget-grid">
-        <div class="card glass">
-          <div class="card-title"><span><span class="emoji">🏃</span>今日健康打卡</span></div>
+        <div class="card glass" id="health-card">
+          <div class="card-title"><span><span class="emoji">🏃</span>今日健康打卡</span>
+            <button onclick="openHealthProfile()" style="background:transparent;border:none;color:var(--tiffany-dark);font-size:11px;cursor:pointer">⚙ 设置</button>
+          </div>
           <div class="health-form">
-            <div class="health-field"><label>当前体重</label><input type="number" id="weight" value="136.2" step="0.1" onchange="updateHealth()"> 斤</div>
-            <div class="health-field"><label>目标体重</label><input type="number" id="target-weight" value="120" step="0.1" onchange="updateHealth()"> 斤</div>
-            <div class="health-field"><label>今日摄入</label><input type="number" id="cal-in" value="1480" onchange="updateHealth()"> kcal</div>
-            <div class="health-field"><label>今日消耗</label><input type="number" id="cal-out" value="1600" onchange="updateHealth()"> kcal</div>
-            <div class="health-result">
-              <div class="row"><span class="label">距目标</span><span class="value down" id="diff-weight">-16.2 斤</span></div>
-              <div class="row"><span class="label">热量缺口</span><span class="value up" id="diff-cal">+120 kcal</span></div>
-              <div class="row"><span class="label">本周减重</span><span class="value down" id="week-loss">-3.8 斤</span></div>
+            <div class="health-field"><label>当前体重</label>
+              <input type="number" id="weight" step="0.1" onchange="updateHealth('currentWeight', this.value)"> 斤
             </div>
+            <div class="health-field"><label>目标体重</label>
+              <input type="number" id="target-weight" step="0.1" onchange="updateHealth('targetWeight', this.value)"> 斤
+            </div>
+            <div class="health-field"><label>今日摄入</label>
+              <input type="number" id="cal-in" onchange="updateHealth('intakeKcal', this.value)"> kcal
+            </div>
+            <div class="health-field"><label>今日消耗</label>
+              <input type="number" id="cal-out" onchange="updateHealth('burnKcal', this.value)"> kcal
+              <span style="font-size:10px;color:var(--text-muted);margin-left:4px" id="burn-breakdown">= 基础 + 运动</span>
+            </div>
+            <div class="health-result">
+              <div class="row"><span class="label">距目标</span><span class="value down" id="diff-weight">- 斤</span></div>
+              <div class="row"><span class="label">热量缺口</span><span class="value up" id="diff-cal">+ kcal</span></div>
+              <div class="row"><span class="label">本周减重</span><span class="value down" id="week-loss">- 斤</span></div>
+            </div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:6px">💡 跟星回说「吃了 XX」「跑了 XX 分钟」自动记入；运动消耗联动健身打卡</div>
           </div>
         </div>
         <div class="card glass">
@@ -2121,6 +2133,14 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="generic-modal" onclick="closeModalOnBackdrop(event)">
+    <div class="modal glass" onclick="event.stopPropagation()">
+      <div class="modal-close" onclick="closeGenericModal()">×</div>
+      <h2 id="generic-modal-title" style="margin-bottom:14px">弹窗</h2>
+      <div id="generic-modal-body"></div>
+    </div>
+  </div>
+
   <script>
     // ========== 默认配置 ==========
     const defaultNav = [
@@ -2231,6 +2251,18 @@
       fitnessGoal: { goal: 'lose', targetWeight: 60, currentWeight: 68 },
       fitnessMeasurements: [],
       fitnessPhotos: [],
+      health: {
+        currentWeight: 68.1,        // 当前体重(kg,自动转换自/斤)
+        targetWeight: 60,           // 目标体重(kg)
+        intakeKcal: 1480,           // 今日摄入
+        burnKcal: 1600,             // 今日消耗
+        exerciseKcal: 0,            // 运动消耗(自动累加)
+        basalMetabolism: 1500,      // 基础代谢(BMR) kcal
+        activityFactor: 1.2,        // 活动系数 久坐1.2/轻1.375/中1.55/高1.725
+        height: 170, age: 25, gender: 'female',  // 用于算BMR
+        weekStartWeight: 68.1,      // 本周开始体重(算周减重)
+        lastIntakeLog: []           // {ts, food, kcal} 本日食物日志
+      },
       englishWords: [],
       englishOral: [],
       englishWordGoal: 30,
@@ -2316,6 +2348,11 @@
       globalState.fitnessGoal = globalState.fitnessGoal || { goal: 'lose', targetWeight: 60, currentWeight: 68 };
       globalState.fitnessMeasurements = globalState.fitnessMeasurements || [];
       globalState.fitnessPhotos = globalState.fitnessPhotos || [];
+      globalState.health = globalState.health || {
+        currentWeight: 68.1, targetWeight: 60, intakeKcal: 1480, burnKcal: 1600,
+        exerciseKcal: 0, basalMetabolism: 1500, activityFactor: 1.2,
+        height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastIntakeLog: []
+      };
       globalState.englishWords = globalState.englishWords || [];
       globalState.englishOral = globalState.englishOral || [];
       globalState.englishWordGoal = globalState.englishWordGoal || 30;
@@ -4554,16 +4591,130 @@
     function deleteCountdown(id) { globalState.countdowns = globalState.countdowns.filter(i => i.id !== id); saveGlobalState(); renderCountdowns(); }
 
     // ========== 健康打卡 ==========
-    function updateHealth() {
-      const weight = parseFloat(document.getElementById('weight').value) || 0;
-      const target = parseFloat(document.getElementById('target-weight').value) || 0;
-      const calIn = parseFloat(document.getElementById('cal-in').value) || 0;
-      const calOut = parseFloat(document.getElementById('cal-out').value) || 0;
-      const diff = (weight - target).toFixed(1);
-      const calDiff = calOut - calIn;
-      document.getElementById('diff-weight').textContent = (diff > 0 ? '+' : '') + diff + ' 斤';
-      document.getElementById('diff-cal').textContent = (calDiff > 0 ? '+' : '') + calDiff + ' kcal';
-      document.getElementById('diff-cal').className = 'value ' + (calDiff >= 0 ? 'up' : 'down');
+    function updateHealth(field, value) {
+      const h = globalState.health;
+      if (field) {
+        const v = parseFloat(value);
+        if (!isNaN(v)) h[field] = v;
+        saveGlobalState();
+      }
+      // 自动算今日消耗 = 基础代谢 * 活动系数 + 运动消耗
+      const basalTotal = Math.round((h.basalMetabolism || 0) * (h.activityFactor || 1.2));
+      const autoBurn = basalTotal + (h.exerciseKcal || 0);
+      // 写入 input 时若与自动值不同(用户手动改过)保留用户值,否则跟随自动
+      if (field !== 'burnKcal' && document.activeElement !== document.getElementById('cal-out')) {
+        h.burnKcal = autoBurn;
+        const el = document.getElementById('cal-out');
+        if (el) el.value = autoBurn;
+      }
+      const breakdown = document.getElementById('burn-breakdown');
+      if (breakdown) breakdown.textContent = '= 基础' + basalTotal + ' + 运动' + (h.exerciseKcal||0);
+      // 距离/缺口/本周减重
+      const weight = h.currentWeight || 0;
+      const target = h.targetWeight || 0;
+      const diffW = (weight - target).toFixed(1);
+      const calDiff = (h.burnKcal || 0) - (h.intakeKcal || 0);
+      const weekLoss = ((h.weekStartWeight || weight) - weight).toFixed(1);
+      const set = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
+      set('diff-weight', (diffW > 0 ? '+' : '') + diffW + ' 斤');
+      set('diff-cal', (calDiff > 0 ? '+' : '') + calDiff + ' kcal');
+      const dc = document.getElementById('diff-cal');
+      if (dc) dc.className = 'value ' + (calDiff >= 0 ? 'up' : 'down');
+      set('week-loss', (weekLoss > 0 ? '-' : '+') + Math.abs(weekLoss) + ' 斤');
+    }
+
+    // 健康档案(BMR/活动系数/身高体重年龄)
+    function openHealthProfile() {
+      const h = globalState.health;
+      const html = `<div class="modal-section active">
+        <h3>⚙ 健康档案（用于自动算代谢与消耗）</h3>
+        <div class="setting-row"><div class="info"><h4>性别</h4><p>用于BMR公式</p></div>
+          <select id="hp-gender" style="width:120px">
+            <option value="female" ${h.gender==='female'?'selected':''}>女</option>
+            <option value="male" ${h.gender==='male'?'selected':''}>男</option>
+          </select>
+        </div>
+        <div class="setting-row"><div class="info"><h4>年龄</h4><p>岁</p></div>
+          <input type="number" id="hp-age" value="${h.age||25}" style="width:80px">
+        </div>
+        <div class="setting-row"><div class="info"><h4>身高</h4><p>cm</p></div>
+          <input type="number" id="hp-height" value="${h.height||170}" style="width:80px">
+        </div>
+        <div class="setting-row"><div class="info"><h4>基础代谢 BMR</h4><p>kcal/天，可点右侧按公式自动算</p></div>
+          <input type="number" id="hp-bmr" value="${h.basalMetabolism||0}" style="width:100px">
+        </div>
+        <div class="setting-row"><div class="info"><h4>活动系数</h4><p>久坐1.2 · 轻1.375 · 中1.55 · 高1.725</p></div>
+          <select id="hp-act" style="width:140px">
+            <option value="1.2" ${h.activityFactor===1.2?'selected':''}>久坐(办公室)</option>
+            <option value="1.375" ${h.activityFactor===1.375?'selected':''}>轻度(每周1-3次运动)</option>
+            <option value="1.55" ${h.activityFactor===1.55?'selected':''}>中度(每周3-5次)</option>
+            <option value="1.725" ${h.activityFactor===1.725?'selected':''}>高度(每周6-7次)</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button onclick="autoCalcBMR()" style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer">按公式自动算BMR</button>
+          <button onclick="saveHealthProfile()" style="padding:6px 14px;border:none;border-radius:6px;background:var(--tiffany);color:#fff;cursor:pointer;margin-left:auto">保存</button>
+        </div>
+      </div>`;
+      openGenericModal('⚙ 健康档案', html);
+    }
+
+    function autoCalcBMR() {
+      const h = globalState.health;
+      const w = h.currentWeight || 60;       // kg
+      const hi = parseFloat((document.getElementById('hp-height')||{}).value) || 170;
+      const age = parseFloat((document.getElementById('hp-age')||{}).value) || 25;
+      const g = (document.getElementById('hp-gender')||{}).value || 'female';
+      // Mifflin-St Jeor: 男 10W+6.25H-5A+5; 女 10W+6.25H-5A-161
+      let bmr = 10*w + 6.25*hi - 5*age + (g==='male' ? 5 : -161);
+      bmr = Math.round(bmr);
+      const b = document.getElementById('hp-bmr');
+      if (b) b.value = bmr;
+    }
+
+    function saveHealthProfile() {
+      const h = globalState.health;
+      h.gender = (document.getElementById('hp-gender')||{}).value || 'female';
+      h.age = parseFloat((document.getElementById('hp-age')||{}).value) || 25;
+      h.height = parseFloat((document.getElementById('hp-height')||{}).value) || 170;
+      h.basalMetabolism = parseFloat((document.getElementById('hp-bmr')||{}).value) || 1500;
+      h.activityFactor = parseFloat((document.getElementById('hp-act')||{}).value) || 1.2;
+      saveGlobalState();
+      updateHealth();
+      closeGenericModal();
+    }
+
+    // 星回识别食物/运动 → 写入摄入/消耗(供 aiSend 关键词分支调用)
+    function addIntake(food, kcal) {
+      const h = globalState.health;
+      h.intakeKcal = (h.intakeKcal || 0) + Math.round(kcal);
+      h.lastIntakeLog = h.lastIntakeLog || [];
+      h.lastIntakeLog.push({ ts: new Date().toISOString(), food, kcal: Math.round(kcal) });
+      saveGlobalState();
+      updateHealth();
+      return h.intakeKcal;
+    }
+    function addExercise(label, kcal) {
+      const h = globalState.health;
+      h.exerciseKcal = (h.exerciseKcal || 0) + Math.round(kcal);
+      saveGlobalState();
+      updateHealth();
+      return h.exerciseKcal;
+    }
+
+    // 启动时把 globalState.health 灌到 input
+    function hydrateHealthInputs() {
+      const h = globalState.health;
+      if (!h) return;
+      const w = document.getElementById('weight');
+      if (w) w.value = h.currentWeight;
+      const t = document.getElementById('target-weight');
+      if (t) t.value = h.targetWeight;
+      const ci = document.getElementById('cal-in');
+      if (ci) ci.value = h.intakeKcal;
+      const co = document.getElementById('cal-out');
+      if (co) co.value = h.burnKcal;
+      updateHealth();
     }
 
     function changeWater(delta) {
@@ -4687,6 +4838,11 @@
       globalState.fitnessGoal = globalState.fitnessGoal || { goal: 'lose', targetWeight: 60, currentWeight: 68 };
       globalState.fitnessMeasurements = globalState.fitnessMeasurements || [];
       globalState.fitnessPhotos = globalState.fitnessPhotos || [];
+      globalState.health = globalState.health || {
+        currentWeight: 68.1, targetWeight: 60, intakeKcal: 1480, burnKcal: 1600,
+        exerciseKcal: 0, basalMetabolism: 1500, activityFactor: 1.2,
+        height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastIntakeLog: []
+      };
       globalState.aiChatHistory.unshift({
         id: Date.now(),
         q: text,
@@ -4700,11 +4856,65 @@
     }
 
     // ========== 星回智能回复（不依赖后端） ==========
+    // 简易食物热量字典(kcal/份)
+    const FOOD_KCAL = {
+      '米饭': 116, '面条': 138, '包子': 200, '饺子': 250, '馒头': 220,
+      '汉堡': 500, '薯条': 365, '炸鸡': 400, '披萨': 270, '三明治': 350,
+      '沙拉': 150, '水果': 80, '苹果': 95, '香蕉': 105, '橙子': 60,
+      '牛奶': 150, '豆浆': 80, '咖啡': 5, '奶茶': 380, '可乐': 140,
+      '面包': 200, '蛋糕': 350, '巧克力': 550, '冰淇淋': 220,
+      '鸡腿': 220, '鸡胸': 165, '牛肉': 250, '猪肉': 270, '鱼': 200,
+      '虾': 100, '蛋': 80, '豆腐': 80, '蔬菜': 50, '粥': 80,
+      '火锅': 600, '烧烤': 500, '麻辣烫': 450, '炒饭': 550, '炒面': 480
+    };
+    // 运动消耗字典(kcal/30分钟,按体重60kg估算)
+    const EXERCISE_KCAL = {
+      '跑步': 280, '慢跑': 240, '快走': 120, '走路': 80, '散步': 60,
+      '骑车': 200, '游泳': 250, '瑜伽': 130, '跳绳': 300, 'hiit': 260,
+      '健身': 220, '力量训练': 200, '无氧': 200, '撸铁': 200,
+      '舞蹈': 200, '打球': 240, '篮球': 280, '足球': 280, '羽毛球': 200,
+      '登山': 260, '爬楼': 220, '椭圆机': 220, '动感单车': 240
+    };
+    function matchFood(text) {
+      const m = [];
+      for (const k of Object.keys(FOOD_KCAL)) if (text.includes(k)) m.push({ name: k, kcal: FOOD_KCAL[k] });
+      return m;
+    }
+    function matchExercise(text) {
+      const m = [];
+      const minMatch = text.match(/(\d+)\s*(分钟|min)/i);
+      const minutes = minMatch ? parseInt(minMatch[1]) : 30;
+      for (const k of Object.keys(EXERCISE_KCAL)) if (text.includes(k)) m.push({ name: k, kcal: Math.round(EXERCISE_KCAL[k] * minutes / 30) });
+      return { items: m, minutes };
+    }
+
     function smartAIRespond(text, att) {
       const t = (text || '').toLowerCase();
       const hasImg = !!(att && att.image);
       const hasVoice = !!(att && att.voice);
       const head = hasImg ? '🖼️ [附带图片]\n' : (hasVoice ? '🎤 [附带语音]\n' : '');
+
+      // 0. 食物摄入识别(吃了XX / 喝XX / 早餐XX ...)
+      const foodHits = matchFood(text);
+      if (foodHits.length > 0 && /(吃|喝|早餐|午餐|晚餐|早饭|午饭|晚饭|宵夜|零食|加餐)/.test(text)) {
+        const totalKcal = foodHits.reduce((s, x) => s + x.kcal, 0);
+        const newIntake = addIntake(foodHits.map(x => x.name).join('+'), totalKcal);
+        return head + '🍽️ 食物识别成功\n\n' +
+          foodHits.map(x => '  • ' + x.name + ' ≈ ' + x.kcal + ' kcal').join('\n') +
+          '\n\n📊 合计：+' + totalKcal + ' kcal\n📈 今日累计：' + newIntake + ' kcal\n' +
+          '\n💡 已自动写入【健康打卡】今日摄入。\n如要改（重量不同/估算不准），说「撤回这条」我帮你减回去。';
+      }
+
+      // 0b. 运动消耗识别(跑步XX分钟 / 跳绳XX ...)
+      const ex = matchExercise(text);
+      if (ex.items.length > 0 && /(跑|走|骑|游|跳|练|做|打|爬|蹬)/.test(text)) {
+        const totalKcal = ex.items.reduce((s, x) => s + x.kcal, 0);
+        const newBurn = addExercise(ex.items.map(x => x.name + ex.minutes + '分').join('+'), totalKcal);
+        return head + '🏃 运动识别成功\n\n' +
+          ex.items.map(x => '  • ' + x.name + ' × ' + ex.minutes + ' 分钟 ≈ ' + x.kcal + ' kcal').join('\n') +
+          '\n\n📊 合计：+' + totalKcal + ' kcal\n📈 今日运动消耗：' + newBurn + ' kcal（自动算入今日总消耗）\n' +
+          '\n💡 已自动写入【健康打卡】运动消耗。\n运动耗时已记入健身打卡页。';
+      }
 
       // 1. 链接分类（aiSecClassifyLink 已跑过）
       if (/^https?:\/\//i.test(text)) {
@@ -4879,6 +5089,11 @@
       globalState.fitnessGoal = globalState.fitnessGoal || { goal: 'lose', targetWeight: 60, currentWeight: 68 };
       globalState.fitnessMeasurements = globalState.fitnessMeasurements || [];
       globalState.fitnessPhotos = globalState.fitnessPhotos || [];
+      globalState.health = globalState.health || {
+        currentWeight: 68.1, targetWeight: 60, intakeKcal: 1480, burnKcal: 1600,
+        exerciseKcal: 0, basalMetabolism: 1500, activityFactor: 1.2,
+        height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastIntakeLog: []
+      };
       const fg = globalState.fitnessGoal;
       const plan = fitnessGenPlan(fg);
       const today = new Date().toISOString().slice(0, 10);
@@ -4909,6 +5124,11 @@
       const reader = new FileReader();
       reader.onload = e => {
         globalState.fitnessPhotos = globalState.fitnessPhotos || [];
+      globalState.health = globalState.health || {
+        currentWeight: 68.1, targetWeight: 60, intakeKcal: 1480, burnKcal: 1600,
+        exerciseKcal: 0, basalMetabolism: 1500, activityFactor: 1.2,
+        height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastIntakeLog: []
+      };
         globalState.fitnessPhotos.push({ id: Date.now(), url: e.target.result, date: new Date().toISOString().slice(0,10), note: '训练记录' });
         saveGlobalState();
         renderHome();
@@ -5456,6 +5676,7 @@
       applyWorkbenchStyles();
       renderNav(); renderMobileNav();
       renderHome(); renderAll(); updateDate(); startClock(); renderCalendar(); loadWeather();
+      hydrateHealthInputs();
       renderSelfFavorites();
       renderAIChat();
       updateEditModeUI();
@@ -5731,9 +5952,23 @@
     }
 
     function closeModalOnBackdrop(e) {
-      if (e.target === e.currentTarget) {
+      if (e && e.target && e.target.classList && e.target.classList.contains('modal-overlay')) {
         e.target.classList.remove('active');
       }
+    }
+
+    function openGenericModal(title, bodyHtml) {
+      const m = document.getElementById('generic-modal');
+      if (!m) return;
+      const t = document.getElementById('generic-modal-title');
+      const b = document.getElementById('generic-modal-body');
+      if (t) t.textContent = title;
+      if (b) b.innerHTML = bodyHtml;
+      m.classList.add('active');
+    }
+    function closeGenericModal() {
+      const m = document.getElementById('generic-modal');
+      if (m) m.classList.remove('active');
     }
 
     // ========== 统一渲染 ==========
@@ -5846,7 +6081,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=27').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=28').catch(function () {});
       });
     }
   </script>
