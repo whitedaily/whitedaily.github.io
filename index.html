@@ -524,6 +524,60 @@
     }
     body.ai-panel-open::after { content: ''; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 999; display: none; }
     @media (max-width: 900px) { body.ai-panel-open::after { display: block; } }
+
+    /* 微信样式 AI 输入栏 */
+    .wx-input-wrap { border: 1px solid var(--border); border-radius: 8px; background: #fff; display: flex; flex-direction: column; }
+    .wx-textarea {
+      padding: 8px 10px; min-height: 48px; max-height: 140px;
+      font-size: 13px; line-height: 1.5;
+      border: none; outline: none; resize: none;
+      background: transparent; color: var(--text); width: 100%;
+      box-sizing: border-box;
+    }
+    .wx-toolbar {
+      display: flex; align-items: center; padding: 4px 6px;
+      border-top: 1px solid var(--border); gap: 0;
+    }
+    .wx-icon {
+      width: 30px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px; cursor: pointer;
+      font-size: 16px; color: var(--text-secondary);
+      transition: all 0.15s;
+      position: relative;
+    }
+    .wx-icon:hover { background: var(--tiffany-light); color: var(--tiffany-dark); }
+    .wx-icon.recording { background: #FF6B6B !important; color: #fff !important; animation: pulse 1.2s infinite; }
+    .wx-icon[title]:hover::after {
+      content: attr(title); position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.8); color: #fff; padding: 3px 7px; border-radius: 4px;
+      font-size: 10px; white-space: nowrap; pointer-events: none; z-index: 10;
+    }
+    .wx-char-count { margin-left: auto; font-size: 11px; color: var(--text-muted); padding-right: 4px; }
+    .wx-send {
+      margin-left: 4px; padding: 4px 14px;
+      background: #f0f0f0; color: #aaa;
+      border: 1px solid #e0e0e0; border-radius: 4px;
+      font-size: 12px; cursor: not-allowed; font-weight: 500;
+      transition: all 0.2s;
+    }
+    .wx-send.active {
+      background: var(--tiffany); color: #fff;
+      border-color: var(--tiffany-dark); cursor: pointer; font-weight: 600;
+    }
+    .wx-send.active:hover { background: var(--tiffany-dark); }
+    .wx-emoji-panel {
+      position: absolute; bottom: 50px; left: 8px;
+      background: #fff; border: 1px solid var(--border); border-radius: 12px;
+      padding: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      display: none; max-width: 280px; z-index: 20;
+    }
+    .wx-emoji-panel.show { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+    .wx-emoji-panel span {
+      font-size: 18px; text-align: center; cursor: pointer; padding: 4px;
+      border-radius: 4px;
+    }
+    .wx-emoji-panel span:hover { background: var(--tiffany-light); }
     .ai-header {
       display: flex; align-items: center; gap: 12px;
       margin-bottom: 18px;
@@ -1730,20 +1784,19 @@
 
     <div class="ai-chat-log" id="ai-chat-log"></div>
 
-    <div class="ai-input-wrap" id="right-input-wrap" style="margin-top:8px">
-      <div class="ai-sec-mode-row" style="display:flex;gap:4px;margin-bottom:6px">
-        <button class="ai-sec-mode active" data-mode="text" onclick="rightPanelMode(this)">📝 文字</button>
-        <button class="ai-sec-mode" data-mode="voice" onclick="rightPanelMode(this)">🎤 语音</button>
-        <button class="ai-sec-mode" data-mode="image" onclick="rightPanelMode(this)">🖼 图片</button>
-        <button class="ai-sec-mode" data-mode="link" onclick="rightPanelMode(this)">🔗 链接</button>
+    <div class="wx-input-wrap" id="right-input-wrap" style="margin-top:8px;position:relative">
+      <textarea class="wx-textarea" id="ai-input" placeholder="输入文字，或按住Ctrl+Win使用语音输入" oninput="wxUpdateCount()" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();wxSendClick()}" style="font-family:inherit"></textarea>
+      <input type="url" class="wx-textarea" id="rp-url" placeholder="粘贴链接,按回车分类..." style="display:none;min-height:32px" onkeydown="if(event.key==='Enter'){event.preventDefault();wxSendClick()}">
+      <div class="wx-toolbar">
+        <span class="wx-icon" id="wx-emoji" title="表情" onclick="wxToggleEmoji()">😊</span>
+        <span class="wx-icon" title="文件" onclick="wxPickFile()">📦</span>
+        <span class="wx-icon" title="截图" onclick="wxPickImage()">✂️</span>
+        <span class="wx-icon" id="wx-voice" title="语音" onclick="wxToggleVoice()">🎤</span>
+        <span class="wx-icon" id="wx-link" title="链接" onclick="wxSwitchLink()" style="display:none">🔗</span>
+        <span class="char-count wx-char-count" id="wx-char">0/500</span>
+        <button class="wx-send" id="wx-send-btn" onclick="wxSendClick()">发送</button>
       </div>
-      <textarea class="ai-input ai-sec-text" id="ai-input" placeholder="输入文本，按回车..." style="min-height:36px;max-height:80px;font-size:12px"></textarea>
-      <input type="url" class="ai-input ai-sec-text" id="rp-url" placeholder="粘贴链接..." style="display:none;min-height:0;font-size:12px">
-      <div class="ai-sec-controls" style="display:flex;gap:6px;margin-top:6px;align-items:center">
-        <button class="ai-sec-btn" id="rp-voice-btn" onclick="aiSecToggleVoice()" style="font-size:11px">🎤 开始录音</button>
-        <label class="ai-sec-btn" style="cursor:pointer;font-size:11px">📎 图片<input type="file" accept="image/*" style="display:none" onchange="aiSecHandleImage(event)"></label>
-        <button class="ai-sec-btn primary" onclick="aiSend()" style="font-size:11px;margin-left:auto">✨ 发送</button>
-      </div>
+      <div class="wx-emoji-panel" id="wx-emoji-panel"></div>
     </div>
     <div class="ai-sec-attach-row" id="aiSecAttach" style="margin-top:6px"></div>
     <div class="ai-sec-arrange" id="aiSecArrange" style="margin-top:8px"></div>
@@ -1755,49 +1808,107 @@
   </aside>
 
   <script>
-    // 右栏 4 模式切换
-    function rightPanelMode(btn) {
-      btn.parentNode.querySelectorAll('.ai-sec-mode').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const mode = btn.dataset.mode;
-      const wrap = document.getElementById('right-input-wrap');
-      const text = document.getElementById('ai-input');
+    // ========== 微信样式 AI 输入栏 ==========
+    let _wxLinkMode = false;
+    let _wxEmojiOpen = false;
+    function wxUpdateCount() {
+      const ta = document.getElementById('ai-input');
       const url = document.getElementById('rp-url');
-      const voiceBtn = document.getElementById('rp-voice-btn');
-      const sendBtn = wrap.querySelector('.primary');
-      if (mode === 'text') {
-        text.style.display = ''; text.placeholder = '输入文本，按回车...';
-        url.style.display = 'none';
-        voiceBtn.style.display = ''; sendBtn.textContent = '✨ 发送';
-      } else if (mode === 'voice') {
-        text.style.display = ''; text.placeholder = '（语音将自动转写到这里）';
-        url.style.display = 'none';
-        voiceBtn.style.display = ''; sendBtn.textContent = '🎤 录完发送';
-      } else if (mode === 'image') {
-        text.style.display = ''; text.placeholder = '图片描述（可选），选图后自动附加...';
-        url.style.display = 'none';
-        voiceBtn.style.display = 'none'; sendBtn.textContent = '🖼 发送图片';
-      } else if (mode === 'link') {
-        text.style.display = 'none';
-        url.style.display = '';
-        voiceBtn.style.display = 'none'; sendBtn.textContent = '🔗 分类链接';
-      }
+      const txt = (_wxLinkMode && url) ? url.value : (ta ? ta.value : '');
+      const cnt = document.getElementById('wx-char');
+      if (cnt) cnt.textContent = (txt || '').length + '/500';
+      const btn = document.getElementById('wx-send-btn');
+      if (btn) btn.classList.toggle('active', !!(txt || '').trim());
     }
-    // 右栏"链接模式"发送处理
-    document.addEventListener('DOMContentLoaded', () => {
-      const urlInput = document.getElementById('rp-url');
-      if (urlInput) urlInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          const url = urlInput.value.trim();
-          if (!url || !url.startsWith('http')) { alert('请粘贴有效链接'); return; }
-          // 复用 aiSecSendLink：把链接写入 ai-input + 走链接模式分支
-          const ta = document.getElementById('ai-input');
-          ta.value = url; ta.dataset.linkMode = '1';
-          aiSecSendLink();
-          urlInput.value = '';
+    function wxSendClick() {
+      if (_wxLinkMode) {
+        const url = (document.getElementById('rp-url')||{}).value || '';
+        if (!url.trim() || !url.startsWith('http')) { alert('请粘贴有效链接'); return; }
+        document.getElementById('ai-input').value = url;
+        aiSecSendLink();
+        document.getElementById('rp-url').value = '';
+      } else {
+        aiSend();
+      }
+      wxUpdateCount();
+    }
+    function wxToggleEmoji() {
+      const panel = document.getElementById('wx-emoji-panel');
+      if (!panel) return;
+      _wxEmojiOpen = !_wxEmojiOpen;
+      if (_wxEmojiOpen && !panel.dataset.init) {
+        panel.dataset.init = '1';
+        const list = ['😊','😄','😁','😂','🤣','😍','🥰','😘','😎','🤩','🥳','😏','🤔','🙄','😴','😪','🥺','😭','😱','🤯','🤗','👍','👎','👏','🙏','💪','🔥','✨','🌟','💯','💕','❤️','🧡','💛','💚','💙','💜','🤍','🖤'];
+        panel.innerHTML = list.map(e => '<span onclick="wxInsertEmoji(\''+e+'\')">'+e+'</span>').join('');
+      }
+      panel.classList.toggle('show', _wxEmojiOpen);
+    }
+    function wxInsertEmoji(e) {
+      const ta = document.getElementById('ai-input');
+      if (ta) { ta.value = (ta.value || '') + e; wxUpdateCount(); ta.focus(); }
+    }
+    function wxSwitchLink() {
+      _wxLinkMode = !_wxLinkMode;
+      const ta = document.getElementById('ai-input');
+      const url = document.getElementById('rp-url');
+      const linkIcon = document.getElementById('wx-link');
+      if (ta) ta.style.display = _wxLinkMode ? 'none' : '';
+      if (url) url.style.display = _wxLinkMode ? '' : 'none';
+      if (linkIcon) linkIcon.style.background = _wxLinkMode ? 'var(--tiffany-light)' : '';
+      wxUpdateCount();
+    }
+    function wxPickFile() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*,application/*';
+      input.onchange = (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        if (f.type.startsWith('image/')) {
+          const ev = { target: input }; aiSecHandleImage(ev);
+        } else {
+          alert('文件类型: ' + (f.type || f.name) + '（暂以图片方式读取）');
+          const reader = new FileReader();
+          reader.onload = (r) => {
+            globalState.aiChatHistory = globalState.aiChatHistory || [];
+            globalState.aiChatHistory.unshift({
+              id: Date.now(),
+              q: '📦 附件: ' + f.name + ' (' + (f.size/1024).toFixed(1) + ' KB)',
+              a: '已接收附件:' + f.name + '\n(浏览器静态部署暂不支持保存非图片文件,请把内容粘贴到文字框让 AI 总结)',
+              provider: globalState.provider,
+              ts: new Date().toISOString()
+            });
+            saveGlobalState();
+            renderAIChat();
+          };
+          reader.readAsDataURL(f);
         }
-      });
-    });
+      };
+      input.click();
+    }
+    function wxPickImage() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = (e) => aiSecHandleImage({ target: input });
+      input.click();
+    }
+    function wxToggleVoice() {
+      const wasRecording = _aiSecRecorder && _aiSecRecorder.state === 'recording';
+      aiSecToggleVoice();
+      // 等一下 recorder state 切换完再读取
+      setTimeout(() => {
+        const btn = document.getElementById('wx-voice');
+        if (btn) {
+          const isRec = _aiSecRecorder && _aiSecRecorder.state === 'recording';
+          btn.classList.toggle('recording', isRec);
+        }
+      }, 50);
+    }
+    // 旧 rightPanelMode 兼容(已被微信工具栏替代,但保留避免报错)
+    function rightPanelMode() { wxUpdateCount(); }
+
+    // 双击星回 widget 打开独立对话框
 
   <!-- 编辑模式：添加小组件浮动按钮 -->
   <button class="fab" id="fab-add" onclick="openWidgetLib()">+</button>
@@ -5635,7 +5746,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=24').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=25').catch(function () {});
       });
     }
   </script>
