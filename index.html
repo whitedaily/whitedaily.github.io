@@ -1126,7 +1126,7 @@
     // 注册 Service Worker（让工作台可作为 App 安装到手机桌面；file:// 下静默失败）
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=3').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=4').catch(function () {});
       });
     }
   </script>
@@ -2151,10 +2151,16 @@
     }
 
     function updateEditModeUI() {
+      // 在 body 上挂 .edit-mode 标记(供 CSS 选择器使用)
+      document.body.classList.toggle('edit-mode', editMode);
       document.getElementById('topbar-edit').classList.toggle('active', editMode);
       document.getElementById('sidebar-edit-btn').classList.toggle('active', editMode);
       document.getElementById('fab-add').classList.toggle('visible', editMode && currentPage === 'home');
       document.getElementById('btn-add-widget').style.display = editMode && currentPage === 'home' ? 'flex' : 'none';
+      // 强制刷新所有分区页的「➕ 添加小组件」按钮可见性
+      document.querySelectorAll('.page-add-widget-bar').forEach(el => {
+        el.style.display = editMode ? 'flex' : 'none';
+      });
       document.querySelectorAll('.card[data-widget]').forEach(card => {
         card.classList.toggle('edit-highlight', editMode);
         const configBtn = card.querySelector('.config-btn');
@@ -2332,6 +2338,7 @@
       document.getElementById('btn-add-widget').style.display = editMode && page === 'home' ? 'flex' : 'none';
       if (page === 'stats') renderStats();
       if (page !== 'home') { try { renderPageWidgets(page); } catch(e){} }
+      updateEditModeUI();
       window.scrollTo(0,0);
     }
 
