@@ -196,8 +196,11 @@
       display: flex; justify-content: space-between; align-items: flex-start;
       margin-bottom: 22px; gap: 12px; flex-wrap: wrap;
     }
-    .page-title h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
-    .page-title p { font-size: 13px; color: var(--text-secondary); }
+.page-title h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+.page-title p { font-size: 13px; color: var(--text-secondary); }
+.page-title p.editable-sub { cursor: pointer; padding: 2px 6px; border-radius: 6px; display: inline-block; transition: all 0.2s; }
+.page-title p.editable-sub:hover { background: var(--tiffany-light); color: var(--tiffany-dark); }
+.page-title p.editable-sub::before { content: '✏️ '; opacity: 0.5; font-size: 11px; }
     .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
     .action-btn {
       background: var(--tiffany-light);
@@ -1476,7 +1479,7 @@
 
     <!-- 计划 -->
     <section class="page" id="plan">
-      <div class="page-header"><div class="page-title"><h1>计划</h1><p>周视图 · 点击日期添加或查看计划</p></div></div>
+      <div class="page-header"><div class="page-title"><h1 data-h1="plan">计划</h1><p class="editable-sub" data-sub="plan" onclick="editPageSubtitle('plan', this)" title="点击编辑副标题">周视图 · 点击日期添加或查看计划</p></div></div>
       <div class="card glass">
         <div class="card-title"><span>📅 本周计划</span></div>
         <div class="plan-calendar" id="plan-calendar"></div>
@@ -1494,7 +1497,7 @@
 
     <!-- 备考 -->
     <section class="page" id="exam">
-      <div class="page-header"><div class="page-title"><h1>备考</h1><p>公考倒计时 · 点击编辑目标日期与名称</p></div></div>
+      <div class="page-header"><div class="page-title"><h1 data-h1="exam">备考</h1><p class="editable-sub" data-sub="exam" onclick="editPageSubtitle('exam', this)" title="点击编辑副标题">公考倒计时 · 点击编辑目标日期与名称</p></div></div>
       <div class="card glass">
         <div class="card-title">
           <span><span class="emoji">⏰</span>备考倒计时</span>
@@ -1509,7 +1512,7 @@
 
     <!-- 自律 -->
     <section class="page" id="self">
-      <div class="page-header"><div class="page-title"><h1>自律</h1><p>健康打卡 · 记录体重、热量与运动</p></div></div>
+      <div class="page-header"><div class="page-title"><h1 data-h1="self">自律</h1><p class="editable-sub" data-sub="self" onclick="editPageSubtitle('self', this)" title="点击编辑副标题">健康打卡 · 记录体重、热量与运动</p></div></div>
       <div class="widget-grid">
         <div class="card glass">
           <div class="card-title"><span><span class="emoji">🏃</span>今日健康打卡</span></div>
@@ -1560,7 +1563,7 @@
 
     <!-- 运营 -->
     <section class="page" id="ops">
-      <div class="page-header"><div class="page-title"><h1>运营</h1><p>小红书自媒体运营 · 内容排期与数据追踪</p></div></div>
+      <div class="page-header"><div class="page-title"><h1 data-h1="ops">运营</h1><p class="editable-sub" data-sub="ops" onclick="editPageSubtitle('ops', this)" title="点击编辑副标题">小红书自媒体运营 · 内容排期与数据追踪</p></div></div>
       <div class="widget-grid">
         <div class="card glass">
           <div class="card-title"><span><span class="emoji">📋</span>运营任务</span></div>
@@ -1595,7 +1598,7 @@
 
     <!-- 家庭 -->
     <section class="page" id="family">
-      <div class="page-header"><div class="page-title"><h1>家庭</h1><p>宠物专属专栏 · 家庭事务管理</p></div></div>
+      <div class="page-header"><div class="page-title"><h1 data-h1="family">家庭</h1><p class="editable-sub" data-sub="family" onclick="editPageSubtitle('family', this)" title="点击编辑副标题">宠物专属专栏 · 家庭事务管理</p></div></div>
       <div class="widget-grid">
         <div class="card glass">
           <div class="card-title"><span><span class="emoji">🐶</span>宠物事项</span></div>
@@ -1621,7 +1624,7 @@
 
     <!-- 统计 -->
     <section class="page" id="stats">
-      <div class="page-header"><div class="page-title"><h1>统计</h1><p>今日数据汇总 · 实时同步各分区进度</p></div></div>
+      <div class="page-header"><div class="page-title"><h1 data-h1="stats">统计</h1><p class="editable-sub" data-sub="stats" onclick="editPageSubtitle('stats', this)" title="点击编辑副标题">今日数据汇总 · 实时同步各分区进度</p></div></div>
       <div class="stat-grid">
         <div class="stat-card glass"><div class="num" id="stat-todo">0</div><div class="label">今日待办</div></div>
         <div class="stat-card glass"><div class="num" id="stat-exam">0%</div><div class="label">备考进度</div></div>
@@ -2037,7 +2040,16 @@
       fitnessPhotos: [],
       englishWords: [],
       englishOral: [],
-      englishWordGoal: 30
+      englishWordGoal: 30,
+      pageSubtitles: {
+        home: '总览仪表盘',
+        plan: '周视图 · 点击日期添加或查看计划',
+        exam: '公考倒计时 · 点击编辑目标日期与名称',
+        self: '健康打卡 · 记录体重、热量与运动',
+        ops: '小红书自媒体运营 · 内容排期与数据追踪',
+        family: '宠物专属专栏 · 家庭事务管理',
+        stats: '今日数据汇总 · 实时同步各分区进度'
+      }
     };
 
     let appState = {
@@ -2112,6 +2124,14 @@
       globalState.englishWords = globalState.englishWords || [];
       globalState.englishOral = globalState.englishOral || [];
       globalState.englishWordGoal = globalState.englishWordGoal || 30;
+      globalState.pageSubtitles = globalState.pageSubtitles || {
+        plan: '周视图 · 点击日期添加或查看计划',
+        exam: '公考倒计时 · 点击编辑目标日期与名称',
+        self: '健康打卡 · 记录体重、热量与运动',
+        ops: '小红书自媒体运营 · 内容排期与数据追踪',
+        family: '宠物专属专栏 · 家庭事务管理',
+        stats: '今日数据汇总 · 实时同步各分区进度'
+      };
       ensureDefaultWorkbench();
       // URL 自动打卡检测
       setTimeout(autoCheckinFromURL, 200);
@@ -2538,13 +2558,32 @@
       const item = wb.nav.find(n => n.id === id);
       if (item && name.trim()) item.name = name.trim();
       saveAppState(); renderNav(); renderMobileNav();
+      // 当前页标题实时同步
+      if (currentPage === id) applyPageTitle(id);
     }
 
-    function deleteNav(id) {
+    function editPageSubtitle(pageId, el) {
+      const cur = (globalState.pageSubtitles && globalState.pageSubtitles[pageId]) || (el ? el.textContent : '');
+      const next = prompt('编辑副标题（点取消 = 不变）：', cur);
+      if (next === null || next.trim() === cur.trim()) return;
+      globalState.pageSubtitles = globalState.pageSubtitles || {};
+      globalState.pageSubtitles[pageId] = next.trim();
+      saveGlobalState();
+      applyPageTitle(pageId);
+    }
+
+    function applyPageTitle(pageId) {
+      const pg = document.getElementById(pageId);
+      if (!pg) return;
       const wb = getCurrentWorkbench();
-      if (wb.nav.length <= 2) { alert('至少保留两个分区'); return; }
-      wb.nav = wb.nav.filter(n => n.id !== id);
-      saveAppState(); renderNav(); renderMobileNav();
+      const navItem = (wb.nav || []).find(n => n.id === pageId);
+      const h1 = pg.querySelector('[data-h1]') || pg.querySelector('.page-title h1');
+      if (h1 && navItem) h1.textContent = navItem.name;
+      const sub = pg.querySelector('[data-sub]');
+      if (sub) {
+        const txt = (globalState.pageSubtitles || {})[pageId];
+        if (txt !== undefined && txt !== null) sub.textContent = txt;
+      }
     }
 
     // ========== 页面切换 ==========
@@ -2558,6 +2597,7 @@
       const pg = document.getElementById(page);
       if (pg) pg.classList.add('active');
       renderMobileNav();
+      applyPageTitle(page);
       if (window.innerWidth <= 900) toggleSidebar(false);
       document.getElementById('fab-add').classList.toggle('visible', editMode && page === 'home');
       document.getElementById('btn-add-widget').style.display = editMode && page === 'home' ? 'flex' : 'none';
@@ -4289,6 +4329,14 @@
       globalState.englishWords = globalState.englishWords || [];
       globalState.englishOral = globalState.englishOral || [];
       globalState.englishWordGoal = globalState.englishWordGoal || 30;
+      globalState.pageSubtitles = globalState.pageSubtitles || {
+        plan: '周视图 · 点击日期添加或查看计划',
+        exam: '公考倒计时 · 点击编辑目标日期与名称',
+        self: '健康打卡 · 记录体重、热量与运动',
+        ops: '小红书自媒体运营 · 内容排期与数据追踪',
+        family: '宠物专属专栏 · 家庭事务管理',
+        stats: '今日数据汇总 · 实时同步各分区进度'
+      };
       const today = new Date().toISOString().slice(0, 10);
       const todayWords = (globalState.englishWords || []).filter(w => w.date === today);
       const todayOral = (globalState.englishOral || []).filter(o => o.date === today);
@@ -5040,7 +5088,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=9').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=10').catch(function () {});
       });
     }
   </script>
