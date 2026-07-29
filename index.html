@@ -1397,7 +1397,6 @@
   <aside class="sidebar" id="sidebar">
     <div class="user-card">
       <h2>White</h2>
-      <p>个人专属 AI 工作台</p>
       <div class="mini-stats">
         <div class="mini-stat" onclick="goPage('home')">
           <div class="label">今日待办</div>
@@ -5088,7 +5087,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=10').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=11').catch(function () {});
       });
     }
   </script>
