@@ -1174,14 +1174,61 @@
       font-size: 10px; cursor: pointer;
       transition: background 0.2s;
     }
-    .ai-chat-actions button:hover { background: var(--tiffany-light); color: var(--tiffany-dark); }
-    .ai-chat-actions button.pasted { border-color: var(--tiffany); background: var(--tiffany-light); color: var(--tiffany-dark); }
+.ai-chat-actions button:hover { background: var(--tiffany-light); color: var(--tiffany-dark); }
+.ai-chat-actions button.pasted { border-color: var(--tiffany); background: var(--tiffany-light); color: var(--tiffany-dark); }
+
+/* ===== 每日记账小组件 ===== */
+.exp-form { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.exp-form input, .exp-form select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; }
+.exp-form .exp-amt { width: 80px; }
+.exp-form .exp-cat { width: 90px; }
+.exp-form .exp-note { flex: 1; min-width: 100px; }
+.exp-form button { padding: 6px 12px; border: none; border-radius: 8px; background: var(--tiffany); color: #fff; font-size: 12px; cursor: pointer; }
+.exp-summary { display: flex; gap: 12px; margin-bottom: 10px; font-size: 12px; flex-wrap: wrap; }
+.exp-summary .exp-stat { flex: 1; min-width: 70px; text-align: center; padding: 8px; border-radius: 10px; background: rgba(255,255,255,0.5); }
+.exp-summary .exp-stat .num { font-size: 20px; font-weight: 700; color: var(--tiffany-dark); }
+.exp-summary .exp-stat .label { font-size: 10px; color: var(--text-secondary); }
+.exp-summary .exp-stat.over { background: rgba(231,76,60,0.08); }
+.exp-summary .exp-stat.over .num { color: #E17055; }
+.exp-list { max-height: 240px; overflow-y: auto; }
+.exp-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 4px; border-radius: 8px; background: rgba(255,255,255,0.4); font-size: 12px; }
+.exp-item .exp-date { color: var(--text-muted); font-size: 10px; min-width: 36px; }
+.exp-item .exp-cat-chip { padding: 2px 6px; border-radius: 6px; font-size: 10px; background: var(--tiffany-light); color: var(--tiffany-dark); }
+.exp-item .exp-amount { font-weight: 700; margin-left: auto; color: #E17055; }
+.exp-item button { background: transparent; border: none; cursor: pointer; color: #E17055; font-size: 12px; padding: 0 4px; }
+.exp-budget-row { display: flex; gap: 6px; align-items: center; margin-top: 8px; font-size: 11px; }
+.exp-budget-row input { width: 80px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; }
+.exp-budget-row button { padding: 4px 8px; border: none; border-radius: 6px; background: var(--tiffany-light); color: var(--tiffany-dark); cursor: pointer; font-size: 10px; }
+.exp-alert { margin-top: 6px; padding: 6px 10px; border-radius: 8px; font-size: 11px; background: rgba(255,236,179,0.6); color: #856404; display: none; }
+.exp-alert.show { display: block; }
+.exp-month-picker { display: flex; gap: 4px; align-items: center; font-size: 11px; color: var(--text-secondary); }
+.exp-month-picker button { background: transparent; border: none; cursor: pointer; color: var(--tiffany-dark); font-size: 13px; }
+
+/* ===== 健身升级 ===== */
+.fit-goal-card { padding: 12px; border-radius: 12px; background: rgba(10,186,181,0.08); margin-bottom: 10px; }
+.fit-goal-card .fit-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
+.fit-goal-card select, .fit-goal-card input { padding: 5px 7px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; }
+.fit-plan-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.fit-day-card { padding: 8px; border-radius: 10px; background: rgba(255,255,255,0.5); text-align: center; font-size: 11px; }
+.fit-day-card .day { font-weight: 700; color: var(--tiffany-dark); margin-bottom: 4px; }
+.fit-day-card .type { font-size: 10px; padding: 2px 6px; border-radius: 6px; display: inline-block; }
+.fit-day-card .type.cardio { background: #FFE0D0; color: #E17055; }
+.fit-day-card .type.strength { background: #D0E0FF; color: #3366CC; }
+.fit-day-card .type.stretch { background: #D0FFE0; color: #2ECC71; }
+.fit-day-card .type.rest { background: #EEE; color: #999; }
+.fit-measure-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.fit-measure-row input { width: 65px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; }
+.fit-photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 8px; }
+.fit-photo-thumb { aspect-ratio: 1; border-radius: 8px; overflow: hidden; cursor: pointer; background: rgba(255,255,255,0.4); }
+.fit-photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.fit-photo-viewer { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.fit-photo-viewer img { max-width: 92vw; max-height: 92vh; border-radius: 12px; }
   </style>
   <script>
     // 注册 Service Worker（让工作台可作为 App 安装到手机桌面；file:// 下静默失败）
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=5').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=6').catch(function () {});
       });
     }
   </script>
@@ -1805,7 +1852,9 @@
       aiSecretary: { title: '🤖 AI 助手秘书', desc: '语音/图片 · 自动分类', render: renderAISecretaryWidget },
       calendarMarker: { title: '📆 日历标记', desc: '在日历上记录任何事', render: renderCalendarMarkerWidget },
       familyCheckin: { title: '🏠 家庭打卡', desc: '成员回家自动打卡', render: renderFamilyCheckinWidget },
-      lifeSkills: { title: '📚 生活技能', desc: '用药/急救/偏方/技能', render: renderLifeSkillsWidget }
+      lifeSkills: { title: '📚 生活技能', desc: '用药/急救/偏方/技能', render: renderLifeSkillsWidget },
+      expenseTracker: { title: '💰 每日记账', desc: '消费分类·收支汇总·超支提醒', render: renderExpenseTrackerWidget },
+      fitnessTracker: { title: '💪 健身打卡', desc: '训练计划·围度记录·相册', render: renderFitnessTrackerWidget }
     };
 
     const providers = {
@@ -1879,7 +1928,12 @@
         { key: 'contact', name: '📞 紧急联系', items: [] }
       ]},
       pageWidgets: { plan: [], exam: [], self: [], ops: [], family: [], stats: [] },
-      aiChatHistory: []
+      aiChatHistory: [],
+      expenses: [],
+      expenseBudget: { monthly: 5000, alertAt: 80 },
+      fitnessGoal: { goal: 'lose', targetWeight: 60, currentWeight: 68 },
+      fitnessMeasurements: [],
+      fitnessPhotos: []
     };
 
     let appState = {
@@ -1946,6 +2000,11 @@
         wb.pageWidgets = wb.pageWidgets || { plan: [], exam: [], self: [], ops: [], family: [], stats: [] };
       });
       globalState.aiChatHistory = globalState.aiChatHistory || [];
+      globalState.expenses = globalState.expenses || [];
+      globalState.expenseBudget = globalState.expenseBudget || { monthly: 5000, alertAt: 80 };
+      globalState.fitnessGoal = globalState.fitnessGoal || { goal: 'lose', targetWeight: 60, currentWeight: 68 };
+      globalState.fitnessMeasurements = globalState.fitnessMeasurements || [];
+      globalState.fitnessPhotos = globalState.fitnessPhotos || [];
       ensureDefaultWorkbench();
       // URL 自动打卡检测
       setTimeout(autoCheckinFromURL, 200);
@@ -3906,6 +3965,11 @@
       const text = (input ? input.value : '').trim();
       if (!text) return;
       globalState.aiChatHistory = globalState.aiChatHistory || [];
+      globalState.expenses = globalState.expenses || [];
+      globalState.expenseBudget = globalState.expenseBudget || { monthly: 5000, alertAt: 80 };
+      globalState.fitnessGoal = globalState.fitnessGoal || { goal: 'lose', targetWeight: 60, currentWeight: 68 };
+      globalState.fitnessMeasurements = globalState.fitnessMeasurements || [];
+      globalState.fitnessPhotos = globalState.fitnessPhotos || [];
       globalState.aiChatHistory.unshift({
         id: Date.now(),
         q: text,
@@ -3984,6 +4048,94 @@
       globalState.aiChatHistory = (globalState.aiChatHistory || []).filter(x => x.id !== id);
       saveGlobalState();
       renderAIChat();
+    }
+
+    // ========== 每日记账小组件 ==========
+    const EXP_CATS = ['🍔 餐饮','🛍 购物','🚗 交通','🎮 娱乐','🏠 居家','💊 医疗','📚 学习','💡 其他'];
+    function renderExpenseTrackerWidget(body) {
+      globalState.expenses = globalState.expenses || [];
+      globalState.expenseBudget = globalState.expenseBudget || { monthly: 5000, alertAt: 80 };
+      const today = new Date().toISOString().slice(0, 10);
+      const todayTotal = (globalState.expenses || []).filter(e => e.date === today).reduce((s, e) => s + (e.amount || 0), 0);
+      const monthStr = new Date().toISOString().slice(0, 7);
+      const monthTotal = (globalState.expenses || []).filter(e => (e.date || '').startsWith(monthStr)).reduce((s, e) => s + (e.amount || 0), 0);
+      const budget = globalState.expenseBudget.monthly || 5000;
+      const pct = Math.round(monthTotal / budget * 100);
+      const overspend = monthTotal > budget * (globalState.expenseBudget.alertAt || 80) / 100;
+      const list = (globalState.expenses || []).sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 30);
+      body.innerHTML = '<div class="exp-summary"><div class="exp-stat"><div class="num">¥' + todayTotal + '</div><div class="label">今日支出</div></div><div class="exp-stat ' + (overspend ? 'over' : '') + '"><div class="num">¥' + monthTotal + '</div><div class="label">本月 / ¥' + budget + '<br>' + pct + '%</div></div><div class="exp-stat"><div class="num">' + pct + '%</div><div class="label">预算使用</div></div></div><div class="progress-bar" style="margin-bottom:10px"><div class="progress-fill" style="width:' + Math.min(pct, 100) + '%;background:' + (pct > 80 ? '#E17055' : '') + '"></div></div><div class="exp-alert ' + (overspend ? 'show' : '') + '">⚠️ 本月已用' + pct + '%, 超支预警（阈值 ' + (globalState.expenseBudget.alertAt || 80) + '%）</div><div class="exp-form"><input type="number" class="exp-amt" id="exp-amt" placeholder="金额" step="0.01" onkeypress="if(event.key===\'Enter\')expAdd()"><select class="exp-cat" id="exp-cat">' + EXP_CATS.map(c => '<option>' + c + '</option>').join('') + '</select><input type="text" class="exp-note" id="exp-note" placeholder="备注..." onkeypress="if(event.key===\'Enter\')expAdd()"><button onclick="expAdd()">记一笔</button></div><div class="exp-budget-row"><span>月预算:</span><input type="number" id="exp-budget-val" value="' + budget + '" onchange="expSetBudget()" min="100" step="100"><span>预警%:</span><input type="number" id="exp-budget-pct" value="' + (globalState.expenseBudget.alertAt || 80) + '" onchange="expSetBudget()" min="10" max="200"><span>元</span></div><div class="exp-list">' + (list.length === 0 ? '<div style="opacity:0.5;text-align:center;padding:12px;font-size:12px">暂无记录，记下第一笔吧 📝</div>' : list.map(e => '<div class="exp-item"><span class="exp-date">' + (e.date||'').slice(5) + '</span><span class="exp-cat-chip">' + escapeHtml(e.category||'') + '</span><span style="flex:1">' + escapeHtml(e.note||'') + '</span><span class="exp-amount">-¥' + (e.amount||0).toFixed(2) + '</span><button onclick="expDel(' + e.id + ')">×</button></div>').join('')) + '</div>';
+    }
+    function expAdd() {
+      const amt = parseFloat((document.getElementById('exp-amt') || {}).value);
+      const cat = (document.getElementById('exp-cat') || {}).value || '💡 其他';
+      const note = (document.getElementById('exp-note') || {}).value || '';
+      if (!amt || amt <= 0) { alert('请输入有效金额'); return; }
+      globalState.expenses = globalState.expenses || [];
+      globalState.expenses.push({ id: Date.now(), amount: amt, category: cat, note: note.trim(), date: new Date().toISOString().slice(0, 10), ts: Date.now() });
+      saveGlobalState();
+      renderHome();
+    }
+    function expDel(id) {
+      globalState.expenses = (globalState.expenses || []).filter(e => e.id !== id);
+      saveGlobalState();
+      renderHome();
+    }
+    function expSetBudget() {
+      const v = parseInt((document.getElementById('exp-budget-val') || {}).value) || 5000;
+      const p = parseInt((document.getElementById('exp-budget-pct') || {}).value) || 80;
+      globalState.expenseBudget = { monthly: v, alertAt: p };
+      saveGlobalState();
+      renderHome();
+    }
+
+    // ========== 健身打卡升级小组件 ==========
+    function renderFitnessTrackerWidget(body) {
+      globalState.fitnessGoal = globalState.fitnessGoal || { goal: 'lose', targetWeight: 60, currentWeight: 68 };
+      globalState.fitnessMeasurements = globalState.fitnessMeasurements || [];
+      globalState.fitnessPhotos = globalState.fitnessPhotos || [];
+      const fg = globalState.fitnessGoal;
+      const plan = fitnessGenPlan(fg);
+      const today = new Date().toISOString().slice(0, 10);
+      const todayMeasure = (globalState.fitnessMeasurements || []).filter(m => m.date === today);
+      body.innerHTML = '<div class="fit-goal-card"><div style="font-size:12px;font-weight:600;color:var(--tiffany-dark);margin-bottom:6px">🎯 健身目标</div><div class="fit-row"><select onchange="fitSetGoal(\'goal\',this.value)"><option value="lose" ' + (fg.goal==='lose'?'selected':'') + '>减脂</option><option value="gain" ' + (fg.goal==='gain'?'selected':'') + '>增肌</option><option value="maintain" ' + (fg.goal==='maintain'?'selected':'') + '>保持</option></select><input type="number" value="' + (fg.currentWeight||'') + '" placeholder="当前体重(kg)" onchange="fitSetGoal(\'currentWeight\',parseFloat(this.value))" style="width:100px"><input type="number" value="' + (fg.targetWeight||'') + '" placeholder="目标体重(kg)" onchange="fitSetGoal(\'targetWeight\',parseFloat(this.value))" style="width:100px"><button onclick="fitSaveGoal()" style="padding:5px 10px;border:none;border-radius:6px;background:var(--tiffany);color:#fff;font-size:11px;cursor:pointer">保存</button></div><div style="font-size:11px;color:var(--text-secondary)">📐 推荐训练量：' + escapeHtml(plan.summary) + '</div></div><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📅 本周训练计划</div><div class="fit-plan-grid">' + plan.days.map(d => '<div class="fit-day-card"><div class="day">' + d.day + '</div><div class="type ' + d.type + '">' + d.label + '</div><div style="font-size:9px;margin-top:4px;color:var(--text-muted)">' + d.detail + '</div></div>').join('') + '</div><div class="fit-goal-card" style="margin-top:10px"><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📏 身体数据记录' + (todayMeasure.length ? '（已记录）' : '') + '</div><div class="fit-measure-row"><input type="number" id="fit-w" placeholder="体重(kg)" value="' + (fg.currentWeight||'') + '" step="0.1"><input type="number" id="fit-waist" placeholder="腰围(cm)" step="0.1"><input type="number" id="fit-chest" placeholder="胸围(cm)" step="0.1"><input type="number" id="fit-arms" placeholder="臂围(cm)" step="0.1"><input type="number" id="fit-legs" placeholder="腿围(cm)" step="0.1"><button onclick="fitRecordMeasure()" style="padding:5px 10px;border:none;border-radius:6px;background:var(--tiffany);color:#fff;font-size:11px;cursor:pointer">记录</button></div>' + ((globalState.fitnessMeasurements||[]).length > 0 ? '<div style="font-size:10px;color:var(--text-muted);margin-top:6px">📈 历史：' + (globalState.fitnessMeasurements||[]).slice(-3).map(m => m.date.slice(5)+' '+m.weight+'kg').join(' → ') + '</div>' : '') + '</div><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📸 训练相册</div><label style="display:inline-block;padding:5px 12px;border:1px dashed var(--border);border-radius:8px;cursor:pointer;font-size:11px;margin-bottom:8px;background:rgba(255,255,255,0.4)">📷 拍训练照 <input type="file" accept="image/*" capture="environment" style="display:none" onchange="fitUploadPhoto(event)"></label><div class="fit-photo-grid">' + ((globalState.fitnessPhotos||[]).slice(0,8).length === 0 ? '<div style="opacity:0.5;text-align:center;padding:16px;font-size:11px;grid-column:1/-1">还没有训练照片</div>' : (globalState.fitnessPhotos||[]).slice(0,8).map(p => '<div class="fit-photo-thumb" onclick="fitViewPhoto(\'' + p.url.replace(/\'/g,"\\\'") + '\')"><img src="' + p.url + '"></div>').join('')) + '</div><div class="ai-sec-hint" style="margin-top:8px">🤖 AI 每周提醒：根据你的 ' + (fg.goal==='lose'?'减脂':fg.goal==='gain'?'增肌':'保持') + ' 目标，建议每周' + plan.cardioDays + '次有氧、' + plan.strengthDays + '次力量、' + plan.stretchDays + '次拉伸。坚持记录围度，AI 可分析趋势。</div>';
+    }
+    function fitSetGoal(field, val) { globalState.fitnessGoal = globalState.fitnessGoal || {}; globalState.fitnessGoal[field] = val; }
+    function fitSaveGoal() { saveGlobalState(); renderHome(); }
+    function fitnessGenPlan(fg) {
+      const m = {
+        lose: {days:[{day:'周一',type:'cardio',label:'有氧',detail:'跑步/跳绳30min'},{day:'周二',type:'strength',label:'力量',detail:'哑铃/深蹲/俯卧撑'},{day:'周三',type:'cardio',label:'有氧',detail:'HIIT 20min'},{day:'周四',type:'stretch',label:'拉伸',detail:'瑜伽/泡沫轴'},{day:'周五',type:'strength',label:'力量',detail:'核心+腿'},{day:'周六',type:'cardio',label:'有氧',detail:'户外/骑行'},{day:'周日',type:'rest',label:'休息',detail:'复原日'}],summary:'每周3次有氧+2次力量+1次拉伸，维持热量缺口300-500kcal/天',cardioDays:3,strengthDays:2,stretchDays:1},
+        gain: {days:[{day:'周一',type:'strength',label:'力量',detail:'胸+三头'},{day:'周二',type:'strength',label:'力量',detail:'背+二头'},{day:'周三',type:'stretch',label:'拉伸',detail:'瑜伽'},{day:'周四',type:'strength',label:'力量',detail:'腿+肩'},{day:'周五',type:'cardio',label:'有氧',detail:'慢跑/跳绳'},{day:'周六',type:'strength',label:'力量',detail:'复合/大肌群'},{day:'周日',type:'rest',label:'休息',detail:'复原日'}],summary:'每周4次力量+1次有氧+1次拉伸，蛋白质1.6-2.2g/kg体重',cardioDays:1,strengthDays:4,stretchDays:1},
+        maintain: {days:[{day:'周一',type:'strength',label:'力量',detail:'全身'},{day:'周二',type:'cardio',label:'有氧',detail:'跑步/游泳'},{day:'周三',type:'stretch',label:'拉伸',detail:'瑜伽'},{day:'周四',type:'strength',label:'力量',detail:'上下分离'},{day:'周五',type:'cardio',label:'有氧',detail:'HIIT'},{day:'周六',type:'stretch',label:'拉伸',detail:'泡沫轴'},{day:'周日',type:'rest',label:'休息',detail:'复原日'}],summary:'每周2次力量+2次有氧+2次拉伸，均衡维持',cardioDays:2,strengthDays:2,stretchDays:2}
+      };
+      return m[fg.goal||'lose'] || m.lose;
+    }
+    function fitRecordMeasure() {
+      const w = parseFloat((document.getElementById('fit-w')||{}).value);
+      if (!w) { alert('至少填体重'); return; }
+      globalState.fitnessMeasurements = globalState.fitnessMeasurements || [];
+      globalState.fitnessMeasurements.push({date:new Date().toISOString().slice(0,10),weight:w,waist:parseFloat((document.getElementById('fit-waist')||{}).value)||0,chest:parseFloat((document.getElementById('fit-chest')||{}).value)||0,arms:parseFloat((document.getElementById('fit-arms')||{}).value)||0,legs:parseFloat((document.getElementById('fit-legs')||{}).value)||0,ts:Date.now()});
+      if (w) { globalState.fitnessGoal.currentWeight = w; }
+      saveGlobalState();
+      renderHome();
+    }
+    function fitUploadPhoto(ev) {
+      const f = ev.target.files[0]; if (!f) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        globalState.fitnessPhotos = globalState.fitnessPhotos || [];
+        globalState.fitnessPhotos.push({ id: Date.now(), url: e.target.result, date: new Date().toISOString().slice(0,10), note: '训练记录' });
+        saveGlobalState();
+        renderHome();
+      };
+      reader.readAsDataURL(f);
+      ev.target.value = '';
+    }
+    function fitViewPhoto(url) {
+      const viewer = document.createElement('div');
+      viewer.className = 'fit-photo-viewer';
+      viewer.innerHTML = '<img src="' + url + '" alt="训练照">';
+      viewer.onclick = () => viewer.remove();
+      document.body.appendChild(viewer);
     }
 
     // ========== 设置面板 ==========
