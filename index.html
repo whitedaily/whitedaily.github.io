@@ -1398,21 +1398,21 @@
     <div class="user-card">
       <h2>White</h2>
       <div class="mini-stats">
-        <div class="mini-stat" onclick="goPage('home')">
+        <div class="mini-stat" onclick="miniGo('home','todo')">
           <div class="label">今日待办</div>
           <div class="value" id="mini-todo">0</div>
         </div>
-        <div class="mini-stat" onclick="goPage('exam')">
+        <div class="mini-stat" onclick="miniGo('exam','exam-list')">
           <div class="label">备考进度</div>
           <div class="value" id="mini-exam">0%</div>
         </div>
-        <div class="mini-stat" onclick="goPage('self')">
-          <div class="label">晨间打卡</div>
+        <div class="mini-stat" onclick="miniGo('self','self-list')">
+          <div class="label">自律打卡</div>
           <div class="sub" id="mini-check">待打卡</div>
         </div>
-        <div class="mini-stat" onclick="goPage('family')">
-          <div class="label">家庭待办</div>
-          <div class="value" id="mini-family">0</div>
+        <div class="mini-stat" onclick="miniGo('home','aiSecretary')">
+          <div class="label">AI 助手秘书</div>
+          <div class="sub">语音/图片/链接</div>
         </div>
       </div>
     </div>
@@ -2556,6 +2556,35 @@
       saveAppState(); renderNav(); renderMobileNav();
       // 当前页标题实时同步
       if (currentPage === id) applyPageTitle(id);
+    }
+
+    // ========== 侧栏迷你卡片跳转 ==========
+    function miniGo(pageId, targetKey) {
+      goPage(pageId);
+      setTimeout(() => {
+        const card = document.querySelector('.card[data-widget="' + targetKey + '"]');
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          card.classList.add('mini-highlight');
+          setTimeout(() => card.classList.remove('mini-highlight'), 1400);
+        } else if (targetKey === 'todo' || targetKey === 'exam-list' || targetKey === 'self-list') {
+          // 列表元素直接滚到
+          const el = document.getElementById(targetKey);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        // AI 助手秘书：自动加入首页(如未添加)并打开右栏
+        if (targetKey === 'aiSecretary') {
+          const wb = getCurrentWorkbench();
+          if (!wb.widgets.includes('aiSecretary')) {
+            wb.widgets.push('aiSecretary');
+            saveAppState();
+            renderHome();
+            setTimeout(() => miniGo('home','aiSecretary'), 200);
+          } else if (window.innerWidth > 900) {
+            document.body.classList.add('show-ai-panel');
+          }
+        }
+      }, 120);
     }
 
     function editPageSubtitle(pageId, el) {
@@ -5225,7 +5254,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=15').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=16').catch(function () {});
       });
     }
   </script>
