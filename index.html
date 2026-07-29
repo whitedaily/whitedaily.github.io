@@ -1224,6 +1224,84 @@
 .fit-photo-viewer { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .fit-photo-viewer img { max-width: 92vw; max-height: 92vh; border-radius: 12px; }
 
+/* ===== 桌面小猫桌宠 ===== */
+.desk-pet {
+  position: fixed; right: 24px; bottom: 24px;
+  width: 110px; height: 110px;
+  z-index: 9998;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  display: none;
+}
+@media (min-width: 769px) { .desk-pet { display: block; } }
+.desk-pet.dragging { cursor: grabbing; }
+.desk-pet-img {
+  width: 100%; height: 100%; object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.85);
+  box-shadow: 0 6px 20px rgba(10,186,181,0.35), 0 2px 6px rgba(0,0,0,0.15);
+  animation: petBreathe 4s ease-in-out infinite;
+  transition: transform 0.25s ease;
+}
+.desk-pet:hover .desk-pet-img { transform: scale(1.08); animation-duration: 1.5s; }
+.desk-pet.petting .desk-pet-img { animation: petReact 0.5s ease 3; }
+.desk-pet.sleeping .desk-pet-img { transform: scale(0.92) rotate(-3deg); animation-duration: 7s; filter: brightness(0.92); }
+@keyframes petBreathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.025); } }
+@keyframes petReact { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-12deg) scale(1.1); } 75% { transform: rotate(12deg) scale(1.1); } }
+@keyframes petZZZ {
+  0% { opacity: 0; transform: translate(0,0); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(20px,-30px); }
+}
+.desk-pet-bubble {
+  position: absolute; right: 100%; top: -8px; margin-right: 6px;
+  background: #fff; color: #2D3436;
+  border-radius: 14px; padding: 7px 12px;
+  font-size: 12px; line-height: 1.4;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  white-space: nowrap;
+  opacity: 0; pointer-events: none;
+  transform: translateY(6px);
+  transition: opacity 0.25s, transform 0.25s;
+}
+.desk-pet-bubble.show { opacity: 1; transform: translateY(0); }
+.desk-pet-bubble::after {
+  content: ''; position: absolute; left: 100%; top: 16px;
+  border: 6px solid transparent; border-left-color: #fff;
+}
+.desk-pet-sleep {
+  position: absolute; top: -6px; right: -6px;
+  font-size: 18px; color: #6C7CE7;
+  opacity: 0;
+  animation: petZZZ 2.5s ease-in-out infinite;
+}
+.desk-pet.sleeping .desk-pet-sleep { opacity: 1; }
+.desk-pet-close {
+  position: absolute; top: -6px; right: -6px;
+  width: 22px; height: 22px;
+  background: rgba(255,255,255,0.95); color: #E17055;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; cursor: pointer;
+  opacity: 0; transition: opacity 0.2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  z-index: 9999;
+}
+.desk-pet:hover .desk-pet-close { opacity: 1; }
+.desk-pet-menu {
+  position: absolute; right: 100%; bottom: 0; margin-right: 8px;
+  background: rgba(255,255,255,0.97); border-radius: 10px;
+  padding: 4px; display: none;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+}
+.desk-pet-menu.show { display: flex; gap: 4px; }
+.desk-pet-menu button {
+  padding: 5px 10px; border: none; border-radius: 6px;
+  background: var(--tiffany-light); color: var(--tiffany-dark);
+  font-size: 11px; cursor: pointer;
+}
+.desk-pet-menu button:hover { background: var(--tiffany); color: #fff; }
+
 /* ===== 英语学习小组件 ===== */
 .eng-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
 .eng-tab { flex: 1; text-align: center; padding: 6px 4px; border-radius: 8px; border: 1px solid var(--border); font-size: 11px; cursor: pointer; background: rgba(255,255,255,0.5); transition: all 0.2s; }
@@ -4817,6 +4895,114 @@
     function renderAll() {
       renderTodos(); renderExam(); renderSelf(); renderOps(); renderFamily();
       renderCountdowns(); updateProgress(); updateHealth(); renderStats();
+    }
+
+    // ========== 桌面小猫桌宠 ==========
+    (function initDeskPet() {
+      const PET_IMAGES = ['/pet/cat-1.jpg','/pet/cat-2.jpg','/pet/cat-3.jpg','/pet/cat-4.jpg','/pet/cat-5.jpg','/pet/cat-6.jpg','/pet/cat-7.jpg','/pet/cat-8.jpg','/pet/cat-9.jpg','/pet/cat-10.jpg'];
+      const MOOD_LINES = ['喵～🐱','摸摸我呀~','铲屎官！','喵喵喵？','这里这里','我看到你了','加鱼干！','不许走开','困了…💤','看我表演'];
+      const pet = document.createElement('div');
+      pet.className = 'desk-pet';
+      pet.innerHTML = '<img class="desk-pet-img" id="pet-img" src="' + PET_IMAGES[0] + '" alt="喵">' +
+        '<div class="desk-pet-bubble" id="pet-bubble">喵~</div>' +
+        '<div class="desk-pet-sleep">Z</div>' +
+        '<div class="desk-pet-close" title="关闭桌宠">×</div>' +
+        '<div class="desk-pet-menu"><button data-act="random">🎲 换装</button><button data-act="sleep">💤 睡觉</button><button data-act="wake">⏰ 叫醒</button></div>';
+      document.body.appendChild(pet);
+      const img = pet.querySelector('#pet-img');
+      const bubble = pet.querySelector('#pet-bubble');
+      const closeBtn = pet.querySelector('.desk-pet-close');
+      const menu = pet.querySelector('.desk-pet-menu');
+      let pose = 0, sleeping = false, lastActivity = Date.now();
+      const setPose = (i) => { pose = (i + PET_IMAGES.length) % PET_IMAGES.length; img.src = PET_IMAGES[pose]; };
+      const say = (msg) => { bubble.textContent = msg || MOOD_LINES[Math.floor(Math.random()*MOOD_LINES.length)]; bubble.classList.add('show'); clearTimeout(pet._t); pet._t = setTimeout(() => bubble.classList.remove('show'), 2400); };
+      // 跟随鼠标方向(轻转头)
+      document.addEventListener('mousemove', (e) => {
+        if (sleeping) return;
+        const rect = pet.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+        const dx = e.clientX - cx, dy = e.clientY - cy;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 220) {
+          const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+          const tilt = Math.max(-15, Math.min(15, angle / 6));
+          img.style.transform = 'rotate(' + tilt + 'deg) scale(1.05)';
+        } else {
+          img.style.transform = '';
+        }
+        lastActivity = Date.now();
+      });
+      // 鼠标长时间没动 → 入睡
+      setInterval(() => {
+        if (Date.now() - lastActivity > 60000 && !sleeping) { sleeping = true; pet.classList.add('sleeping'); say('Zzz…'); }
+        else if (Date.now() - lastActivity < 30000 && sleeping) { sleeping = false; pet.classList.remove('sleeping'); say('醒啦！'); }
+      }, 10000);
+      // 换装定时
+      setInterval(() => { if (!sleeping) setPose(pose + 1); }, 30000);
+      // 点击 → 反馈 + 随机说话 + 随机换装
+      let lastClick = 0;
+      pet.addEventListener('click', (e) => {
+        if (e.target.closest('.desk-pet-close') || e.target.closest('.desk-pet-menu')) return;
+        lastActivity = Date.now();
+        if (Date.now() - lastClick < 350) {
+          pet.classList.add('petting');
+          setTimeout(() => pet.classList.remove('petting'), 1500);
+          setPose(pose + 1);
+          say('喵喵喵！喜欢！');
+        } else {
+          pet.classList.add('petting');
+          setTimeout(() => pet.classList.remove('petting'), 1500);
+          say(MOOD_LINES[Math.floor(Math.random()*MOOD_LINES.length)]);
+        }
+        lastClick = Date.now();
+        e.stopPropagation();
+      });
+      // 关闭按钮
+      closeBtn.addEventListener('click', (e) => {
+        pet.style.display = 'none';
+        // 5 分钟后自动回来
+        setTimeout(() => { pet.style.display = 'block'; pet.style.opacity = '0'; pet.style.transition = 'opacity 1s'; setTimeout(() => pet.style.opacity = '1', 50); say('我回来啦！'); }, 5 * 60 * 1000);
+        e.stopPropagation();
+      });
+      // 右键 → 菜单
+      pet.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        menu.classList.toggle('show');
+        setTimeout(() => menu.classList.remove('show'), 4000);
+      });
+      menu.querySelector('[data-act="random"]').addEventListener('click', (e) => { setPose(pose + 1); say('看新造型！'); e.stopPropagation(); });
+      menu.querySelector('[data-act="sleep"]').addEventListener('click', (e) => { sleeping = true; pet.classList.add('sleeping'); say('困了…'); e.stopPropagation(); });
+      menu.querySelector('[data-act="wake"]').addEventListener('click', (e) => { sleeping = false; pet.classList.remove('sleeping'); say('醒啦！'); lastActivity = Date.now(); e.stopPropagation(); });
+      // 拖拽
+      let dragOff = null;
+      pet.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('.desk-pet-close') || e.target.closest('.desk-pet-menu')) return;
+        pet.setPointerCapture(e.pointerId);
+        pet.classList.add('dragging');
+        const rect = pet.getBoundingClientRect();
+        dragOff = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      });
+      pet.addEventListener('pointermove', (e) => {
+        if (!dragOff) return;
+        const x = Math.max(0, Math.min(window.innerWidth - pet.offsetWidth, e.clientX - dragOff.x));
+        const y = Math.max(0, Math.min(window.innerHeight - pet.offsetHeight, e.clientY - dragOff.y));
+        pet.style.left = x + 'px';
+        pet.style.top = y + 'px';
+        pet.style.right = 'auto'; pet.style.bottom = 'auto';
+      });
+      pet.addEventListener('pointerup', (e) => { dragOff = null; pet.classList.remove('dragging'); });
+      pet.addEventListener('pointercancel', () => { dragOff = null; pet.classList.remove('dragging'); });
+      // 双击隐藏 30 秒
+      pet.addEventListener('dblclick', (e) => { pet.style.display = 'none'; setTimeout(() => pet.style.display = 'block', 30000); e.stopPropagation(); });
+      // 启动欢迎
+      setTimeout(() => say('喵～我来啦 🐱'), 800);
+    })();
+
+    // ========== SW v8 ==========
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js?v=8').catch(function () {});
+      });
     }
   </script>
 </body>
