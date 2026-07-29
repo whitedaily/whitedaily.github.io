@@ -1411,7 +1411,7 @@
           <div class="sub" id="mini-check">待打卡</div>
         </div>
         <div class="mini-stat" onclick="miniGo('home','aiSecretary')">
-          <div class="label">AI 助手秘书</div>
+          <div class="label">星回</div>
           <div class="sub">语音/图片/链接</div>
         </div>
       </div>
@@ -1693,9 +1693,9 @@
   <aside class="right-panel glass" id="right-panel">
     <div class="ai-header">
       <div class="ai-avatar">✨</div>
-      <div><h3>White AI 助手</h3><p>● 在线 · 跨板块联动</p></div>
+      <div><h3>星回</h3><p>● 在线 · 你若有需要，我就在这里</p></div>
     </div>
-    <div class="ai-intro">你好！我是 White AI 助手。选择下方 AI 平台后，点击快捷指令即可直接在工作台打开对应 AI 软件并联动数据。</div>
+    <div class="ai-intro">你好，我是星回。无论备考、工作还是生活，我都会陪在你身边。试试下方的快捷指令，或者直接跟我说你想做什么。</div>
 
     <div class="quick-title">选择 AI 平台</div>
     <div class="ai-providers">
@@ -1947,7 +1947,7 @@
       messages: { title: '🔔 消息提醒', desc: '重要消息汇总', render: renderMessagesWidget },
       weather: { title: '🌤️ 本地天气', desc: '温度湿度紫外线', render: renderWeatherWidget },
       news: { title: '📰 每日新闻', desc: '国内国际要闻', render: renderNewsWidget },
-      aiSecretary: { title: '🤖 AI 助手秘书', desc: '语音/图片 · 自动分类', render: renderAISecretaryWidget },
+      aiSecretary: { title: '🌟 星回', desc: '语音/图片 · 自动分类', render: renderAISecretaryWidget },
       calendarMarker: { title: '📆 日历标记', desc: '在日历上记录任何事', render: renderCalendarMarkerWidget },
       familyCheckin: { title: '🏠 家庭打卡', desc: '成员回家自动打卡', render: renderFamilyCheckinWidget },
       lifeSkills: { title: '📚 生活技能', desc: '用药/急救/偏方/技能', render: renderLifeSkillsWidget },
@@ -4107,6 +4107,63 @@
     function renderOps() { renderTodoList(globalState.opsTasks, 'ops-list', 'toggleOps', 'deleteOps'); renderTaskHistory(document.getElementById('ops-history'), 'opsTasks', '运营任务'); }
     function renderFamily() { renderTodoList(globalState.familyTasks, 'family-list', 'toggleFamily', 'deleteFamily'); renderTaskHistory(document.getElementById('family-history'), 'familyTasks', '家庭待办'); }
 
+    // ========== 星回 · 双击独立对话框 ==========
+    function openStarDialog() {
+      const old = document.getElementById('star-dialog-modal');
+      if (old) { old.remove(); return; }
+      const modal = document.createElement('div');
+      modal.id = 'star-dialog-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10001;display:flex;align-items:center;justify-content:center;';
+      const card = document.createElement('div');
+      card.style.cssText = 'background:#fff;border-radius:18px;padding:20px;width:90%;max-width:680px;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);';
+      const closeBtn = document.createElement('div');
+      closeBtn.textContent = '×'; closeBtn.style.cssText = 'position:absolute;top:12px;right:18px;font-size:22px;cursor:pointer;color:var(--text-secondary);z-index:1';
+      closeBtn.onclick = () => modal.remove();
+      const header = document.createElement('div');
+      header.innerHTML = '<h2 style="font-size:18px;font-weight:700;color:var(--tiffany-dark);margin:0 0 2px">🌟 星回</h2><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">有什么事想跟我说？</p>';
+      const chatArea = document.createElement('div');
+      chatArea.id = 'star-dialog-chat';
+      chatArea.style.cssText = 'flex:1;overflow-y:auto;margin-bottom:10px;min-height:200px;max-height:50vh;';
+      // 复制右侧面板的 chat 渲染
+      const list = globalState.aiChatHistory || [];
+      chatArea.innerHTML = list.length === 0
+        ? '<div style="opacity:0.5;text-align:center;padding:30px;font-size:12px">✨ 还没有对话，输入你的问题，我会帮你分类安排好。</div>'
+        : list.slice(0, 20).map(c => {
+            const p = providers[c.provider] || providers.doubao;
+            const ts = (c.ts || '').slice(5, 16).replace('T', ' ');
+            return `<div style="margin-bottom:10px;border-radius:10px;background:rgba(255,255,255,0.6);padding:8px 10px;font-size:12px;border:1px solid rgba(0,0,0,0.06)">
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">${ts} · ${escapeHtml(p.name)}</div>
+              <div style="padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.7);margin-bottom:4px;border-left:3px solid var(--tiffany)">${escapeHtml(c.q)}</div>
+              ${c.a ? `<div style="padding:6px 8px;border-radius:8px;background:rgba(10,186,181,0.1);border-left:3px solid var(--tiffany-dark)">${escapeHtml(c.a).replace(/\\n/g,'<br>')}</div>` : '<div style="opacity:0.5;font-size:11px;font-style:italic;padding:4px 8px">⏳ 等待回答...</div>'}
+            </div>`;
+          }).join('');
+      const inputRow = document.createElement('div');
+      inputRow.style.cssText = 'display:flex;gap:8px;';
+      inputRow.innerHTML = `
+        <input type="text" id="star-dialog-input" placeholder="跟星回说点什么..." style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px" onkeypress="if(event.key==='Enter')starDialogSend()">
+        <button onclick="starDialogSend()" style="padding:8px 16px;background:var(--tiffany);color:#fff;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-weight:600">发送</button>`;
+      card.appendChild(header);
+      card.appendChild(chatArea);
+      card.appendChild(inputRow);
+      modal.appendChild(card);
+      modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+      document.body.appendChild(modal);
+      setTimeout(() => document.getElementById('star-dialog-input').focus(), 200);
+    }
+    function starDialogSend() {
+      const input = document.getElementById('star-dialog-input');
+      const text = (input.value || '').trim();
+      if (!text) return;
+      globalState.aiChatHistory = globalState.aiChatHistory || [];
+      globalState.aiChatHistory.unshift({ id: Date.now(), q: text, a: '', provider: globalState.provider, ts: new Date().toISOString() });
+      input.value = '';
+      saveGlobalState();
+      // 更新右侧 chat + 对话框
+      renderAIChat();
+      const old = document.getElementById('star-dialog-modal');
+      if (old) { openStarDialog(); /* 刷新 */ }
+    }
+
     function updateExamProgress() {
       const total = globalState.examTasks.length;
       const done = globalState.examTasks.filter(i => i.done).length;
@@ -4879,6 +4936,11 @@
       renderAIChat();
       updateEditModeUI();
       initSync();
+      // 双击星回 widget 打开独立对话框
+      document.addEventListener('dblclick', (e) => {
+        const card = e.target.closest('.card[data-widget="aiSecretary"]');
+        if (card) { openStarDialog(); }
+      });
       const pd = document.getElementById('plan-date'); if (pd) pd.value = new Date().toISOString().split('T')[0];
     }
 
@@ -5254,7 +5316,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=16').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=17').catch(function () {});
       });
     }
   </script>
