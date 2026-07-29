@@ -1953,7 +1953,8 @@
       lifeSkills: { title: '📚 生活技能', desc: '用药/急救/偏方/技能', render: renderLifeSkillsWidget },
       expenseTracker: { title: '💰 每日记账', desc: '消费分类·收支汇总·超支提醒', render: renderExpenseTrackerWidget },
       fitnessTracker: { title: '💪 健身打卡', desc: '训练计划·围度记录·相册', render: renderFitnessTrackerWidget },
-      englishLearning: { title: '📖 英语学习', desc: '单词打卡·口语跟读练习', render: renderEnglishLearningWidget }
+      englishLearning: { title: '📖 英语学习', desc: '单词打卡·口语跟读练习', render: renderEnglishLearningWidget },
+      planCountdown: { title: '⏰ 计划倒计时', desc: '到期前一周提醒 · 首页+星回', render: renderPlanCountdownWidget }
     };
 
     const providers = {
@@ -2045,7 +2046,8 @@
         family: '宠物专属专栏 · 家庭事务管理',
         stats: '今日数据汇总 · 实时同步各分区进度'
       },
-      ximaUid: ''
+      ximaUid: '',
+      planCountdowns: []
     };
 
     let appState = {
@@ -4547,6 +4549,87 @@
       document.body.appendChild(viewer);
     }
 
+    // ========== 计划倒计时小组件 ==========
+    function renderPlanCountdownWidget(body) {
+      globalState.planCountdowns = globalState.planCountdowns || [];
+      const list = globalState.planCountdowns.sort((a,b) => (a.date||'').localeCompare(b.date||''));
+      const now = new Date(); now.setHours(0,0,0,0);
+      body.innerHTML = `
+        <div class="todo-input-wrap">
+          <input type="text" id="pc-title" placeholder="倒计时名称（如：交报告、项目管理评审）">
+          <input type="date" id="pc-date" value="${new Date(Date.now()+7*86400000).toISOString().slice(0,10)}">
+          <button class="icon-btn" onclick="addPlanCountdown()">+</button>
+        </div>
+        <div class="countdown-list" id="plan-countdown-list">${list.length === 0
+          ? '<div style="opacity:0.5;text-align:center;padding:16px;font-size:12px">还没有倒计时</div>'
+          : list.map(c => {
+            const target = new Date(c.date); target.setHours(0,0,0,0);
+            const diffMs = target - now;
+            const days = Math.ceil(diffMs / 86400000);
+            const urgent = days <= 7;
+            return `<div class="countdown-item" style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;border-radius:10px;background:${urgent?'rgba(255,236,179,0.5)':'rgba(255,255,255,0.45)'};border-left:4px solid ${urgent?'#FFA500':'var(--tiffany)'}">
+              <div style="flex:1;font-size:13px;font-weight:600">${escapeHtml(c.title||'')}</div>
+              <div style="font-size:10px;color:var(--text-muted);min-width:70px;text-align:right">${escapeHtml(c.date||'').slice(5)}</div>
+              <div style="font-size:20px;font-weight:700;color:${urgent?'#E17055':'var(--tiffany-dark)'};min-width:60px;text-align:right">${days} 天</div>
+              <button onclick="deletePlanCountdown(${c.id})" style="background:transparent;border:none;color:#E17055;cursor:pointer;font-size:14px">×</button>
+            </div>`;
+          }).join('')}</div>
+        ${checkUrgentCountdowns() ? `<div class="exp-alert show" style="margin-top:6px"><span style="font-size:16px;margin-right:4px">🔔</span> ${checkUrgentCountdowns()}</div>` : ''}
+      `;
+    }
+
+    function addPlanCountdown() {
+      const title = (document.getElementById('pc-title')||{}).value || '';
+      const date = (document.getElementById('pc-date')||{}).value || '';
+      if (!title.trim() || !date) { alert('请输入名称和日期'); return; }
+      globalState.planCountdowns = globalState.planCountdowns || [];
+      globalState.planCountdowns.push({ id: Date.now(), title: title.trim(), date: date });
+      saveGlobalState();
+      renderHome();
+    }
+
+    function deletePlanCountdown(id) {
+      globalState.planCountdowns = (globalState.planCountdowns || []).filter(c => c.id !== id);
+      saveGlobalState();
+      renderHome();
+    }
+
+    // 首页提醒栏
+    function checkUrgentCountdowns() {
+      globalState.planCountdowns = globalState.planCountdowns || [];
+      const now = new Date(); now.setHours(0,0,0,0);
+      const urgs = globalState.planCountdowns.filter(c => {
+        const t = new Date(c.date); t.setHours(0,0,0,0);
+        const days = Math.ceil((t - now) / 86400000);
+        return days >= 0 && days <= 7;
+      });
+      if (urgs.length === 0) return '';
+      return urgs.map(c => {
+        const t = new Date(c.date); t.setHours(0,0,0,0);
+        const days = Math.ceil((t - now) / 86400000);
+        return (days === 0 ? '⏰ 今天就是「' + c.title + '」！' : '🔔 距「' + c.title + '」还有 ' + days + ' 天');
+      }).join(' · ');
+    }
+
+    // 星回 AI 提醒（在 bootApp 调用）
+    function starRemindCountdowns() {
+      const msg = checkUrgentCountdowns();
+      if (!msg) return;
+      const log = document.getElementById('ai-chat-log');
+      if (!log) return;
+      // 避免重复提醒（今天已提醒过）
+      const today = new Date().toISOString().slice(0,10);
+      if (globalState._lastCountdownRemind === today) return;
+      globalState._lastCountdownRemind = today;
+      globalState.aiChatHistory = globalState.aiChatHistory || [];
+      globalState.aiChatHistory.unshift({
+        id: Date.now(), q: '⏰ 倒计时提醒', a: msg,
+        provider: 'doubao', ts: new Date().toISOString()
+      });
+      saveGlobalState();
+      renderAIChat();
+    }
+
     // ========== 英语学习小组件 ==========
     function renderEnglishLearningWidget(body) {
       globalState.englishWords = globalState.englishWords || [];
@@ -4936,6 +5019,7 @@
       renderAIChat();
       updateEditModeUI();
       initSync();
+      starRemindCountdowns();
       // 双击星回 widget 打开独立对话框
       document.addEventListener('dblclick', (e) => {
         const card = e.target.closest('.card[data-widget="aiSecretary"]');
@@ -5316,7 +5400,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=17').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=18').catch(function () {});
       });
     }
   </script>
