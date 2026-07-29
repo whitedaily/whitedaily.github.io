@@ -1565,21 +1565,13 @@
       <div class="page-header"><div class="page-title"><h1 data-h1="ops">运营</h1><p class="editable-sub" data-sub="ops" onclick="editPageSubtitle('ops', this)" title="点击编辑副标题">小红书自媒体运营 · 内容排期与数据追踪</p></div></div>
       <div class="widget-grid">
         <div class="card glass">
-          <div class="card-title"><span><span class="emoji">📋</span>运营任务</span></div>
-          <div class="todo-input-wrap">
-            <input type="text" class="todo-input" id="ops-input" placeholder="添加运营任务..." onkeypress="if(event.key==='Enter') addOpsTask()">
-            <button class="icon-btn" onclick="addOpsTask()">+</button>
-          </div>
-          <div class="todo-list" id="ops-list"></div>
-        </div>
-        <div class="card glass">
-          <div class="card-title"><span><span class="emoji">💰</span>收益概览</span></div>
-          <div class="info-list">
-            <div class="info-item"><span class="left">本月已到账</span><span class="value">¥2,800</span></div>
-            <div class="info-item"><span class="left">本月待对账</span><span class="value">¥3,500</span></div>
-            <div class="info-item"><span class="left">进行中合作</span><span class="value">3 单</span></div>
-            <div class="info-item"><span class="left">待交稿</span><span class="tag warning">2 笔即将到期</span></div>
-          </div>
+          <div class="card-title"><span><span class="emoji">💸</span>消费概览</span><span style="font-size:11px;color:var(--text-muted);font-weight:400" id="ops-exp-count">0 笔</span></div>
+          <div class="info-list" id="ops-exp-stats" style="margin-bottom:10px"></div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📊 本月分类 Top</div>
+          <div id="ops-exp-topcats" style="font-size:11px;margin-bottom:10px"></div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">🕐 最近消费</div>
+          <div id="ops-exp-recent" style="max-height:120px;overflow-y:auto"></div>
+          <div style="margin-top:10px;font-size:10px;color:var(--text-muted);text-align:center">💡 在首页「💰 每日记账」里记一笔，自动同步到这里</div>
         </div>
         <div class="card glass">
           <div class="card-title"><span><span class="emoji">🎙️</span>播客收听</span></div>
@@ -4106,7 +4098,68 @@
     function renderTodos() { renderTodoList(globalState.todos, 'todo-list', 'toggleTodo', 'deleteTodo'); }
     function renderExam() { renderTodoList(globalState.examTasks, 'exam-list', 'toggleExam', 'deleteExam'); updateExamProgress(); renderTaskHistory(document.getElementById('exam-history'), 'examTasks', '备考任务'); }
     function renderSelf() { renderTodoList(globalState.selfTasks, 'self-list', 'toggleSelf', 'deleteSelf'); renderTaskHistory(document.getElementById('self-history'), 'selfTasks', '自律打卡'); }
-    function renderOps() { renderTodoList(globalState.opsTasks, 'ops-list', 'toggleOps', 'deleteOps'); renderTaskHistory(document.getElementById('ops-history'), 'opsTasks', '运营任务'); }
+    function renderOps() { renderTodoList(globalState.opsTasks, 'ops-list', 'toggleOps', 'deleteOps'); renderTaskHistory(document.getElementById('ops-history'), 'opsTasks', '运营任务'); renderOpsExpenseView(); }
+
+    function renderOpsExpenseView() {
+      globalState.expenses = globalState.expenses || [];
+      const all = globalState.expenses;
+      const today = new Date().toISOString().slice(0, 10);
+      const monthStr = new Date().toISOString().slice(0, 7);
+      const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay()); weekStart.setHours(0,0,0,0);
+      const todayAmt = all.filter(e => e.date === today).reduce((s, e) => s + (e.amount || 0), 0);
+      const weekAmt = all.filter(e => e.date && new Date(e.date) >= weekStart).reduce((s, e) => s + (e.amount || 0), 0);
+      const monthAmt = all.filter(e => (e.date || '').startsWith(monthStr)).reduce((s, e) => s + (e.amount || 0), 0);
+      const dayOfMonth = new Date().getDate() || 1;
+      const avgDaily = Math.round(monthAmt / dayOfMonth);
+
+      // 顶部统计
+      const stats = document.getElementById('ops-exp-stats');
+      if (stats) stats.innerHTML = `
+        <div class="info-item"><span class="left">今日消费</span><span class="value" style="color:#E17055">¥${todayAmt}</span></div>
+        <div class="info-item"><span class="left">本周消费</span><span class="value">¥${weekAmt}</span></div>
+        <div class="info-item"><span class="left">本月消费</span><span class="value" style="color:var(--tiffany-dark)">¥${monthAmt}</span></div>
+        <div class="info-item"><span class="left">本月日均</span><span class="value">¥${avgDaily}</span></div>
+      `;
+      const cnt = document.getElementById('ops-exp-count');
+      if (cnt) cnt.textContent = all.length + ' 笔';
+
+      // 分类 Top 3
+      const catMap = {};
+      all.filter(e => (e.date || '').startsWith(monthStr)).forEach(e => { catMap[e.category || '其他'] = (catMap[e.category || '其他'] || 0) + (e.amount || 0); });
+      const topCats = Object.entries(catMap).sort((a,b) => b[1] - a[1]).slice(0, 3);
+      const topEl = document.getElementById('ops-exp-topcats');
+      if (topEl) {
+        if (topCats.length === 0) {
+          topEl.innerHTML = '<div style="opacity:0.5;font-size:11px">本月还没有消费</div>';
+        } else {
+          const max = topCats[0][1];
+          topEl.innerHTML = topCats.map(([cat, amt]) =>
+            `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              <span style="font-size:11px;min-width:54px">${escapeHtml(cat)}</span>
+              <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.round(amt/max*100)}%;background:var(--tiffany)"></div></div>
+              <span style="font-size:11px;font-weight:600;color:var(--tiffany-dark);min-width:50px;text-align:right">¥${amt}</span>
+            </div>`
+          ).join('');
+        }
+      }
+
+      // 最近 5 条
+      const rec = all.slice().sort((a,b) => (b.ts||0) - (a.ts||0)).slice(0, 5);
+      const recEl = document.getElementById('ops-exp-recent');
+      if (recEl) {
+        if (rec.length === 0) {
+          recEl.innerHTML = '<div style="opacity:0.5;text-align:center;padding:8px;font-size:11px">还没消费记录</div>';
+        } else {
+          recEl.innerHTML = rec.map(e => `
+            <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;margin-bottom:3px;border-radius:6px;background:rgba(255,255,255,0.45);font-size:11px">
+              <span style="color:var(--text-muted);min-width:34px;font-size:10px">${(e.date||'').slice(5)}</span>
+              <span style="padding:1px 5px;border-radius:4px;background:var(--tiffany-light);color:var(--tiffany-dark);font-size:10px">${escapeHtml(e.category||'')}</span>
+              <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(e.note||'')}</span>
+              <span style="font-weight:600;color:#E17055">¥${(e.amount||0).toFixed(0)}</span>
+            </div>`).join('');
+        }
+      }
+    }
     function renderFamily() { renderTodoList(globalState.familyTasks, 'family-list', 'toggleFamily', 'deleteFamily'); renderTaskHistory(document.getElementById('family-history'), 'familyTasks', '家庭待办'); }
 
     // ========== 星回 · 双击独立对话框 ==========
@@ -4485,11 +4538,13 @@
       globalState.expenses.push({ id: Date.now(), amount: amt, category: cat, note: note.trim(), date: new Date().toISOString().slice(0, 10), ts: Date.now() });
       saveGlobalState();
       renderHome();
+      renderOpsExpenseView();
     }
     function expDel(id) {
       globalState.expenses = (globalState.expenses || []).filter(e => e.id !== id);
       saveGlobalState();
       renderHome();
+      renderOpsExpenseView();
     }
     function expSetBudget() {
       const v = parseInt((document.getElementById('exp-budget-val') || {}).value) || 5000;
@@ -5400,7 +5455,7 @@
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=18').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=19').catch(function () {});
       });
     }
   </script>
