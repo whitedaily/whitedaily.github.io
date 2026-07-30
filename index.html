@@ -14,8 +14,8 @@
   <link rel="apple-touch-icon" href="/icon-512.png">
   <title>White 个人专属 AI 工作台</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script async src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+  <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     :root {
       --tiffany: #0ABAB5;
@@ -5781,7 +5781,7 @@ function aiDel(id) {
     async function initAuth(){
       showLoginOverlay('signin');
       try {
-        const me = await fetch('/api/me', { credentials: 'include' });
+        const ac = new AbortController();const to = setTimeout(()=>ac.abort(),5000);const me = await fetch('/api/me', { signal:ac.signal,credentials: 'include' });clearTimeout(to);
         if (me.ok) {
           SERVER_MODE = true;
           await loadStateRemote();
@@ -6169,6 +6169,7 @@ function aiDel(id) {
   </script>
 </body>
 </html>
+
 
 
 
