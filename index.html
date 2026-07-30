@@ -2246,6 +2246,7 @@
       ]},
       pageWidgets: { plan: [], exam: [], self: [], ops: [], family: [], stats: [] },
       aiChatHistory: [],
+      xinghuiProfile: { firstMeeting: true, knownSince: new Date().toISOString().slice(0,10), userPatterns: { preferredTopics: [], moodHistory: [], repeatTasks: [] }, memories: [] },
       expenses: [],
       expenseBudget: { monthly: 5000, alertAt: 80 },
       fitnessGoal: { goal: 'lose', targetWeight: 60, currentWeight: 68 },
@@ -4907,6 +4908,33 @@
       return { items: m, minutes };
     }
 
+    function xinghuiLearn(text) {
+      var prof = globalState.xinghuiProfile || {};
+      prof.userPatterns = prof.userPatterns || {preferredTopics:[],moodHistory:[]};
+      var topics = [];
+      if(/(跑|走|健身|运动|健康|体重|减脂)/.test(text)) topics.push('健康');
+      if(/(备考|行测|申论|学习|考试|读书|单词)/.test(text)) topics.push('学习');
+      if(/(工作|运营|小红书|投稿)/.test(text)) topics.push('工作');
+      if(/(宠物|猫|狗|家庭)/.test(text)) topics.push('家庭');
+      topics.forEach(function(t){ if(!prof.userPatterns.preferredTopics.includes(t)) prof.userPatterns.preferredTopics.push(t); if(prof.userPatterns.preferredTopics.length>20) prof.userPatterns.preferredTopics.shift(); });
+      prof.memories = prof.memories || [];
+      if(text.length>5) { prof.memories.unshift({text:text.slice(0,60), time:new Date().toISOString()}); if(prof.memories.length>30) prof.memories.pop(); }
+      globalState.xinghuiProfile = prof;
+      saveGlobalState();
+    }
+    function xinghuiPersonalize() {
+      var prof = globalState.xinghuiProfile || {};
+      var p = prof.userPatterns || {};
+      var parts = [];
+      if(p.preferredTopics&&p.preferredTopics.length>0) {
+        var topicMap={health:'身体',study:'学习',work:'工作',family:'家庭',emotion:'情感'};
+        var interests = p.preferredTopics.slice(-3).map(function(t){return topicMap[t]||t;}).join('、');
+        parts.push('我知道你最近关注' + interests);
+      }
+      var undone = (globalState.todos||[]).filter(function(t){return !t.done;}).length;
+      if(undone>0) parts.push('还有' + undone + '件事没处理，别急，我陪你一件一件来');
+      return parts.length>0 ? parts.join('\n\n') + '\n\n' : '';
+    }
     function smartAIRespond(text, att) {
       const t = (text || '').toLowerCase();
       const hasImg = !!(att && att.image);
