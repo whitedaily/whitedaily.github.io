@@ -4229,53 +4229,17 @@
 
     async function fetchWeather(lat, lon) {
       try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,uv_index&timezone=auto`);
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,uv_index,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto&forecast_days=3`);
         const data = await res.json();
         const cur = data.current;
-        globalState.weather = { city: '当前位置', temp: Math.round(cur.temperature_2m) + '°C', humidity: cur.relative_humidity_2m + '%', uv: cur.uv_index, desc: getWeatherDesc(cur.uv_index) };
-      } catch (e) { fallbackWeather('北京'); }
+        const wcode = cur.weather_code;
+        const wdesc = (typeof wmoWeatherDesc==='function'?wmoWeatherDesc(wcode):'\u6674') + ' | ' + getWeatherDesc(cur.uv_index);
+        globalState.weather = { city: '\u5f53\u524d\u4f4d\u7f6e', temp: Math.round(cur.temperature_2m) + '\u00b0C', humidity: cur.relative_humidity_2m + '%', uv: cur.uv_index, desc: wdesc, code: wcode, wind: cur.wind_speed_10m, daily: data.daily };
+        try { localStorage.setItem('wb_last_weather', JSON.stringify(globalState.weather)); } catch(e) {}
+        if (typeof xinghuiWeatherCheck==='function') xinghuiWeatherCheck(cur, data.daily, lat, lon);
+      } catch (e) { fallbackWeather('\u5317\u4eac'); }
       saveGlobalState(); renderHome();
-    }
-
-        function fallbackWeather(city) {
-      try { const c = JSON.parse(localStorage.getItem('wb_last_weather')||'null'); if(c&&c.city){ globalState.weather=c; saveGlobalState();renderHome(); return; } } catch(e){}
-      globalState.weather = { city, temp: '31\u00b0C', humidity: '62%', uv: '6', desc: '多云转晴' };
-      saveGlobalState(); renderHome();
-    }unction fallbackWeather(city) {
-      globalState.weather = { city, temp: '31°C', humidity: '62%', uv: '6', desc: '多云转晴', code: 2, wind: 10, daily: null };
-      saveGlobalState(); renderHome();
-    }
-
-    function xinghuiWeatherCheck(current, daily, lat, lon) {
-      if (!current) return;
-      const code = current.weather_code;
-      const temp = current.temperature_2m;
-      const wind = current.wind_speed_10m || 0;
-      const uv = current.uv_index || 0;
-      const todayKey = 'wx_' + new Date().toISOString().slice(0,10);
-      if (localStorage.getItem(todayKey)) return;
-      const reminders = [];
-      if ((code >= 51 && code <= 82) || (code >= 95)) reminders.push({emoji:'\u2614', msg:'今天有雨，出门记得带伞，别淋湿了。'});
-      if ((code >= 71 && code <= 86)) reminders.push({emoji:'\u2744\ufe0f', msg:'今天有雪，路滑注意安全，多穿一点。'});
-      if (code >= 95) reminders.push({emoji:'\u26c8\ufe0f', msg:'今天有雷雨，尽量避免外出。如果在家，记得关好门窗。'});
-      if (temp >= 35) reminders.push({emoji:'\ud83d\udd25', msg:'今天高温 ' + Math.round(temp) + '\u00b0C，注意防曬，多喝水。'});
-      else if (temp <= 5) reminders.push({emoji:'\ud83e\udde3', msg:'今天低温 ' + Math.round(temp) + '\u00b0C，出门多穿些，别着凉。'});
-      if (uv >= 7) reminders.push({emoji:'\ud83e\uddf4', msg:'紫外线指数 ' + uv + '，很强。出门记得涂防晒。'});
-      if (wind >= 40) reminders.push({emoji:'\ud83d\udca8', msg:'今天风力 ' + Math.round(wind) + 'km/h，风大注意高空坠物。'});
-      if (reminders.length === 0) return;
-      localStorage.setItem(todayKey, '1');
-      const pick = reminders[0];
-      globalState.aiChatHistory = globalState.aiChatHistory || [];
-      globalState.aiChatHistory.unshift({ id: Date.now(), q: '\u2601\ufe0f 天气提醒', a: pick.emoji + ' ' + pick.msg, provider: 'doubao', ts: new Date().toISOString() });
-      saveGlobalState();
-      setTimeout(() => {
-        showHint(pick.emoji + ' 沈星回提醒你：' + pick.msg);
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('\ud83c\udf1f 沈星回天气提醒', { body: pick.msg });
-        }
-      }, 3000);
-    }
-    function manualWeather(city) { fallbackWeather(city || '北京'); }
+    }function manualWeather(city) { fallbackWeather(city || '北京'); }
 
     function getWeatherDesc(uv) {
       if (uv >= 8) return '晴 · 紫外线强';
