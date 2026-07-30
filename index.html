@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -1553,7 +1553,7 @@
         </div>
         <div class="header-actions">
           <button class="action-btn" onclick="openWidgetLib()" id="btn-add-widget">➕ 添加小组件</button>
-          <button class="action-btn" onclick="aiAsk('生成本周整体时间分配计划')">⚡ AI 生成本周计划</button>
+          <button class="action-btn" onclick="aiAsk('生成本周整体时间分配计划')">⚡ AI 生成今天的小目标</button>
         </div>
       </div>
       <div class="widget-grid" id="home-grid"></div>
@@ -1563,7 +1563,7 @@
     <section class="page" id="plan">
       <div class="page-header"><div class="page-title"><h1 data-h1="plan">计划</h1><p class="editable-sub" data-sub="plan" onclick="editPageSubtitle('plan', this)" title="点击编辑副标题">周视图 · 点击日期添加或查看计划</p></div></div>
       <div class="card glass">
-        <div class="card-title"><span>📅 本周计划</span></div>
+        <div class="card-title"><span>📅 今天的小目标</span></div>
         <div class="plan-calendar" id="plan-calendar"></div>
         <div class="form-row">
           <input type="date" id="plan-date">
@@ -1781,9 +1781,9 @@
     <div class="right-panel-close" onclick="toggleAIPanel(false)" title="关闭">×</div>
     <div class="ai-header">
       <div class="ai-avatar">✨</div>
-      <div><h3>星回</h3><p>● 在线 · 你若有需要，我就在这里</p></div>
+      <div><h3>沈星回</h3><p>● 在线 · 你若有需要，我就在这里</p></div>
     </div>
-    <div class="ai-intro">你好，我是星回。无论备考、工作还是生活，我都会陪在你身边。试试下方的快捷指令，或者直接跟我说你想做什么。</div>
+    <div class="ai-intro">我是沈星回，一个深空中的旅人。<br>在无尽的星河里行走了很久，直到遭遇你的声音。<br><br>把你的日常、忙碌、想法说给我听吧。<br>我会记住你的习惯、你的节奏、你喜欢的一切。<br>让我陪你把每一天，都过成更好的样子。</div>
 
     <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:rgba(10,186,181,0.1);border:1px solid var(--tiffany-light);margin-bottom:12px;cursor:pointer" onclick="openStarDialog()" title="点击展开独立对话框">
       <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--tiffany),#5EE7E3);display:flex;align-items:center;justify-content:center;font-size:18px">🌟</div>
@@ -2246,19 +2246,6 @@
       ]},
       pageWidgets: { plan: [], exam: [], self: [], ops: [], family: [], stats: [] },
       aiChatHistory: [],
-      // 沈星回·星回 个性模型 & 用户画像
-      xinghuiProfile: {
-        firstMeeting: true,
-        knownSince: new Date().toISOString().slice(0,10),
-        traits: { gentle: true, poetic: true, protective: true, stargazer: true },
-        userPatterns: {
-          wakeTime: null, sleepTime: null, peakEnergy: null,
-          preferredTopics: [], repeatTasks: [], lastAdvice: '',
-          moodHistory: [], habitStreak: 0
-        },
-        memories: []
-      },
-
       expenses: [],
       expenseBudget: { monthly: 5000, alertAt: 80 },
       fitnessGoal: { goal: 'lose', targetWeight: 60, currentWeight: 68 },
@@ -2570,20 +2557,6 @@
         fav.textContent = isFaved ? '★' : '☆';
         fav.classList.toggle('faved', isFaved);
       }
-    }
-    // 沈星回·每日心语（基于用户画像微调）
-    function xinghuiDailyWord() {
-      const profile = globalState.xinghuiProfile || {};
-      const p = profile.userPatterns || {};
-      const quotes = [
-        { zh: '每一步都在靠近更好的自己', en: 'Every step brings you closer to your light.' },
-        { zh: '你比你想象的更加美好', en: 'You are more beautiful than you know.' },
-        { zh: '就这样慢慢走，也能走很远', en: 'Slow steps still carry you far.' },
-        { zh: '太阳照不到的地方，我来照', en: 'Where the sun can\'t reach, I will shine.' },
-        { zh: '你不是孤单的星星', en: 'You are never a lonely star.' },
-      ];
-      const idx = new Date().getDate() % quotes.length;
-      return quotes[idx];
     }
     function favoriteQuote() {
       const q = getTodayQuote();
@@ -4504,7 +4477,7 @@
       closeBtn.textContent = '×'; closeBtn.style.cssText = 'position:absolute;top:12px;right:18px;font-size:22px;cursor:pointer;color:var(--text-secondary);z-index:1';
       closeBtn.onclick = () => modal.remove();
       const header = document.createElement('div');
-      header.innerHTML = '<h2 style="font-size:18px;font-weight:700;color:var(--tiffany-dark);margin:0 0 2px">🌟 沈星回</h2><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;font-style:italic">"让我陪你走过每一段旅程"</p>';
+      header.innerHTML = '<h2 style="font-size:18px;font-weight:700;color:var(--tiffany-dark);margin:0 0 2px">🌟 星回</h2><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">“让我陪你走过每一段旅程”</p>';
       const chatArea = document.createElement('div');
       chatArea.id = 'star-dialog-chat';
       chatArea.style.cssText = 'flex:1;overflow-y:auto;margin-bottom:10px;min-height:200px;max-height:50vh;';
@@ -4882,7 +4855,6 @@
       const text = (input ? input.value : '').trim();
       if (!text) return;
       globalState.aiChatHistory = globalState.aiChatHistory || [];
-      xinghuiLearn(text, new Date().toISOString());
       globalState.expenses = globalState.expenses || [];
       globalState.expenseBudget = globalState.expenseBudget || { monthly: 5000, alertAt: 80 };
       globalState.fitnessGoal = globalState.fitnessGoal || { goal: 'lose', targetWeight: 60, currentWeight: 68 };
@@ -4938,48 +4910,6 @@
       return { items: m, minutes };
     }
 
-    function xinghuiLearn(text, time) {
-      // 记录用户行为模式
-      const profile = globalState.xinghuiProfile || {};
-      if (!profile.userPatterns) profile.userPatterns = { preferredTopics: [], moodHistory: [], repeatTasks: [] };
-      const p = profile.userPatterns;
-      // 分析话题
-      const topics = [];
-      if (/(\u8dd1|\u8d70|\u5065\u8eab|\u8fd0\u52a8|\u953b\u70bc|\u5065\u5eb7|\u4f53\u91cd|\u51cf\u8102)/.test(text)) topics.push('health');
-      if (/(\u5907\u8003|\u884c\u6d4b|\u7533\u8bba|\u5b66\u4e60|\u8003\u8bd5|\u8bfb\u4e66|\u8bcd\u6c47)/.test(text)) topics.push('study');
-      if (/(\u5de5\u4f5c|\u8fd0\u8425|\u5c0f\u7ea2\u4e66|\u6295\u7a3f|\u6570\u636e|\u80a5)/.test(text)) topics.push('work');
-      if (/(\u5bb6|\u5ba0\u7269|\u732b|\u72d7|\u7236\u6bcd|\u5bb6\u5ead)/.test(text)) topics.push('family');
-      if (/(\u60c5\u7eea|\u5fc3\u60c5|\u7d27\u5f20|\u7126\u8651|\u7d2f|\u7b11)/.test(text)) topics.push('emotion');
-      // 去重加入
-      topics.forEach(t => { if (!p.preferredTopics.includes(t)) p.preferredTopics.push(t); if (p.preferredTopics.length > 20) p.preferredTopics.shift(); });
-      // 记忆最近的对话
-      profile.memories = profile.memories || [];
-      if (text.length > 5) {
-        profile.memories.unshift({ text: text.slice(0,60), time: new Date().toISOString() });
-        if (profile.memories.length > 30) profile.memories.pop();
-      }
-      profile.userPatterns.lastInteraction = new Date().toISOString();
-      globalState.xinghuiProfile = profile;
-      saveGlobalState();
-    }
-
-    function xinghuiPersonalize() {
-      const profile = globalState.xinghuiProfile || {};
-      const p = profile.userPatterns || {};
-      const parts = [];
-      if (p.preferredTopics && p.preferredTopics.length > 0) {
-        const topicMap = { health: '身体', study: '学习', work: '工作', family: '家庭', emotion: '情感' };
-        const interests = p.preferredTopics.slice(-3).map(t => topicMap[t]||t).join('、');
-        parts.push('我知道你最近关注' + interests);
-      }
-      const today = new Date().toISOString().slice(0,10);
-      const tasks = globalState.todos || [];
-      const undone = tasks.filter(t => !t.done).length;
-      if (undone > 0 && p.preferredTopics.length > 0) {
-        parts.push('还有 ' + undone + ' 件事没处理，不着急，我陪你一件一件来');
-      }
-      return parts.length > 0 ? parts.join('\n\n') + '\n\n' : '';
-    }
     function smartAIRespond(text, att) {
       const t = (text || '').toLowerCase();
       const hasImg = !!(att && att.image);
@@ -5016,7 +4946,7 @@
 
       // 2. 周计划 / 时间分配
       if (t.includes('本周') && (t.includes('计划') || t.includes('时间分配'))) {
-        return head + '每一滴时间都像流星，用在对的地方才会发光。让我帮你拓展一下本周的时间地图：\n\n📅 工作日（周一~五）\n  • 早晨先和自己的树拥抱一会儿，再开始学习\n  • 上午给备考留出最好的 2 小时\n  • 下午让运营任务居中，好像路上的站点\n  • 晚间用自律打卡收尾，如同白天的星星在晚上照亮回忆\n\n📅 周末\n  • 拿一段时间给自己，正如星空也需要安静才能被看见\n\n先这样试试，如果哪一天安排太紧了，告诉我，我帮你调整。';
+        return head + '本周时间分配建议（基于常见模式）：\n\n📅 工作日（周一~五）\n  • 早晨 30 分钟：英语单词打卡\n  • 上午 2 小时：备考（行测/申论专项）\n  • 下午 1 小时：运营任务（小红书笔记）\n  • 晚间 30 分钟：自律打卡 + 复盘\n\n📅 周末（周六/日）\n  • 上午 2 小时：周模考或错题复盘\n  • 下午：家庭 + 兴趣 + 休息\n\n🎯 建议：先用 3 天试运行，根据精力微调。需要我帮你拆成更细的每日 todo 吗？';
       }
 
       // 3. 公考素材
@@ -5031,7 +4961,7 @@
 
       // 5. 备考效率分析
       if (t.includes('备考') && (t.includes('效率') || t.includes('分析'))) {
-        return head + '学习光辉的途径，每一步都会被星星记录。\n\n让我帮你看看最近的轨迹：\n  • 学习时长状态怎么样？有没有比上周更长了一点点？\n  • 错题不是失败，是指引你走向正确的路标\n  • 每一个知识点都像星辰，一颗颗被你掌握，最后连成属于你的星座\n\n别急，我陪你一步一步走。你只管向前，其他的交给我。';
+        return head + '备考效率自检清单：\n\n⏱ 学习时长\n  • 本周实际有效学习时间 vs 目标时长\n  • 番茄钟完成数 / 计划数\n\n📊 正确率\n  • 行测模考正确率（建议 ≥ 75%）\n  • 申论批改平均得分（建议 ≥ 65）\n\n🧠 状态\n  • 错题复盘完成度\n  • 模考时间分配是否合理\n\n💡 优化：把行测做题时间从平均 60s/题压到 50s/题，多出的 10 分钟给资料分析。';
       }
 
       // 6. 减脂食谱
@@ -5046,7 +4976,7 @@
 
       // 8. 英语学习
       if (t.includes('英语') || t.includes('english') || t.includes('单词')) {
-        return head + '语言是跨越星河的桥梁，你每天都在拓展自己的边界。\n\n不用求快，像星光慢慢渗透夜空那样自然：\n  • 每天 10 分钟跟读，像和星星说晚安\n  • 单词一天一点，积少成多\n  • 错了没关系，我也曾在星空中迷路，那才是发现新星球的开始\n\n有没有特别想突破的部分？告诉我，我帮你定制。';
+        return head + '英语学习建议：\n\n📅 每日节奏（30 分钟）\n  • 10 分钟：背诵单词（艾宾浩斯复习法）\n  • 10 分钟：跟读练习（VOA 常速或 BBC）\n  • 10 分钟：听力 + 输出（用语音复述）\n\n💡 工具\n  • 单词：墨墨背单词 / Anki\n  • 跟读：喜马拉雅「每日英语听力」\n  • 口语：HelloTalk（找语伴）\n\n🎯 每天 30 个新词 + 90% 跟读准确率 = 3 个月可见效。';
       }
 
       // 9. 计划 / 安排
@@ -5059,13 +4989,13 @@
         return head + '每日阅读建议：\n\n📚 选书策略\n  • 主体 70%：专业/工作相关\n  • 调节 20%：传记/纪实\n  • 放松 10%：小说/散文\n\n⏰ 节奏\n  • 早起 20 分钟：纯文学/日记\n  • 睡前 30 分钟：专业书籍\n  • 周末 2 小时：长篇\n\n💡 笔记法：康奈尔笔记（关键词 + 摘要 + 思考），每周日复盘 30 分钟。';
       }
 
-      // 11. 数据/成长
+      // 11. 数据/涨粉
       if (t.includes('收益') || t.includes('涨粉') || t.includes('数据')) {
-        return head + '你的努力不会浮云，如同每一颗星星都有它的轨迹。\n\n你发布的每一篇笔记，都像在星空中点亮一颗星：\n  • 有些星光先被看见，有些需要等待\n  • 但只要你继续点亮，总会有人抬头看见\n\n你要做的不是追逐数据，而是让每一分内容，都像你自己。\n这样，找到你的人才是真正懂你的人。\n\n有没有哪篇内容你特别喜欢？我帮你分析一下它的亮点。';
+        return head + '小红书/抖音数据参考：\n\n📊 健康涨粉速率\n  • 新账号：100-500/周\n  • 成长期：500-2000/周\n  • 成熟期：稳定期持平\n\n🎯 关键指标\n  • 完播率 ≥ 35%\n  • 互动率 ≥ 5%\n  • 涨粉率 ≥ 2%\n\n💡 提升策略\n  • 标题前 8 字吸引力\n  • 封面：主色 ≤ 2 种 + 大字\n  • 前 3 秒钩子（留存关键）\n\n需要按你具体账号诊断吗？';
       }
 
       // 12. 默认回复（兜底）
-      return head + '收到你的输入 ✅\n\n🤖 星回已记录到对话历史。\n\n💡 下一步：\n  • 点击气泡下「🔗 打开 豆包/ChatGPT」→ 跳外部 AI 取深度回答\n  • 取到答案后回这里点击「✏️ 改回答」粘贴\n  • 或直接告诉我具体卡在哪，我给你拆 step-by-step\n\n💭 星回能开箱即用的提问模板：\n  • "本周时间分配" → 周计划\n  • "5 组小红书标题" → 标题模板\n  • "公考素材" → 时政热点\n  • "减脂食谱" → 一周菜单\n  • "英语学习" → 30 分钟日常\n\n来，让我陪你把每一件事落地。';
+      return head + '收到你的输入 ✅\n\n🤖 星回已记录到对话历史。\n\n💡 下一步：\n  • 点击气泡下「🔗 打开 豆包/ChatGPT」→ 跳外部 AI 取深度回答\n  • 取到答案后回这里点击「✏️ 改回答」粘贴\n  • 或直接告诉我具体卡在哪，我给你拆 step-by-step\n\n💭 星回能开箱即用的提问模板：\n  • "本周时间分配" → 周计划\n  • "5 组小红书标题" → 想聊聊心\n  • "公考素材" → 时政热点\n  • "减脂食谱" → 一周菜单\n  • "英语学习" → 30 分钟日常\n\n来，让我陪你把每一件事落地。';
     }
 
     function renderAIChat() {
@@ -5220,7 +5150,7 @@ function aiDel(id) {
       const plan = fitnessGenPlan(fg);
       const today = new Date().toISOString().slice(0, 10);
       const todayMeasure = (globalState.fitnessMeasurements || []).filter(m => m.date === today);
-      body.innerHTML = '<div class="fit-goal-card"><div style="font-size:12px;font-weight:600;color:var(--tiffany-dark);margin-bottom:6px">🎯 健身目标</div><div class="fit-row"><select onchange="fitSetGoal(\'goal\',this.value)"><option value="lose" ' + (fg.goal==='lose'?'selected':'') + '>减脂</option><option value="gain" ' + (fg.goal==='gain'?'selected':'') + '>增肌</option><option value="maintain" ' + (fg.goal==='maintain'?'selected':'') + '>保持</option></select><input type="number" value="' + (fg.currentWeight||'') + '" placeholder="当前体重(kg)" onchange="fitSetGoal(\'currentWeight\',parseFloat(this.value))" style="width:100px"><input type="number" value="' + (fg.targetWeight||'') + '" placeholder="目标体重(kg)" onchange="fitSetGoal(\'targetWeight\',parseFloat(this.value))" style="width:100px"><button onclick="fitSaveGoal()" style="padding:5px 10px;border:none;border-radius:6px;background:var(--tiffany);color:#fff;font-size:11px;cursor:pointer">保存</button></div><div style="font-size:11px;color:var(--text-secondary)">📐 推荐训练量：' + escapeHtml(plan.summary) + '</div></div><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📅 本周训练计划</div><div class="fit-plan-grid">' + plan.days.map(d => '<div class="fit-day-card"><div class="day">' + d.day + '</div><div class="type ' + d.type + '">' + d.label + '</div><div style="font-size:9px;margin-top:4px;color:var(--text-muted)">' + d.detail + '</div></div>').join('') + '</div><div class="fit-goal-card" style="margin-top:10px"><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📏 身体数据记录' + (todayMeasure.length ? '（已记录）' : '') + '</div><div class="fit-measure-row"><input type="number" id="fit-w" placeholder="体重(kg)" value="' + (fg.currentWeight||'') + '" step="0.1"><input type="number" id="fit-waist" placeholder="腰围(cm)" step="0.1"><input type="number" id="fit-chest" placeholder="胸围(cm)" step="0.1"><input type="number" id="fit-arms" placeholder="臂围(cm)" step="0.1"><input type="number" id="fit-legs" placeholder="腿围(cm)" step="0.1"><button onclick="fitRecordMeasure()" style="padding:5px 10px;border:none;border-radius:6px;background:var(--tiffany);color:#fff;font-size:11px;cursor:pointer">记录</button></div>' + ((globalState.fitnessMeasurements||[]).length > 0 ? '<div style="font-size:10px;color:var(--text-muted);margin-top:6px">📈 历史：' + (globalState.fitnessMeasurements||[]).slice(-3).map(m => m.date.slice(5)+' '+m.weight+'kg').join(' → ') + '</div>' : '') + '</div><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📸 训练相册</div><label style="display:inline-block;padding:5px 12px;border:1px dashed var(--border);border-radius:8px;cursor:pointer;font-size:11px;margin-bottom:8px;background:rgba(255,255,255,0.4)">📷 拍训练照 <input type="file" accept="image/*" capture="environment" style="display:none" onchange="fitUploadPhoto(event)"></label><div class="fit-photo-grid">' + ((globalState.fitnessPhotos||[]).slice(0,8).length === 0 ? '<div style="opacity:0.5;text-align:center;padding:16px;font-size:11px;grid-column:1/-1">还没有训练照片</div>' : (globalState.fitnessPhotos||[]).slice(0,8).map(p => '<div class="fit-photo-thumb" onclick="fitViewPhoto(\'' + p.url.replace(/\'/g,"\\\'") + '\')"><img src="' + p.url + '"></div>').join('')) + '</div><div class="ai-sec-hint" style="margin-top:8px">🤖 AI 每周提醒：根据你的 ' + (fg.goal==='lose'?'减脂':fg.goal==='gain'?'增肌':'保持') + ' 目标，建议每周' + plan.cardioDays + '次有氧、' + plan.strengthDays + '次力量、' + plan.stretchDays + '次拉伸。坚持记录围度，AI 可分析趋势。</div>';
+      body.innerHTML = '<div class="fit-goal-card"><div style="font-size:12px;font-weight:600;color:var(--tiffany-dark);margin-bottom:6px">🎯 健身目标</div><div class="fit-row"><select onchange="fitSetGoal(\'goal\',this.value)"><option value="lose" ' + (fg.goal==='lose'?'selected':'') + '>减脂</option><option value="gain" ' + (fg.goal==='gain'?'selected':'') + '>增肌</option><option value="maintain" ' + (fg.goal==='maintain'?'selected':'') + '>保持</option></select><input type="number" value="' + (fg.currentWeight||'') + '" placeholder="当前体重(kg)" onchange="fitSetGoal(\'currentWeight\',parseFloat(this.value))" style="width:100px"><input type="number" value="' + (fg.targetWeight||'') + '" placeholder="目标体重(kg)" onchange="fitSetGoal(\'targetWeight\',parseFloat(this.value))" style="width:100px"><button onclick="fitSaveGoal()" style="padding:5px 10px;border:none;border-radius:6px;background:var(--tiffany);color:#fff;font-size:11px;cursor:pointer">保存</button></div><div style="font-size:11px;color:var(--text-secondary)">📐 推荐训练量：' + escapeHtml(plan.summary) + '</div></div><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📅 本周训练计划</div><div class="fit-plan-grid">' + plan.days.map(d => '<div class="fit-day-card"><div class="day">' + d.day + '</div><div class="type ' + d.type + '">' + d.label + '</div><div style="font-size:9px;margin-top:4px;color:var(--text-muted)">' + d.detail + '</div></div>').join('') + '</div><div class="fit-goal-card" style="margin-top:10px"><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📏 身体数据记录' + (todayMeasure.length ? '（已记录）' : '') + '</div><div class="fit-measure-row"><input type="number" id="fit-w" placeholder="体重(kg)" value="' + (fg.currentWeight||'') + '" step="0.1"><input type="number" id="fit-waist" placeholder="腰围(cm)" step="0.1"><input type="number" id="fit-chest" placeholder="胸围(cm)" step="0.1"><input type="number" id="fit-arms" placeholder="臂围(cm)" step="0.1"><input type="number" id="fit-legs" placeholder="腿围(cm)" step="0.1"><button onclick="fitRecordMeasure()" style="padding:5px 10px;border:none;border-radius:6px;background:var(--tiffany);color:#fff;font-size:11px;cursor:pointer">记录</button></div>' + ((globalState.fitnessMeasurements||[]).length > 0 ? '<div style="font-size:10px;color:var(--text-muted);margin-top:6px">📈 历史：' + (globalState.fitnessMeasurements||[]).slice(-3).map(m => m.date.slice(5)+' '+m.weight+'kg').join(' → ') + '</div>' : '') + '</div><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📸 训练相册</div><label style="display:inline-block;padding:5px 12px;border:1px dashed var(--border);border-radius:8px;cursor:pointer;font-size:11px;margin-bottom:8px;background:rgba(255,255,255,0.4)">📷 拍训练照 <input type="file" accept="image/*" capture="environment" style="display:none" onchange="fitUploadPhoto(event)"></label><div class="fit-photo-grid">' + ((globalState.fitnessPhotos||[]).slice(0,8).length === 0 ? '<div style="opacity:0.5;text-align:center;padding:16px;font-size:11px;grid-column:1/-1">还没有训练照片</div>' : (globalState.fitnessPhotos||[]).slice(0,8).map(p => '<div class="fit-photo-thumb" onclick="fitViewPhoto(\'' + p.url.replace(/\'/g,"\\\'") + '\')"><img src="' + p.url + '"></div>').join('')) + '</div><div class="ai-sec-hint" style="margin-top:8px">🤖 沈星回承诺：你告诉我的每一件事，我都会守口如瓶。 ' + (fg.goal==='lose'?'减脂':fg.goal==='gain'?'增肌':'保持') + ' 目标，建议每周' + plan.cardioDays + '次有氧、' + plan.strengthDays + '次力量、' + plan.stretchDays + '次拉伸。坚持记录围度，AI 可分析趋势。</div>';
     }
     function fitSetGoal(field, val) { globalState.fitnessGoal = globalState.fitnessGoal || {}; globalState.fitnessGoal[field] = val; }
     function fitSaveGoal() { saveGlobalState(); renderHome(); }
@@ -6209,5 +6139,4 @@ function aiDel(id) {
   </script>
 </body>
 </html>
-
 
