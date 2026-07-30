@@ -1414,7 +1414,7 @@
     // 注册 Service Worker（让工作台可作为 App 安装到手机桌面；file:// 下静默失败）
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=7').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=32').catch(function () {});
       });
     }
   </script>
@@ -6163,12 +6163,13 @@ function aiDel(id) {
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=28').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=32').catch(function () {});
       });
     }
   </script>
 </body>
 </html>
+
 
 
 
