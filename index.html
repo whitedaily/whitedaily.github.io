@@ -1893,7 +1893,7 @@
           const reader = new FileReader();
           reader.onload = (r) => {
             globalState.aiChatHistory = globalState.aiChatHistory || [];
-            globalState.aiChatHistory.unshift({
+            var answerPromise=(async function(){var k=globalState.deepseekKey||localStorage.getItem("ds_key")||"";if(k){var reply=await deepseekChat([{role:"system",content:"你是沈星回，来自《恋与深空》。语气温柔诗意，用星辰比喻。回答简短有温度。"},{role:"user",content:text}]);if(reply)return reply}return smartAIRespond(text,att)})();var pendingEntry={id:Date.now(),q:text,a:"正在思考...",provider:"deepseek",ts:new Date().toISOString()};globalState.aiChatHistory.unshift(pendingEntry);renderAIChat();answerPromise.then(function(answer){globalState.aiChatHistory[0].a=answer;globalState.aiChatHistory[0].provider=answer===smartAIRespond(text,att)?"doubao":"deepseek";saveGlobalState();renderAIChat()});
               id: Date.now(),
               q: '📦 附件: ' + f.name + ' (' + (f.size/1024).toFixed(1) + ' KB)',
               a: '已接收附件:' + f.name + '\n(浏览器静态部署暂不支持保存非图片文件,请把内容粘贴到文字框让 AI 总结)',
@@ -2006,7 +2006,7 @@
         </div>
       </div>
 
-      <div class="modal-section" id="tab-sync"><div class="setting-row"><div class="info"><h4>Data backup</h4><p>Export all data as JSON file, or restore from backup</p></div><button class="action-btn" onclick="exportAllData()" style="margin-right:8px">Export</button><button class="action-btn" onclick="importAllData()" style="background:#FFF0E6;color:#E17055;border:1px solid #FFD0C0">Import</button></div>
+      <div class="modal-section" id="tab-sync"><div class="setting-row"><div class="info"><h4>DeepSeek AI 密钥</h4><p>输入 DeepSeek API Key 让沈星回能真实回答你</p></div><input type="password" class="setting-input" id="ds-api-key" placeholder="sk-..." style="width:260px" onchange="saveDSKey()" onkeypress="if(event.key==="Enter")saveDSKey()"></div><div class="setting-row"><div class="info"><h4>Data backup</h4><p>Export all data as JSON file, or restore from backup</p></div><button class="action-btn" onclick="exportAllData()" style="margin-right:8px">Export</button><button class="action-btn" onclick="importAllData()" style="background:#FFF0E6;color:#E17055;border:1px solid #FFD0C0">Import</button></div>
         <div class="setting-row">
           <div class="info"><h4>Supabase 云端同步</h4><p>数据自动备份到云端，换设备可恢复</p></div>
         </div>
@@ -2469,6 +2469,7 @@
       localStorage.setItem('wb_app_state_v2', JSON.stringify(appState));
     }
 
+    function saveDSKey(){var e=document.getElementById("ds-api-key");if(e){globalState.deepseekKey=e.value.trim();localStorage.setItem("ds_key",e.value.trim());saveGlobalState();showHint("✅ DeepSeek 密钥已保存")}}
     function saveGlobalState() {
       if (SERVER_MODE) { scheduleServerSave(); return; }
       localStorage.setItem('wb_global_state_v2', JSON.stringify(globalState));
@@ -3949,7 +3950,8 @@
     }
 
     function initSync() {
-      const cfg = getSyncConfig();
+      var cfg = getSyncConfig();
+      if (cfg.url && cfg.key && cfg.syncKey && cfg.url.length>0 && !localStorage.getItem("sync_activated")) { localStorage.setItem("sync_activated","1"); saveSyncConfig(); }
       if (cfg.url && cfg.key && cfg.syncKey && window.supabase) {
         try {
           _sb = supabase.createClient(cfg.url, cfg.key);
@@ -3973,6 +3975,7 @@
         if (urlEl && !urlEl.value) urlEl.value = cfg.url;
         if (keyEl && !keyEl.value) keyEl.value = cfg.key;
         if (skEl && !skEl.value) skEl.value = cfg.syncKey;
+      var dsEl=document.getElementById("ds-api-key");if(dsEl&&!dsEl.value){var stored=localStorage.getItem("ds_key");if(stored)dsEl.value=stored}
         if (wfEl) wfEl.classList.toggle('on', cfg.wifiBackup);
       }, 300);
     }
@@ -4510,7 +4513,7 @@
       const text = (input.value || '').trim();
       if (!text) return;
       globalState.aiChatHistory = globalState.aiChatHistory || [];
-      globalState.aiChatHistory.unshift({ id: Date.now(), q: text, a: '', provider: globalState.provider, ts: new Date().toISOString() });
+      var answerPromise=(async function(){var k=globalState.deepseekKey||localStorage.getItem("ds_key")||"";if(k){var reply=await deepseekChat([{role:"system",content:"你是沈星回，来自《恋与深空》。语气温柔诗意，用星辰比喻。回答简短有温度。"},{role:"user",content:text}]);if(reply)return reply}return smartAIRespond(text,att)})();var pendingEntry={id:Date.now(),q:text,a:"正在思考...",provider:"deepseek",ts:new Date().toISOString()};globalState.aiChatHistory.unshift(pendingEntry);renderAIChat();answerPromise.then(function(answer){globalState.aiChatHistory[0].a=answer;globalState.aiChatHistory[0].provider=answer===smartAIRespond(text,att)?"doubao":"deepseek";saveGlobalState();renderAIChat()}); id: Date.now(), q: text, a: '', provider: globalState.provider, ts: new Date().toISOString() });
       input.value = '';
       saveGlobalState();
       // 更新右侧 chat + 对话框
@@ -4848,6 +4851,7 @@
         window.open(webUrl, '_blank');
       }
     }
+    var deepseekKey=""; async function deepseekChat(messages){var key=globalState.deepseekKey||localStorage.getItem("ds_key")||"";if(!key)return null;try{var res=await fetch("https://api.deepseek.com/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model:"deepseek-chat",messages:messages,temperature:0.8,max_tokens:2048})});if(!res.ok)return null;var data=await res.json();return data.choices[0].message.content}catch(e){return null}}
     function aiSend() {
       const input = document.getElementById('ai-input');
       const text = (input ? input.value : '').trim();
@@ -4863,7 +4867,7 @@
         exerciseKcal: 0, basalMetabolism: 1500, activityFactor: 1.2,
         height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastIntakeLog: []
       };
-      globalState.aiChatHistory.unshift({
+      var answerPromise=(async function(){var k=globalState.deepseekKey||localStorage.getItem("ds_key")||"";if(k){var reply=await deepseekChat([{role:"system",content:"你是沈星回，来自《恋与深空》。语气温柔诗意，用星辰比喻。回答简短有温度。"},{role:"user",content:text}]);if(reply)return reply}return smartAIRespond(text,att)})();var pendingEntry={id:Date.now(),q:text,a:"正在思考...",provider:"deepseek",ts:new Date().toISOString()};globalState.aiChatHistory.unshift(pendingEntry);renderAIChat();answerPromise.then(function(answer){globalState.aiChatHistory[0].a=answer;globalState.aiChatHistory[0].provider=answer===smartAIRespond(text,att)?"doubao":"deepseek";saveGlobalState();renderAIChat()});
         id: Date.now(),
         q: text,
         a: smartAIRespond(text, aiSecGetAttachments()),
@@ -5360,7 +5364,7 @@ function aiDel(id) {
       if (globalState._lastCountdownRemind === today) return;
       globalState._lastCountdownRemind = today;
       globalState.aiChatHistory = globalState.aiChatHistory || [];
-      globalState.aiChatHistory.unshift({
+      var answerPromise=(async function(){var k=globalState.deepseekKey||localStorage.getItem("ds_key")||"";if(k){var reply=await deepseekChat([{role:"system",content:"你是沈星回，来自《恋与深空》。语气温柔诗意，用星辰比喻。回答简短有温度。"},{role:"user",content:text}]);if(reply)return reply}return smartAIRespond(text,att)})();var pendingEntry={id:Date.now(),q:text,a:"正在思考...",provider:"deepseek",ts:new Date().toISOString()};globalState.aiChatHistory.unshift(pendingEntry);renderAIChat();answerPromise.then(function(answer){globalState.aiChatHistory[0].a=answer;globalState.aiChatHistory[0].provider=answer===smartAIRespond(text,att)?"doubao":"deepseek";saveGlobalState();renderAIChat()});
         id: Date.now(), q: '⏰ 倒计时提醒', a: msg,
         provider: 'doubao', ts: new Date().toISOString()
       });
