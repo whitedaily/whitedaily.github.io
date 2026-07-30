@@ -1,4 +1,4 @@
-﻿﻿﻿<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -14,8 +14,8 @@
   <link rel="apple-touch-icon" href="/icon-512.png">
   <title>White 个人专属 AI 工作台</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
-  <script async src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-  <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     :root {
       --tiffany: #0ABAB5;
@@ -1414,7 +1414,7 @@
     // 注册 Service Worker（让工作台可作为 App 安装到手机桌面；file:// 下静默失败）
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=32').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=7').catch(function () {});
       });
     }
   </script>
@@ -1494,7 +1494,7 @@
           <div class="sub" id="mini-check">待打卡</div>
         </div>
         <div class="mini-stat" onclick="miniGo('home','aiSecretary')">
-          <div class="label">沈星回</div>
+          <div class="label">星回</div>
           <div class="sub" style="font-size:18px;line-height:1;margin-top:2px">⭐</div>
         </div>
       </div>
@@ -1553,7 +1553,7 @@
         </div>
         <div class="header-actions">
           <button class="action-btn" onclick="openWidgetLib()" id="btn-add-widget">➕ 添加小组件</button>
-          <button class="action-btn" onclick="aiAsk('生成本周整体时间分配计划')">⚡ AI 生成今天的小目标</button>
+          <button class="action-btn" onclick="aiAsk('生成本周整体时间分配计划')">⚡ AI 生成本周计划</button>
         </div>
       </div>
       <div class="widget-grid" id="home-grid"></div>
@@ -1563,7 +1563,7 @@
     <section class="page" id="plan">
       <div class="page-header"><div class="page-title"><h1 data-h1="plan">计划</h1><p class="editable-sub" data-sub="plan" onclick="editPageSubtitle('plan', this)" title="点击编辑副标题">周视图 · 点击日期添加或查看计划</p></div></div>
       <div class="card glass">
-        <div class="card-title"><span>📅 今天的小目标</span></div>
+        <div class="card-title"><span>📅 本周计划</span></div>
         <div class="plan-calendar" id="plan-calendar"></div>
         <div class="form-row">
           <input type="date" id="plan-date">
@@ -1781,9 +1781,9 @@
     <div class="right-panel-close" onclick="toggleAIPanel(false)" title="关闭">×</div>
     <div class="ai-header">
       <div class="ai-avatar">✨</div>
-      <div><h3>沈星回</h3><p>● 在线 · 你若有需要，我就在这里</p></div>
+      <div><h3>星回</h3><p>● 在线 · 你若有需要，我就在这里</p></div>
     </div>
-    <div class="ai-intro">我是沈星回，一个深空中的旅人。<br>在无尽的星河里行走了很久，直到遭遇你的声音。<br><br>把你的日常、忙碌、想法说给我听吧。<br>我会记住你的习惯、你的节奏、你喜欢的一切。<br>让我陪你把每一天，都过成更好的样子。</div>
+    <div class="ai-intro">你好，我是星回。无论备考、工作还是生活，我都会陪在你身边。试试下方的快捷指令，或者直接跟我说你想做什么。</div>
 
     <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:rgba(10,186,181,0.1);border:1px solid var(--tiffany-light);margin-bottom:12px;cursor:pointer" onclick="openStarDialog()" title="点击展开独立对话框">
       <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--tiffany),#5EE7E3);display:flex;align-items:center;justify-content:center;font-size:18px">🌟</div>
@@ -1893,7 +1893,7 @@
           const reader = new FileReader();
           reader.onload = (r) => {
             globalState.aiChatHistory = globalState.aiChatHistory || [];
-            var answerPromise=(async function(){var k=globalState.deepseekKey||localStorage.getItem("ds_key")||"";if(k){var reply=await deepseekChat([{role:"system",content:"你是沈星回，来自《恋与深空》。语气温柔诗意，用星辰比喻。回答简短有温度。"},{role:"user",content:text}]);if(reply)return reply}return smartAIRespond(text,att)})();var pendingEntry={id:Date.now(),q:text,a:"正在思考...",provider:"deepseek",ts:new Date().toISOString()};globalState.aiChatHistory.unshift(pendingEntry);renderAIChat();answerPromise.then(function(answer){globalState.aiChatHistory[0].a=answer;globalState.aiChatHistory[0].provider=answer===smartAIRespond(text,att)?"doubao":"deepseek";saveGlobalState();renderAIChat()});
+            globalState.aiChatHistory.unshift({
               id: Date.now(),
               q: '📦 附件: ' + f.name + ' (' + (f.size/1024).toFixed(1) + ' KB)',
               a: '已接收附件:' + f.name + '\n(浏览器静态部署暂不支持保存非图片文件,请把内容粘贴到文字框让 AI 总结)',
@@ -2006,7 +2006,7 @@
         </div>
       </div>
 
-      <div class="modal-section" id="tab-sync"><div class="setting-row"><div class="info"><h4>DeepSeek AI 密钥</h4><p>输入 DeepSeek API Key 让沈星回能真实回答你</p></div><input type="password" class="setting-input" id="ds-api-key" placeholder="sk-..." style="width:260px" onchange="saveDSKey()" onkeypress="if(event.key==="Enter")saveDSKey()"></div><div class="setting-row"><div class="info"><h4>Data backup</h4><p>Export all data as JSON file, or restore from backup</p></div><button class="action-btn" onclick="exportAllData()" style="margin-right:8px">Export</button><button class="action-btn" onclick="importAllData()" style="background:#FFF0E6;color:#E17055;border:1px solid #FFD0C0">Import</button></div>
+      <div class="modal-section" id="tab-sync"><div class="setting-row"><div class="info"><h4>Data backup</h4><p>Export all data as JSON file, or restore from backup</p></div><button class="action-btn" onclick="exportAllData()" style="margin-right:8px">Export</button><button class="action-btn" onclick="importAllData()" style="background:#FFF0E6;color:#E17055;border:1px solid #FFD0C0">Import</button></div>
         <div class="setting-row">
           <div class="info"><h4>Supabase 云端同步</h4><p>数据自动备份到云端，换设备可恢复</p></div>
         </div>
@@ -2246,7 +2246,6 @@
       ]},
       pageWidgets: { plan: [], exam: [], self: [], ops: [], family: [], stats: [] },
       aiChatHistory: [],
-      xinghuiProfile: { firstMeeting: true, knownSince: new Date().toISOString().slice(0,10), userPatterns: { preferredTopics: [], moodHistory: [], repeatTasks: [] }, memories: [] },
       expenses: [],
       expenseBudget: { monthly: 5000, alertAt: 80 },
       fitnessGoal: { goal: 'lose', targetWeight: 60, currentWeight: 68 },
@@ -2469,7 +2468,6 @@
       localStorage.setItem('wb_app_state_v2', JSON.stringify(appState));
     }
 
-    function saveDSKey(){var e=document.getElementById("ds-api-key");if(e){globalState.deepseekKey=e.value.trim();localStorage.setItem("ds_key",e.value.trim());saveGlobalState();showHint("✅ DeepSeek 密钥已保存")}}
     function saveGlobalState() {
       if (SERVER_MODE) { scheduleServerSave(); return; }
       localStorage.setItem('wb_global_state_v2', JSON.stringify(globalState));
@@ -3950,8 +3948,7 @@
     }
 
     function initSync() {
-      var cfg = getSyncConfig();
-      if (cfg.url && cfg.key && cfg.syncKey && cfg.url.length>0 && !localStorage.getItem("sync_activated")) { localStorage.setItem("sync_activated","1"); saveSyncConfig(); }
+      const cfg = getSyncConfig();
       if (cfg.url && cfg.key && cfg.syncKey && window.supabase) {
         try {
           _sb = supabase.createClient(cfg.url, cfg.key);
@@ -3975,7 +3972,6 @@
         if (urlEl && !urlEl.value) urlEl.value = cfg.url;
         if (keyEl && !keyEl.value) keyEl.value = cfg.key;
         if (skEl && !skEl.value) skEl.value = cfg.syncKey;
-      var dsEl=document.getElementById("ds-api-key");if(dsEl&&!dsEl.value){var stored=localStorage.getItem("ds_key");if(stored)dsEl.value=stored}
         if (wfEl) wfEl.classList.toggle('on', cfg.wifiBackup);
       }, 300);
     }
@@ -4223,7 +4219,7 @@
 
     // ========== 天气 ==========
     async function loadWeather() {
-      globalState.weather = { ...globalState.weather, temp: '--', humidity: '--', uv: '--', desc: '定位中...', code: 0, wind: 0, daily: null };
+      globalState.weather = { ...globalState.weather, temp: '--', humidity: '--', uv: '--', desc: '定位中...' };
       renderHome();
       if (!navigator.geolocation) { fallbackWeather('北京'); return; }
       navigator.geolocation.getCurrentPosition(async pos => {
@@ -4233,26 +4229,29 @@
 
     async function fetchWeather(lat, lon) {
       try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,uv_index,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto&forecast_days=3`);
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,uv_index&timezone=auto`);
         const data = await res.json();
         const cur = data.current;
-        const wcode = cur.weather_code;
-        const wdesc = (typeof wmoWeatherDesc==='function'?wmoWeatherDesc(wcode):'\u6674') + ' | ' + getWeatherDesc(cur.uv_index);
-        globalState.weather = { city: '\u5f53\u524d\u4f4d\u7f6e', temp: Math.round(cur.temperature_2m) + '\u00b0C', humidity: cur.relative_humidity_2m + '%', uv: cur.uv_index, desc: wdesc, code: wcode, wind: cur.wind_speed_10m, daily: data.daily };
-        try { localStorage.setItem('wb_last_weather', JSON.stringify(globalState.weather)); } catch(e) {}
-        if (typeof xinghuiWeatherCheck==='function') xinghuiWeatherCheck(cur, data.daily, lat, lon);
-      } catch (e) { fallbackWeather('\u5317\u4eac'); }
+        globalState.weather = { city: '当前位置', temp: Math.round(cur.temperature_2m) + '°C', humidity: cur.relative_humidity_2m + '%', uv: cur.uv_index, desc: getWeatherDesc(cur.uv_index) };
+      } catch (e) { fallbackWeather('北京'); }
       saveGlobalState(); renderHome();
-    }function manualWeather(city) { fallbackWeather(city || '北京'); }
+    }
+
+        function fallbackWeather(city) {
+      try { const c = JSON.parse(localStorage.getItem('wb_last_weather')||'null'); if(c&&c.city){ globalState.weather=c; saveGlobalState();renderHome(); return; } } catch(e){}
+      globalState.weather = { city, temp: '31\u00b0C', humidity: '62%', uv: '6', desc: '多云转晴' };
+      saveGlobalState(); renderHome();
+    }unction fallbackWeather(city) {
+      globalState.weather = { city, temp: '31°C', humidity: '62%', uv: '6', desc: '多云转晴' };
+      saveGlobalState(); renderHome();
+    }
+
+    function manualWeather(city) { fallbackWeather(city || '北京'); }
 
     function getWeatherDesc(uv) {
       if (uv >= 8) return '晴 · 紫外线强';
       if (uv >= 5) return '多云 · 紫外线中等';
       return '阴 · 紫外线弱';
-    }
-    function wmoWeatherDesc(code) {
-      const map = {0:'晴',1:'晴间多云',2:'多云',3:'阴',45:'雾',48:'雾冰',51:'小毛毛雨',53:'毛毛雨',55:'大毛毛雨',56:'冻雨',57:'冻雨',61:'小雨',63:'中雨',65:'大雨',66:'冻雨',67:'冻雨',71:'小雪',73:'中雪',75:'大雪',77:'雪粒',80:'小阵雨',81:'中阵雨',82:'大阵雨',85:'小阵雪',86:'大阵雪',95:'雷暴',96:'雷暴夹冰雹',99:'雷暴夹大冰雹'};
-      return map[code] || '未知';
     }
 
     // ========== 待办通用 ==========
@@ -4477,16 +4476,15 @@
       const closeBtn = document.createElement('div');
       closeBtn.textContent = '×'; closeBtn.style.cssText = 'position:absolute;top:12px;right:18px;font-size:22px;cursor:pointer;color:var(--text-secondary);z-index:1';
       closeBtn.onclick = () => modal.remove();
-      document.addEventListener("keydown", function escHandler(e) { if(e.key==="Escape"&&document.getElementById("star-dialog-modal")){ modal.remove(); document.removeEventListener("keydown", escHandler); } });
       const header = document.createElement('div');
-      header.innerHTML = '<h2 style="font-size:18px;font-weight:700;color:var(--tiffany-dark);margin:0 0 2px">🌟 沈星回</h2><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">“让我陪你走过每一段旅程”</p>';
+      header.innerHTML = '<h2 style="font-size:18px;font-weight:700;color:var(--tiffany-dark);margin:0 0 2px">🌟 星回</h2><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">有什么事想跟我说？</p>';
       const chatArea = document.createElement('div');
       chatArea.id = 'star-dialog-chat';
       chatArea.style.cssText = 'flex:1;overflow-y:auto;margin-bottom:10px;min-height:200px;max-height:50vh;';
       // 复制右侧面板的 chat 渲染
       const list = globalState.aiChatHistory || [];
       chatArea.innerHTML = list.length === 0
-        ? '<div style="opacity:0.5;text-align:center;padding:30px;font-size:12px">✨ 我在星空下等你。说点什么吧，我会记住每一句。</div>'
+        ? '<div style="opacity:0.5;text-align:center;padding:30px;font-size:12px">✨ 还没有对话，输入你的问题，我会帮你分类安排好。</div>'
         : list.slice(0, 20).map(c => {
             const p = providers[c.provider] || providers.doubao;
             const ts = (c.ts || '').slice(5, 16).replace('T', ' ');
@@ -4514,7 +4512,7 @@
       const text = (input.value || '').trim();
       if (!text) return;
       globalState.aiChatHistory = globalState.aiChatHistory || [];
-      var answerPromise=(async function(){var k=globalState.deepseekKey||localStorage.getItem("ds_key")||"";if(k){var reply=await deepseekChat([{role:"system",content:"你是沈星回，来自《恋与深空》。语气温柔诗意，用星辰比喻。回答简短有温度。"},{role:"user",content:text}]);if(reply)return reply}return smartAIRespond(text,att)})();var pendingEntry={id:Date.now(),q:text,a:"正在思考...",provider:"deepseek",ts:new Date().toISOString()};globalState.aiChatHistory.unshift(pendingEntry);renderAIChat();answerPromise.then(function(answer){globalState.aiChatHistory[0].a=answer;globalState.aiChatHistory[0].provider=answer===smartAIRespond(text,att)?"doubao":"deepseek";saveGlobalState();renderAIChat()}); id: Date.now(), q: text, a: '', provider: globalState.provider, ts: new Date().toISOString() });
+      globalState.aiChatHistory.unshift({ id: Date.now(), q: text, a: '', provider: globalState.provider, ts: new Date().toISOString() });
       input.value = '';
       saveGlobalState();
       // 更新右侧 chat + 对话框
@@ -4852,7 +4850,6 @@
         window.open(webUrl, '_blank');
       }
     }
-    var deepseekKey=""; async function deepseekChat(messages){var key=globalState.deepseekKey||localStorage.getItem("ds_key")||"";if(!key)return null;try{var res=await fetch("https://api.deepseek.com/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model:"deepseek-chat",messages:messages,temperature:0.8,max_tokens:2048})});if(!res.ok)return null;var data=await res.json();return data.choices[0].message.content}catch(e){return null}}
     function aiSend() {
       const input = document.getElementById('ai-input');
       const text = (input ? input.value : '').trim();
@@ -4868,7 +4865,7 @@
         exerciseKcal: 0, basalMetabolism: 1500, activityFactor: 1.2,
         height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastIntakeLog: []
       };
-      var answerPromise=(async function(){var k=globalState.deepseekKey||localStorage.getItem("ds_key")||"";if(k){var reply=await deepseekChat([{role:"system",content:"你是沈星回，来自《恋与深空》。语气温柔诗意，用星辰比喻。回答简短有温度。"},{role:"user",content:text}]);if(reply)return reply}return smartAIRespond(text,att)})();var pendingEntry={id:Date.now(),q:text,a:"正在思考...",provider:"deepseek",ts:new Date().toISOString()};globalState.aiChatHistory.unshift(pendingEntry);renderAIChat();answerPromise.then(function(answer){globalState.aiChatHistory[0].a=answer;globalState.aiChatHistory[0].provider=answer===smartAIRespond(text,att)?"doubao":"deepseek";saveGlobalState();renderAIChat()});
+      globalState.aiChatHistory.unshift({
         id: Date.now(),
         q: text,
         a: smartAIRespond(text, aiSecGetAttachments()),
@@ -4913,33 +4910,6 @@
       return { items: m, minutes };
     }
 
-    function xinghuiLearn(text) {
-      var prof = globalState.xinghuiProfile || {};
-      prof.userPatterns = prof.userPatterns || {preferredTopics:[],moodHistory:[]};
-      var topics = [];
-      if(/(跑|走|健身|运动|健康|体重|减脂)/.test(text)) topics.push('健康');
-      if(/(备考|行测|申论|学习|考试|读书|单词)/.test(text)) topics.push('学习');
-      if(/(工作|运营|小红书|投稿)/.test(text)) topics.push('工作');
-      if(/(宠物|猫|狗|家庭)/.test(text)) topics.push('家庭');
-      topics.forEach(function(t){ if(!prof.userPatterns.preferredTopics.includes(t)) prof.userPatterns.preferredTopics.push(t); if(prof.userPatterns.preferredTopics.length>20) prof.userPatterns.preferredTopics.shift(); });
-      prof.memories = prof.memories || [];
-      if(text.length>5) { prof.memories.unshift({text:text.slice(0,60), time:new Date().toISOString()}); if(prof.memories.length>30) prof.memories.pop(); }
-      globalState.xinghuiProfile = prof;
-      saveGlobalState();
-    }
-    function xinghuiPersonalize() {
-      var prof = globalState.xinghuiProfile || {};
-      var p = prof.userPatterns || {};
-      var parts = [];
-      if(p.preferredTopics&&p.preferredTopics.length>0) {
-        var topicMap={health:'身体',study:'学习',work:'工作',family:'家庭',emotion:'情感'};
-        var interests = p.preferredTopics.slice(-3).map(function(t){return topicMap[t]||t;}).join('、');
-        parts.push('我知道你最近关注' + interests);
-      }
-      var undone = (globalState.todos||[]).filter(function(t){return !t.done;}).length;
-      if(undone>0) parts.push('还有' + undone + '件事没处理，别急，我陪你一件一件来');
-      return parts.length>0 ? parts.join('\n\n') + '\n\n' : '';
-    }
     function smartAIRespond(text, att) {
       const t = (text || '').toLowerCase();
       const hasImg = !!(att && att.image);
@@ -5025,7 +4995,7 @@
       }
 
       // 12. 默认回复（兜底）
-      return head + '收到你的输入 ✅\n\n🤖 星回已记录到对话历史。\n\n💡 下一步：\n  • 点击气泡下「🔗 打开 豆包/ChatGPT」→ 跳外部 AI 取深度回答\n  • 取到答案后回这里点击「✏️ 改回答」粘贴\n  • 或直接告诉我具体卡在哪，我给你拆 step-by-step\n\n💭 星回能开箱即用的提问模板：\n  • "本周时间分配" → 周计划\n  • "5 组小红书标题" → 想聊聊心\n  • "公考素材" → 时政热点\n  • "减脂食谱" → 一周菜单\n  • "英语学习" → 30 分钟日常\n\n来，让我陪你把每一件事落地。';
+      return head + '收到你的输入 ✅\n\n🤖 星回已记录到对话历史。\n\n💡 下一步：\n  • 点击气泡下「🔗 打开 豆包/ChatGPT」→ 跳外部 AI 取深度回答\n  • 取到答案后回这里点击「✏️ 改回答」粘贴\n  • 或直接告诉我具体卡在哪，我给你拆 step-by-step\n\n💭 星回能开箱即用的提问模板：\n  • "本周时间分配" → 周计划\n  • "5 组小红书标题" → 标题模板\n  • "公考素材" → 时政热点\n  • "减脂食谱" → 一周菜单\n  • "英语学习" → 30 分钟日常\n\n来，让我陪你把每一件事落地。';
     }
 
     function renderAIChat() {
@@ -5033,7 +5003,7 @@
       if (!log) return;
       const list = globalState.aiChatHistory || [];
       if (list.length === 0) {
-        log.innerHTML = '<div style="opacity:0.5;text-align:center;padding:18px;font-size:11px">没有了解就没有相伴。说点什么吧，我在听。</div>';
+        log.innerHTML = '<div style="opacity:0.5;text-align:center;padding:18px;font-size:11px">还没有对话 👇 输入或选一个快捷指令开始</div>';
         return;
       }
       log.innerHTML = list.slice(0, 30).map(c => {
@@ -5180,7 +5150,7 @@ function aiDel(id) {
       const plan = fitnessGenPlan(fg);
       const today = new Date().toISOString().slice(0, 10);
       const todayMeasure = (globalState.fitnessMeasurements || []).filter(m => m.date === today);
-      body.innerHTML = '<div class="fit-goal-card"><div style="font-size:12px;font-weight:600;color:var(--tiffany-dark);margin-bottom:6px">🎯 健身目标</div><div class="fit-row"><select onchange="fitSetGoal(\'goal\',this.value)"><option value="lose" ' + (fg.goal==='lose'?'selected':'') + '>减脂</option><option value="gain" ' + (fg.goal==='gain'?'selected':'') + '>增肌</option><option value="maintain" ' + (fg.goal==='maintain'?'selected':'') + '>保持</option></select><input type="number" value="' + (fg.currentWeight||'') + '" placeholder="当前体重(kg)" onchange="fitSetGoal(\'currentWeight\',parseFloat(this.value))" style="width:100px"><input type="number" value="' + (fg.targetWeight||'') + '" placeholder="目标体重(kg)" onchange="fitSetGoal(\'targetWeight\',parseFloat(this.value))" style="width:100px"><button onclick="fitSaveGoal()" style="padding:5px 10px;border:none;border-radius:6px;background:var(--tiffany);color:#fff;font-size:11px;cursor:pointer">保存</button></div><div style="font-size:11px;color:var(--text-secondary)">📐 推荐训练量：' + escapeHtml(plan.summary) + '</div></div><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📅 本周训练计划</div><div class="fit-plan-grid">' + plan.days.map(d => '<div class="fit-day-card"><div class="day">' + d.day + '</div><div class="type ' + d.type + '">' + d.label + '</div><div style="font-size:9px;margin-top:4px;color:var(--text-muted)">' + d.detail + '</div></div>').join('') + '</div><div class="fit-goal-card" style="margin-top:10px"><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📏 身体数据记录' + (todayMeasure.length ? '（已记录）' : '') + '</div><div class="fit-measure-row"><input type="number" id="fit-w" placeholder="体重(kg)" value="' + (fg.currentWeight||'') + '" step="0.1"><input type="number" id="fit-waist" placeholder="腰围(cm)" step="0.1"><input type="number" id="fit-chest" placeholder="胸围(cm)" step="0.1"><input type="number" id="fit-arms" placeholder="臂围(cm)" step="0.1"><input type="number" id="fit-legs" placeholder="腿围(cm)" step="0.1"><button onclick="fitRecordMeasure()" style="padding:5px 10px;border:none;border-radius:6px;background:var(--tiffany);color:#fff;font-size:11px;cursor:pointer">记录</button></div>' + ((globalState.fitnessMeasurements||[]).length > 0 ? '<div style="font-size:10px;color:var(--text-muted);margin-top:6px">📈 历史：' + (globalState.fitnessMeasurements||[]).slice(-3).map(m => m.date.slice(5)+' '+m.weight+'kg').join(' → ') + '</div>' : '') + '</div><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📸 训练相册</div><label style="display:inline-block;padding:5px 12px;border:1px dashed var(--border);border-radius:8px;cursor:pointer;font-size:11px;margin-bottom:8px;background:rgba(255,255,255,0.4)">📷 拍训练照 <input type="file" accept="image/*" capture="environment" style="display:none" onchange="fitUploadPhoto(event)"></label><div class="fit-photo-grid">' + ((globalState.fitnessPhotos||[]).slice(0,8).length === 0 ? '<div style="opacity:0.5;text-align:center;padding:16px;font-size:11px;grid-column:1/-1">还没有训练照片</div>' : (globalState.fitnessPhotos||[]).slice(0,8).map(p => '<div class="fit-photo-thumb" onclick="fitViewPhoto(\'' + p.url.replace(/\'/g,"\\\'") + '\')"><img src="' + p.url + '"></div>').join('')) + '</div><div class="ai-sec-hint" style="margin-top:8px">🤖 沈星回承诺：你告诉我的每一件事，我都会守口如瓶。 ' + (fg.goal==='lose'?'减脂':fg.goal==='gain'?'增肌':'保持') + ' 目标，建议每周' + plan.cardioDays + '次有氧、' + plan.strengthDays + '次力量、' + plan.stretchDays + '次拉伸。坚持记录围度，AI 可分析趋势。</div>';
+      body.innerHTML = '<div class="fit-goal-card"><div style="font-size:12px;font-weight:600;color:var(--tiffany-dark);margin-bottom:6px">🎯 健身目标</div><div class="fit-row"><select onchange="fitSetGoal(\'goal\',this.value)"><option value="lose" ' + (fg.goal==='lose'?'selected':'') + '>减脂</option><option value="gain" ' + (fg.goal==='gain'?'selected':'') + '>增肌</option><option value="maintain" ' + (fg.goal==='maintain'?'selected':'') + '>保持</option></select><input type="number" value="' + (fg.currentWeight||'') + '" placeholder="当前体重(kg)" onchange="fitSetGoal(\'currentWeight\',parseFloat(this.value))" style="width:100px"><input type="number" value="' + (fg.targetWeight||'') + '" placeholder="目标体重(kg)" onchange="fitSetGoal(\'targetWeight\',parseFloat(this.value))" style="width:100px"><button onclick="fitSaveGoal()" style="padding:5px 10px;border:none;border-radius:6px;background:var(--tiffany);color:#fff;font-size:11px;cursor:pointer">保存</button></div><div style="font-size:11px;color:var(--text-secondary)">📐 推荐训练量：' + escapeHtml(plan.summary) + '</div></div><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📅 本周训练计划</div><div class="fit-plan-grid">' + plan.days.map(d => '<div class="fit-day-card"><div class="day">' + d.day + '</div><div class="type ' + d.type + '">' + d.label + '</div><div style="font-size:9px;margin-top:4px;color:var(--text-muted)">' + d.detail + '</div></div>').join('') + '</div><div class="fit-goal-card" style="margin-top:10px"><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📏 身体数据记录' + (todayMeasure.length ? '（已记录）' : '') + '</div><div class="fit-measure-row"><input type="number" id="fit-w" placeholder="体重(kg)" value="' + (fg.currentWeight||'') + '" step="0.1"><input type="number" id="fit-waist" placeholder="腰围(cm)" step="0.1"><input type="number" id="fit-chest" placeholder="胸围(cm)" step="0.1"><input type="number" id="fit-arms" placeholder="臂围(cm)" step="0.1"><input type="number" id="fit-legs" placeholder="腿围(cm)" step="0.1"><button onclick="fitRecordMeasure()" style="padding:5px 10px;border:none;border-radius:6px;background:var(--tiffany);color:#fff;font-size:11px;cursor:pointer">记录</button></div>' + ((globalState.fitnessMeasurements||[]).length > 0 ? '<div style="font-size:10px;color:var(--text-muted);margin-top:6px">📈 历史：' + (globalState.fitnessMeasurements||[]).slice(-3).map(m => m.date.slice(5)+' '+m.weight+'kg').join(' → ') + '</div>' : '') + '</div><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">📸 训练相册</div><label style="display:inline-block;padding:5px 12px;border:1px dashed var(--border);border-radius:8px;cursor:pointer;font-size:11px;margin-bottom:8px;background:rgba(255,255,255,0.4)">📷 拍训练照 <input type="file" accept="image/*" capture="environment" style="display:none" onchange="fitUploadPhoto(event)"></label><div class="fit-photo-grid">' + ((globalState.fitnessPhotos||[]).slice(0,8).length === 0 ? '<div style="opacity:0.5;text-align:center;padding:16px;font-size:11px;grid-column:1/-1">还没有训练照片</div>' : (globalState.fitnessPhotos||[]).slice(0,8).map(p => '<div class="fit-photo-thumb" onclick="fitViewPhoto(\'' + p.url.replace(/\'/g,"\\\'") + '\')"><img src="' + p.url + '"></div>').join('')) + '</div><div class="ai-sec-hint" style="margin-top:8px">🤖 AI 每周提醒：根据你的 ' + (fg.goal==='lose'?'减脂':fg.goal==='gain'?'增肌':'保持') + ' 目标，建议每周' + plan.cardioDays + '次有氧、' + plan.strengthDays + '次力量、' + plan.stretchDays + '次拉伸。坚持记录围度，AI 可分析趋势。</div>';
     }
     function fitSetGoal(field, val) { globalState.fitnessGoal = globalState.fitnessGoal || {}; globalState.fitnessGoal[field] = val; }
     function fitSaveGoal() { saveGlobalState(); renderHome(); }
@@ -5365,7 +5335,7 @@ function aiDel(id) {
       if (globalState._lastCountdownRemind === today) return;
       globalState._lastCountdownRemind = today;
       globalState.aiChatHistory = globalState.aiChatHistory || [];
-      var answerPromise=(async function(){var k=globalState.deepseekKey||localStorage.getItem("ds_key")||"";if(k){var reply=await deepseekChat([{role:"system",content:"你是沈星回，来自《恋与深空》。语气温柔诗意，用星辰比喻。回答简短有温度。"},{role:"user",content:text}]);if(reply)return reply}return smartAIRespond(text,att)})();var pendingEntry={id:Date.now(),q:text,a:"正在思考...",provider:"deepseek",ts:new Date().toISOString()};globalState.aiChatHistory.unshift(pendingEntry);renderAIChat();answerPromise.then(function(answer){globalState.aiChatHistory[0].a=answer;globalState.aiChatHistory[0].provider=answer===smartAIRespond(text,att)?"doubao":"deepseek";saveGlobalState();renderAIChat()});
+      globalState.aiChatHistory.unshift({
         id: Date.now(), q: '⏰ 倒计时提醒', a: msg,
         provider: 'doubao', ts: new Date().toISOString()
       });
@@ -6163,14 +6133,11 @@ function aiDel(id) {
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=32').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=28').catch(function () {});
       });
     }
   </script>
 </body>
 </html>
-
-
-
 
 
