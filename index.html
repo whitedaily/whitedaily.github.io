@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -4219,7 +4219,7 @@
 
     // ========== 天气 ==========
     async function loadWeather() {
-      globalState.weather = { ...globalState.weather, temp: '--', humidity: '--', uv: '--', desc: '定位中...' };
+      globalState.weather = { ...globalState.weather, temp: '--', humidity: '--', uv: '--', desc: '定位中...', code: 0, wind: 0, daily: null };
       renderHome();
       if (!navigator.geolocation) { fallbackWeather('北京'); return; }
       navigator.geolocation.getCurrentPosition(async pos => {
@@ -4242,16 +4242,49 @@
       globalState.weather = { city, temp: '31\u00b0C', humidity: '62%', uv: '6', desc: '多云转晴' };
       saveGlobalState(); renderHome();
     }unction fallbackWeather(city) {
-      globalState.weather = { city, temp: '31°C', humidity: '62%', uv: '6', desc: '多云转晴' };
+      globalState.weather = { city, temp: '31°C', humidity: '62%', uv: '6', desc: '多云转晴', code: 2, wind: 10, daily: null };
       saveGlobalState(); renderHome();
     }
 
+    function xinghuiWeatherCheck(current, daily, lat, lon) {
+      if (!current) return;
+      const code = current.weather_code;
+      const temp = current.temperature_2m;
+      const wind = current.wind_speed_10m || 0;
+      const uv = current.uv_index || 0;
+      const todayKey = 'wx_' + new Date().toISOString().slice(0,10);
+      if (localStorage.getItem(todayKey)) return;
+      const reminders = [];
+      if ((code >= 51 && code <= 82) || (code >= 95)) reminders.push({emoji:'\u2614', msg:'今天有雨，出门记得带伞，别淋湿了。'});
+      if ((code >= 71 && code <= 86)) reminders.push({emoji:'\u2744\ufe0f', msg:'今天有雪，路滑注意安全，多穿一点。'});
+      if (code >= 95) reminders.push({emoji:'\u26c8\ufe0f', msg:'今天有雷雨，尽量避免外出。如果在家，记得关好门窗。'});
+      if (temp >= 35) reminders.push({emoji:'\ud83d\udd25', msg:'今天高温 ' + Math.round(temp) + '\u00b0C，注意防曬，多喝水。'});
+      else if (temp <= 5) reminders.push({emoji:'\ud83e\udde3', msg:'今天低温 ' + Math.round(temp) + '\u00b0C，出门多穿些，别着凉。'});
+      if (uv >= 7) reminders.push({emoji:'\ud83e\uddf4', msg:'紫外线指数 ' + uv + '，很强。出门记得涂防晒。'});
+      if (wind >= 40) reminders.push({emoji:'\ud83d\udca8', msg:'今天风力 ' + Math.round(wind) + 'km/h，风大注意高空坠物。'});
+      if (reminders.length === 0) return;
+      localStorage.setItem(todayKey, '1');
+      const pick = reminders[0];
+      globalState.aiChatHistory = globalState.aiChatHistory || [];
+      globalState.aiChatHistory.unshift({ id: Date.now(), q: '\u2601\ufe0f 天气提醒', a: pick.emoji + ' ' + pick.msg, provider: 'doubao', ts: new Date().toISOString() });
+      saveGlobalState();
+      setTimeout(() => {
+        showHint(pick.emoji + ' 沈星回提醒你：' + pick.msg);
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('\ud83c\udf1f 沈星回天气提醒', { body: pick.msg });
+        }
+      }, 3000);
+    }
     function manualWeather(city) { fallbackWeather(city || '北京'); }
 
     function getWeatherDesc(uv) {
       if (uv >= 8) return '晴 · 紫外线强';
       if (uv >= 5) return '多云 · 紫外线中等';
       return '阴 · 紫外线弱';
+    }
+    function wmoWeatherDesc(code) {
+      const map = {0:'晴',1:'晴间多云',2:'多云',3:'阴',45:'雾',48:'雾冰',51:'小毛毛雨',53:'毛毛雨',55:'大毛毛雨',56:'冻雨',57:'冻雨',61:'小雨',63:'中雨',65:'大雨',66:'冻雨',67:'冻雨',71:'小雪',73:'中雪',75:'大雪',77:'雪粒',80:'小阵雨',81:'中阵雨',82:'大阵雨',85:'小阵雪',86:'大阵雪',95:'雷暴',96:'雷暴夹冰雹',99:'雷暴夹大冰雹'};
+      return map[code] || '未知';
     }
 
     // ========== 待办通用 ==========
@@ -6139,4 +6172,5 @@ function aiDel(id) {
   </script>
 </body>
 </html>
+
 
