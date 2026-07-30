@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -1494,7 +1494,7 @@
           <div class="sub" id="mini-check">待打卡</div>
         </div>
         <div class="mini-stat" onclick="miniGo('home','aiSecretary')">
-          <div class="label">星回</div>
+          <div class="label">沈星回</div>
           <div class="sub" style="font-size:18px;line-height:1;margin-top:2px">⭐</div>
         </div>
       </div>
@@ -2246,6 +2246,19 @@
       ]},
       pageWidgets: { plan: [], exam: [], self: [], ops: [], family: [], stats: [] },
       aiChatHistory: [],
+      // 沈星回·星回 个性模型 & 用户画像
+      xinghuiProfile: {
+        firstMeeting: true,
+        knownSince: new Date().toISOString().slice(0,10),
+        traits: { gentle: true, poetic: true, protective: true, stargazer: true },
+        userPatterns: {
+          wakeTime: null, sleepTime: null, peakEnergy: null,
+          preferredTopics: [], repeatTasks: [], lastAdvice: '',
+          moodHistory: [], habitStreak: 0
+        },
+        memories: []
+      },
+
       expenses: [],
       expenseBudget: { monthly: 5000, alertAt: 80 },
       fitnessGoal: { goal: 'lose', targetWeight: 60, currentWeight: 68 },
@@ -2557,6 +2570,20 @@
         fav.textContent = isFaved ? '★' : '☆';
         fav.classList.toggle('faved', isFaved);
       }
+    }
+    // 沈星回·每日心语（基于用户画像微调）
+    function xinghuiDailyWord() {
+      const profile = globalState.xinghuiProfile || {};
+      const p = profile.userPatterns || {};
+      const quotes = [
+        { zh: '每一步都在靠近更好的自己', en: 'Every step brings you closer to your light.' },
+        { zh: '你比你想象的更加美好', en: 'You are more beautiful than you know.' },
+        { zh: '就这样慢慢走，也能走很远', en: 'Slow steps still carry you far.' },
+        { zh: '太阳照不到的地方，我来照', en: 'Where the sun can\'t reach, I will shine.' },
+        { zh: '你不是孤单的星星', en: 'You are never a lonely star.' },
+      ];
+      const idx = new Date().getDate() % quotes.length;
+      return quotes[idx];
     }
     function favoriteQuote() {
       const q = getTodayQuote();
@@ -4477,14 +4504,14 @@
       closeBtn.textContent = '×'; closeBtn.style.cssText = 'position:absolute;top:12px;right:18px;font-size:22px;cursor:pointer;color:var(--text-secondary);z-index:1';
       closeBtn.onclick = () => modal.remove();
       const header = document.createElement('div');
-      header.innerHTML = '<h2 style="font-size:18px;font-weight:700;color:var(--tiffany-dark);margin:0 0 2px">🌟 星回</h2><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">有什么事想跟我说？</p>';
+      header.innerHTML = '<h2 style="font-size:18px;font-weight:700;color:var(--tiffany-dark);margin:0 0 2px">🌟 沈星回</h2><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;font-style:italic">"让我陪你走过每一段旅程"</p>';
       const chatArea = document.createElement('div');
       chatArea.id = 'star-dialog-chat';
       chatArea.style.cssText = 'flex:1;overflow-y:auto;margin-bottom:10px;min-height:200px;max-height:50vh;';
       // 复制右侧面板的 chat 渲染
       const list = globalState.aiChatHistory || [];
       chatArea.innerHTML = list.length === 0
-        ? '<div style="opacity:0.5;text-align:center;padding:30px;font-size:12px">✨ 还没有对话，输入你的问题，我会帮你分类安排好。</div>'
+        ? '<div style="opacity:0.5;text-align:center;padding:30px;font-size:12px">✨ 我在星空下等你。说点什么吧，我会记住每一句。</div>'
         : list.slice(0, 20).map(c => {
             const p = providers[c.provider] || providers.doubao;
             const ts = (c.ts || '').slice(5, 16).replace('T', ' ');
@@ -4855,6 +4882,7 @@
       const text = (input ? input.value : '').trim();
       if (!text) return;
       globalState.aiChatHistory = globalState.aiChatHistory || [];
+      xinghuiLearn(text, new Date().toISOString());
       globalState.expenses = globalState.expenses || [];
       globalState.expenseBudget = globalState.expenseBudget || { monthly: 5000, alertAt: 80 };
       globalState.fitnessGoal = globalState.fitnessGoal || { goal: 'lose', targetWeight: 60, currentWeight: 68 };
@@ -4910,6 +4938,48 @@
       return { items: m, minutes };
     }
 
+    function xinghuiLearn(text, time) {
+      // 记录用户行为模式
+      const profile = globalState.xinghuiProfile || {};
+      if (!profile.userPatterns) profile.userPatterns = { preferredTopics: [], moodHistory: [], repeatTasks: [] };
+      const p = profile.userPatterns;
+      // 分析话题
+      const topics = [];
+      if (/(\u8dd1|\u8d70|\u5065\u8eab|\u8fd0\u52a8|\u953b\u70bc|\u5065\u5eb7|\u4f53\u91cd|\u51cf\u8102)/.test(text)) topics.push('health');
+      if (/(\u5907\u8003|\u884c\u6d4b|\u7533\u8bba|\u5b66\u4e60|\u8003\u8bd5|\u8bfb\u4e66|\u8bcd\u6c47)/.test(text)) topics.push('study');
+      if (/(\u5de5\u4f5c|\u8fd0\u8425|\u5c0f\u7ea2\u4e66|\u6295\u7a3f|\u6570\u636e|\u80a5)/.test(text)) topics.push('work');
+      if (/(\u5bb6|\u5ba0\u7269|\u732b|\u72d7|\u7236\u6bcd|\u5bb6\u5ead)/.test(text)) topics.push('family');
+      if (/(\u60c5\u7eea|\u5fc3\u60c5|\u7d27\u5f20|\u7126\u8651|\u7d2f|\u7b11)/.test(text)) topics.push('emotion');
+      // 去重加入
+      topics.forEach(t => { if (!p.preferredTopics.includes(t)) p.preferredTopics.push(t); if (p.preferredTopics.length > 20) p.preferredTopics.shift(); });
+      // 记忆最近的对话
+      profile.memories = profile.memories || [];
+      if (text.length > 5) {
+        profile.memories.unshift({ text: text.slice(0,60), time: new Date().toISOString() });
+        if (profile.memories.length > 30) profile.memories.pop();
+      }
+      profile.userPatterns.lastInteraction = new Date().toISOString();
+      globalState.xinghuiProfile = profile;
+      saveGlobalState();
+    }
+
+    function xinghuiPersonalize() {
+      const profile = globalState.xinghuiProfile || {};
+      const p = profile.userPatterns || {};
+      const parts = [];
+      if (p.preferredTopics && p.preferredTopics.length > 0) {
+        const topicMap = { health: '身体', study: '学习', work: '工作', family: '家庭', emotion: '情感' };
+        const interests = p.preferredTopics.slice(-3).map(t => topicMap[t]||t).join('、');
+        parts.push('我知道你最近关注' + interests);
+      }
+      const today = new Date().toISOString().slice(0,10);
+      const tasks = globalState.todos || [];
+      const undone = tasks.filter(t => !t.done).length;
+      if (undone > 0 && p.preferredTopics.length > 0) {
+        parts.push('还有 ' + undone + ' 件事没处理，不着急，我陪你一件一件来');
+      }
+      return parts.length > 0 ? parts.join('\n\n') + '\n\n' : '';
+    }
     function smartAIRespond(text, att) {
       const t = (text || '').toLowerCase();
       const hasImg = !!(att && att.image);
@@ -4946,7 +5016,7 @@
 
       // 2. 周计划 / 时间分配
       if (t.includes('本周') && (t.includes('计划') || t.includes('时间分配'))) {
-        return head + '本周时间分配建议（基于常见模式）：\n\n📅 工作日（周一~五）\n  • 早晨 30 分钟：英语单词打卡\n  • 上午 2 小时：备考（行测/申论专项）\n  • 下午 1 小时：运营任务（小红书笔记）\n  • 晚间 30 分钟：自律打卡 + 复盘\n\n📅 周末（周六/日）\n  • 上午 2 小时：周模考或错题复盘\n  • 下午：家庭 + 兴趣 + 休息\n\n🎯 建议：先用 3 天试运行，根据精力微调。需要我帮你拆成更细的每日 todo 吗？';
+        return head + '每一滴时间都像流星，用在对的地方才会发光。让我帮你拓展一下本周的时间地图：\n\n📅 工作日（周一~五）\n  • 早晨先和自己的树拥抱一会儿，再开始学习\n  • 上午给备考留出最好的 2 小时\n  • 下午让运营任务居中，好像路上的站点\n  • 晚间用自律打卡收尾，如同白天的星星在晚上照亮回忆\n\n📅 周末\n  • 拿一段时间给自己，正如星空也需要安静才能被看见\n\n先这样试试，如果哪一天安排太紧了，告诉我，我帮你调整。';
       }
 
       // 3. 公考素材
@@ -4961,7 +5031,7 @@
 
       // 5. 备考效率分析
       if (t.includes('备考') && (t.includes('效率') || t.includes('分析'))) {
-        return head + '备考效率自检清单：\n\n⏱ 学习时长\n  • 本周实际有效学习时间 vs 目标时长\n  • 番茄钟完成数 / 计划数\n\n📊 正确率\n  • 行测模考正确率（建议 ≥ 75%）\n  • 申论批改平均得分（建议 ≥ 65）\n\n🧠 状态\n  • 错题复盘完成度\n  • 模考时间分配是否合理\n\n💡 优化：把行测做题时间从平均 60s/题压到 50s/题，多出的 10 分钟给资料分析。';
+        return head + '学习光辉的途径，每一步都会被星星记录。\n\n让我帮你看看最近的轨迹：\n  • 学习时长状态怎么样？有没有比上周更长了一点点？\n  • 错题不是失败，是指引你走向正确的路标\n  • 每一个知识点都像星辰，一颗颗被你掌握，最后连成属于你的星座\n\n别急，我陪你一步一步走。你只管向前，其他的交给我。';
       }
 
       // 6. 减脂食谱
@@ -4976,7 +5046,7 @@
 
       // 8. 英语学习
       if (t.includes('英语') || t.includes('english') || t.includes('单词')) {
-        return head + '英语学习建议：\n\n📅 每日节奏（30 分钟）\n  • 10 分钟：背诵单词（艾宾浩斯复习法）\n  • 10 分钟：跟读练习（VOA 常速或 BBC）\n  • 10 分钟：听力 + 输出（用语音复述）\n\n💡 工具\n  • 单词：墨墨背单词 / Anki\n  • 跟读：喜马拉雅「每日英语听力」\n  • 口语：HelloTalk（找语伴）\n\n🎯 每天 30 个新词 + 90% 跟读准确率 = 3 个月可见效。';
+        return head + '语言是跨越星河的桥梁，你每天都在拓展自己的边界。\n\n不用求快，像星光慢慢渗透夜空那样自然：\n  • 每天 10 分钟跟读，像和星星说晚安\n  • 单词一天一点，积少成多\n  • 错了没关系，我也曾在星空中迷路，那才是发现新星球的开始\n\n有没有特别想突破的部分？告诉我，我帮你定制。';
       }
 
       // 9. 计划 / 安排
@@ -4989,9 +5059,9 @@
         return head + '每日阅读建议：\n\n📚 选书策略\n  • 主体 70%：专业/工作相关\n  • 调节 20%：传记/纪实\n  • 放松 10%：小说/散文\n\n⏰ 节奏\n  • 早起 20 分钟：纯文学/日记\n  • 睡前 30 分钟：专业书籍\n  • 周末 2 小时：长篇\n\n💡 笔记法：康奈尔笔记（关键词 + 摘要 + 思考），每周日复盘 30 分钟。';
       }
 
-      // 11. 数据/涨粉
+      // 11. 数据/成长
       if (t.includes('收益') || t.includes('涨粉') || t.includes('数据')) {
-        return head + '小红书/抖音数据参考：\n\n📊 健康涨粉速率\n  • 新账号：100-500/周\n  • 成长期：500-2000/周\n  • 成熟期：稳定期持平\n\n🎯 关键指标\n  • 完播率 ≥ 35%\n  • 互动率 ≥ 5%\n  • 涨粉率 ≥ 2%\n\n💡 提升策略\n  • 标题前 8 字吸引力\n  • 封面：主色 ≤ 2 种 + 大字\n  • 前 3 秒钩子（留存关键）\n\n需要按你具体账号诊断吗？';
+        return head + '你的努力不会浮云，如同每一颗星星都有它的轨迹。\n\n你发布的每一篇笔记，都像在星空中点亮一颗星：\n  • 有些星光先被看见，有些需要等待\n  • 但只要你继续点亮，总会有人抬头看见\n\n你要做的不是追逐数据，而是让每一分内容，都像你自己。\n这样，找到你的人才是真正懂你的人。\n\n有没有哪篇内容你特别喜欢？我帮你分析一下它的亮点。';
       }
 
       // 12. 默认回复（兜底）
@@ -5003,7 +5073,7 @@
       if (!log) return;
       const list = globalState.aiChatHistory || [];
       if (list.length === 0) {
-        log.innerHTML = '<div style="opacity:0.5;text-align:center;padding:18px;font-size:11px">还没有对话 👇 输入或选一个快捷指令开始</div>';
+        log.innerHTML = '<div style="opacity:0.5;text-align:center;padding:18px;font-size:11px">没有了解就没有相伴。说点什么吧，我在听。</div>';
         return;
       }
       log.innerHTML = list.slice(0, 30).map(c => {
@@ -6139,4 +6209,5 @@ function aiDel(id) {
   </script>
 </body>
 </html>
+
 
