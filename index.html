@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -1602,10 +1602,10 @@
           </div>
           <div class="health-form">
             <div class="health-field"><label>当前体重</label>
-              <input type="number" id="weight" step="0.1" onchange="updateHealth('currentWeight', this.value)"> 斤
+              <input type="number" id="weight" step="0.1" onchange="updateHealth('currentWeight', this.value)"> kg <span style="font-size:10px;color:var(--text-muted)">(1 kg = 2 斤)</span>
             </div>
             <div class="health-field"><label>目标体重</label>
-              <input type="number" id="target-weight" step="0.1" onchange="updateHealth('targetWeight', this.value)"> 斤
+              <input type="number" id="target-weight" step="0.1" onchange="updateHealth('targetWeight', this.value)"> kg <span style="font-size:10px;color:var(--text-muted)">(1 kg = 2 斤)</span>
             </div>
             <div class="health-field"><label>今日摄入</label>
               <input type="number" id="cal-in" onchange="updateHealth('intakeKcal', this.value)"> kcal
@@ -2006,7 +2006,7 @@
         </div>
       </div>
 
-      <div class="modal-section" id="tab-sync">
+      <div class="modal-section" id="tab-sync"><div class="setting-row"><div class="info"><h4>Data backup</h4><p>Export all data as JSON file, or restore from backup</p></div><button class="action-btn" onclick="exportAllData()" style="margin-right:8px">Export</button><button class="action-btn" onclick="importAllData()" style="background:#FFF0E6;color:#E17055;border:1px solid #FFD0C0">Import</button></div>
         <div class="setting-row">
           <div class="info"><h4>Supabase 云端同步</h4><p>数据自动备份到云端，换设备可恢复</p></div>
         </div>
@@ -2236,7 +2236,7 @@
       familyCheckins: [],
       familyCheckpointGeo: [],
       familyCheckinCooldown: {},
-      syncConfig: { url: '', key: '', syncKey: '', wifiBackup: true },
+      syncConfig: { url: 'https://qhwmsvlpvetkukujfugb.supabase.co', key: 'sb_publishable__fGv4Ivl74k6CZnpIWtxmw_BdJtLg4J', syncKey: '0114', wifiBackup: true },
       lifeSkills: { categories: [
         { key: 'medication', name: '💊 生病用药', items: [] },
         { key: 'firstaid', name: '🩹 急救知识', items: [] },
@@ -2480,6 +2480,7 @@
     // ========== 初始化 ==========
     document.addEventListener('DOMContentLoaded', () => {
       applyWorkbenchStyles();
+      loadState();
       renderNav();
       renderMobileNav();
       // 登录鉴权：通过后再渲染（bootApp）。未登录时锁屏，不暴露任何数据。
@@ -2578,6 +2579,10 @@
       if (window._wb_clock_timer) clearInterval(window._wb_clock_timer);
       window._wb_clock_timer = setInterval(updateDate, 1000);
     }
+    window.addEventListener('beforeunload', function() {
+      if(window._wb_clock_timer) clearInterval(window._wb_clock_timer);
+      if(window._wb_toast_t) clearTimeout(window._wb_toast_t);
+    });
 
     // ========== 工作台样式应用 ==========
     function applyWorkbenchStyles() {
@@ -2917,9 +2922,12 @@
         const customTitle = cfg.title || def.title;
         const emoji = def.title.split(' ')[0];
         const restTitle = def.title.split(' ').slice(1).join(' ');
+        const firstChar = customTitle.charCodeAt(0);
+        const hasEmoji = firstChar > 0x2000 || customTitle.startsWith(emoji);
+        const displayTitle = hasEmoji && customTitle.includes(' ') ? customTitle.split(' ').slice(1).join(' ') : customTitle;
         card.innerHTML = `
           <div class="card-title editable-title" title="点击修改标题" onclick="event.stopPropagation();editWidgetTitle('${key}', '${escapeHtml(def.title).replace(/'/g, "\\'")}', this)">
-            <span><span class="emoji">${emoji}</span><span class="widget-custom-title">${escapeHtml(customTitle.replace(/^[\S]+ /, ''))}</span></span>
+            <span><span class="emoji">${emoji}</span><span class="widget-custom-title">${escapeHtml(displayTitle)}</span></span>
             <div class="card-actions">
               <span class="drag-handle-card" title="拖动排序">↕</span>
               <button class="widget-config-btn" title="小组件属性" onclick="event.stopPropagation();openWidgetConfig('${key}', this)">⚙</button>
@@ -3071,9 +3079,12 @@
         const customTitle = cfg.title || def.title;
         const emoji = def.title.split(' ')[0];
         const restTitle = def.title.split(' ').slice(1).join(' ');
+        const firstChar = customTitle.charCodeAt(0);
+        const hasEmoji = firstChar > 0x2000 || customTitle.startsWith(emoji);
+        const displayTitle = hasEmoji && customTitle.includes(' ') ? customTitle.split(' ').slice(1).join(' ') : customTitle;
         card.innerHTML = `
           <div class="card-title editable-title" title="点击修改标题" onclick="event.stopPropagation();editWidgetTitle('${key}', '${escapeHtml(def.title).replace(/'/g, "\\'")}', this)">
-            <span><span class="emoji">${emoji}</span><span class="widget-custom-title">${escapeHtml(customTitle.replace(/^[\S]+ /, ''))}</span></span>
+            <span><span class="emoji">${emoji}</span><span class="widget-custom-title">${escapeHtml(displayTitle)}</span></span>
             <div class="card-actions">
               <span class="drag-handle-card" title="拖动排序">↕</span>
               <button class="widget-config-btn" title="小组件属性" onclick="event.stopPropagation();openWidgetConfig('${key}', this)">⚙</button>
@@ -4226,7 +4237,11 @@
       saveGlobalState(); renderHome();
     }
 
-    function fallbackWeather(city) {
+        function fallbackWeather(city) {
+      try { const c = JSON.parse(localStorage.getItem('wb_last_weather')||'null'); if(c&&c.city){ globalState.weather=c; saveGlobalState();renderHome(); return; } } catch(e){}
+      globalState.weather = { city, temp: '31\u00b0C', humidity: '62%', uv: '6', desc: '多云转晴' };
+      saveGlobalState(); renderHome();
+    }unction fallbackWeather(city) {
       globalState.weather = { city, temp: '31°C', humidity: '62%', uv: '6', desc: '多云转晴' };
       saveGlobalState(); renderHome();
     }
@@ -4312,10 +4327,7 @@
       const item = { id: Date.now(), text, done: false };
       if (cat) { item.section = cat.section; item.sectionLabel = cat.label; }
       globalState.todos.push(item);
-      // 自动镜像到对应分区
-      if (cat && globalState[cat.section] && Array.isArray(globalState[cat.section])) {
-        globalState[cat.section].push({ id: Date.now() + 1, text: text, done: false });
-      }
+      // 已通过智能分类标记，避免重复添加
       input.value = '';
       renderTodos();
       updateProgress();
@@ -4563,6 +4575,10 @@
     }
 
     function startCountdown() {
+      const cnow = new Date();
+      const before = globalState.countdowns.length;
+      globalState.countdowns = globalState.countdowns.filter(c => (cnow - new Date(c.date)) < 30*86400000);
+      if (globalState.countdowns.length !== before) saveGlobalState();
       setInterval(() => {
         const now = new Date();
         document.querySelectorAll('.countdown-time').forEach(el => {
@@ -4594,8 +4610,11 @@
     function updateHealth(field, value) {
       const h = globalState.health;
       if (field) {
-        const v = parseFloat(value);
-        if (!isNaN(v)) h[field] = v;
+        let v = parseFloat(value);
+        if (!isNaN(v)) {
+          if (field === 'currentWeight' || field === 'targetWeight') { v = v / 2; }
+          h[field] = v;
+        }
         saveGlobalState();
       }
       // 自动算今日消耗 = 基础代谢 * 活动系数 + 运动消耗
@@ -4662,9 +4681,12 @@
     function autoCalcBMR() {
       const h = globalState.health;
       const w = h.currentWeight || 60;       // kg
-      const hi = parseFloat((document.getElementById('hp-height')||{}).value) || 170;
-      const age = parseFloat((document.getElementById('hp-age')||{}).value) || 25;
-      const g = (document.getElementById('hp-gender')||{}).value || 'female';
+      const hi = parseFloat(((document.getElementById('hp-height')||{}).value)||globalState.health.height) || 170;
+      const age = parseFloat(((document.getElementById('hp-age')||{}).value)||globalState.health.age) || 25;
+      const gEl = document.getElementById('hp-gender');
+      const aEl = document.getElementById('hp-age');
+      const hEl = document.getElementById('hp-height');
+      const g = (gEl&&gEl.value) || globalState.health.gender || 'female';
       // Mifflin-St Jeor: 男 10W+6.25H-5A+5; 女 10W+6.25H-5A-161
       let bmr = 10*w + 6.25*hi - 5*age + (g==='male' ? 5 : -161);
       bmr = Math.round(bmr);
@@ -5038,7 +5060,37 @@
       saveGlobalState();
       renderAIChat();
     }
-    function aiDel(id) {
+    
+    // Data export/import
+    function exportAllData() {
+      try {
+        const data = JSON.stringify({ appState: appState, globalState: globalState, exportedAt: new Date().toISOString() }, null, 2);
+        const blob = new Blob(['﻿' + data], { type: 'application/json;charset=utf-8' });
+        const a = document.createElement('a');
+        a.download = 'workbench_backup_' + new Date().toISOString().slice(0,10) + '.json';
+        a.href = URL.createObjectURL(blob);
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showHint('Data exported as JSON');
+      } catch(e) { showHint('Export failed: ' + e.message); }
+    }
+    function importAllData() {
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = '.json';
+      input.onchange = async (e) => {
+        try {
+          const text = await e.target.files[0].text();
+          const data = JSON.parse(text);
+          if (data.appState) appState = data.appState;
+          if (data.globalState) globalState = data.globalState;
+          saveAppState(); saveGlobalState();
+          showHint('Data restored, reloading...');
+          setTimeout(() => location.reload(), 1000);
+        } catch(err) { showHint('Restore failed: ' + err.message); }
+      };
+      input.click();
+    }
+function aiDel(id) {
       globalState.aiChatHistory = (globalState.aiChatHistory || []).filter(x => x.id !== id);
       saveGlobalState();
       renderAIChat();
@@ -5675,7 +5727,7 @@
     function bootApp(){
       applyWorkbenchStyles();
       renderNav(); renderMobileNav();
-      renderHome(); renderAll(); updateDate(); startClock(); renderCalendar(); loadWeather();
+      renderHome(); updateDate(); startClock(); renderCalendar(); loadWeather();
       hydrateHealthInputs();
       renderSelfFavorites();
       renderAIChat();
@@ -5690,7 +5742,7 @@
       // 单击星回卡片标题 → 开关右栏
       document.addEventListener('click', (e) => {
         const title = e.target.closest('.card[data-widget="aiSecretary"] .card-title');
-        if (title) { toggleAIPanel(); }
+        if (title) { if(typeof toggleAIPanel==='function') toggleAIPanel(); }
       });
       const pd = document.getElementById('plan-date'); if (pd) pd.value = new Date().toISOString().split('T')[0];
     }
@@ -6087,3 +6139,4 @@
   </script>
 </body>
 </html>
+

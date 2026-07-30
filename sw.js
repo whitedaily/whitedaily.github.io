@@ -1,6 +1,4 @@
-// White 工作台 Service Worker —— 让手机可"添加到主屏幕"并离线启动外壳
-// v2 升级: HTML 走网络优先（永远拿最新部署），静态资源缓存优先（离线秒开）
-const CACHE = 'wb-shell-v2';
+﻿// White 宸ヤ綔鍙?Service Worker 鈥斺€?璁╂墜鏈哄彲"娣诲姞鍒颁富灞忓箷"骞剁绾垮惎鍔ㄥ澹?// v2 鍗囩骇: HTML 璧扮綉缁滀紭鍏堬紙姘歌繙鎷挎渶鏂伴儴缃诧級锛岄潤鎬佽祫婧愮紦瀛樹紭鍏堬紙绂荤嚎绉掑紑锛?const CACHE = 'wb-shell-v2';
 const SHELL = ['/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -21,11 +19,10 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
   if (req.method !== 'GET') return;
-  // 数据接口永不缓存
+  // 鏁版嵁鎺ュ彛姘镐笉缂撳瓨
   if (url.pathname.startsWith('/api/')) return;
 
-  // HTML（navigation/文档）走网络优先，确保更新立即生效
-  const isHTML = req.mode === 'navigate' ||
+  // HTML锛坣avigation/鏂囨。锛夎蛋缃戠粶浼樺厛锛岀‘淇濇洿鏂扮珛鍗崇敓鏁?  const isHTML = req.mode === 'navigate' ||
     (req.headers.get('accept') || '').includes('text/html');
   if (isHTML) {
     event.respondWith(
@@ -40,8 +37,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 静态资源（JS/CSS/PNG/SVG/字体...）缓存优先
-  event.respondWith(
+  // 闈欐€佽祫婧愶紙JS/CSS/PNG/SVG/瀛椾綋...锛夌紦瀛樹紭鍏?  event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
       return fetch(req).then((resp) => {
@@ -54,3 +50,4 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
