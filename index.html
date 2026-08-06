@@ -13,9 +13,35 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/icon-512.png">
   <title>White 个人专属 AI 工作台</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
+  <script>
+    // 外部依赖改为异步加载，CDN 不可用时不再阻塞页面渲染
+    (function () {
+      var wbDeps = [
+        'https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js',
+        'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js'
+      ];
+      var wbLoaded = 0;
+      var wbDone = false;
+      function wbReady() {
+        if (wbDone) return;
+        wbDone = true;
+        window.__wbDepsReady = true;
+        try { document.dispatchEvent(new CustomEvent('wbDepsReady')); } catch (e) {}
+      }
+      function wbLoad(src) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = function () { wbLoaded++; if (wbLoaded >= wbDeps.length) wbReady(); };
+        s.onerror = function () { wbLoaded++; if (wbLoaded >= wbDeps.length) wbReady(); };
+        document.head.appendChild(s);
+      }
+      wbDeps.forEach(wbLoad);
+      setTimeout(wbReady, 6000);
+    })();
+  </script>
   <style>
     :root {
       --tiffany: #0ABAB5;
@@ -1409,12 +1435,202 @@
 .eng-oral-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 8px; background: rgba(255,255,255,0.45); margin-bottom: 4px; font-size: 12px; }
 .eng-oral-item .oral-date { font-size: 10px; color: var(--text-muted); min-width: 38px; }
 .eng-oral-item .oral-dur { font-weight: 700; color: var(--tiffany-dark); min-width: 36px; }
+
+  /* ========== Swiss Grid UI ========== */
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --paper: #fafaf8;
+    --paper-2: #f3f1ec;
+    --paper-3: #ece9e2;
+    --line: #e0ddd5;
+    --line-soft: #ebe9e3;
+    --muted: #9a968e;
+    --muted-2: #c4c0b8;
+    --accent: #D85A30;
+    --accent-soft: #f4e0d6;
+    --green: #5b8a5a;
+    --blue: #4a6fa5;
+    --tiffany: #D85A30;
+    --tiffany-light: #F4E0D6;
+    --tiffany-soft: #E8C4B4;
+    --tiffany-dark: #B94A26;
+    --bg-color: #FAFAF8;
+    --bg-image: none;
+    --card-opacity: 1;
+    --glass-blur: 0px;
+    --glass-saturation: 100%;
+    --text: #1A1A1A;
+    --text-secondary: #4A4A4A;
+    --text-muted: #9A968E;
+    --border: #E0DDD5;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04);
+    --shadow-hover: 0 2px 8px rgba(26,26,26,0.08);
+    --radius: 4px;
+    --radius-sm: 4px;
+  }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .glass, .glass-flat {
+    background: #fff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid var(--line) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: var(--shadow) !important;
+  }
+  .sidebar {
+    width: var(--sidebar-w, 224px);
+    background: var(--paper) !important;
+    border-right: 1px solid var(--line);
+    border-radius: 0 !important;
+    color: var(--ink) !important;
+    padding: 20px 16px;
+  }
+  .sidebar::before { display: none; }
+  .user-card { background: var(--paper-2) !important; border: 1px solid var(--line); color: var(--ink) !important; }
+  .mini-stat { background: #fff; border: 1px solid var(--line); color: var(--ink); }
+  .nav-item { color: var(--ink-soft); font-size: 13px; border-radius: var(--radius); }
+  .nav-item.active { background: var(--ink); color: var(--paper); }
+  .side-btn { background: transparent; color: var(--ink-soft); border: 1px solid transparent; border-radius: var(--radius); }
+  .side-btn:hover, .side-btn.active { background: var(--paper-2); color: var(--ink); }
+  .topbar {
+    display: flex !important;
+    height: 52px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+  }
+  .main { padding: 28px 36px; background: var(--paper); }
+  .page-title h1 { font-size: 32px; font-weight: 300; letter-spacing: -0.02em; color: var(--ink); }
+  .page-title p { color: var(--muted); }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    box-shadow: var(--shadow);
+  }
+  .card-title { border-bottom: 1px solid var(--line-soft); }
+  .action-btn, .icon-btn, .modal-actions .primary, .modal-actions .secondary {
+    border-radius: var(--radius);
+  }
+  .action-btn { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-soft); }
+  .action-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .action-btn.danger { background: #f4e0d6; color: #B94A26; }
+  .modal { border-radius: var(--radius); }
+  .modal-tab.active { border-bottom-color: var(--accent); color: var(--ink); }
+
+  /* 底部快速输入 */
+  .quick-capture-fixed {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(680px, calc(100vw - 32px));
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 6px 24px rgba(26,26,26,0.12);
+    z-index: 5000;
+  }
+  .quick-capture-fixed:focus-within { border-color: var(--accent); background: #fff; }
+  .quick-capture-fixed input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink);
+    outline: none;
+  }
+  .quick-capture-fixed .priority-picker { display: flex; gap: 4px; }
+  .priority-btn {
+    width: 26px;
+    height: 22px;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--muted);
+    font-size: 10px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .priority-btn.p1.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .priority-btn.p2.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .priority-btn.p3.active { background: var(--green); border-color: var(--green); color: #fff; }
+
+  /* 任务列表：Active / Completed + 优先级 + hover 删除 */
+  .task-section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 18px 0 6px;
+  }
+  .task-section-label .line { flex: 1; height: 1px; background: var(--line-soft); }
+  .todo-item.swiss-task {
+    display: grid;
+    grid-template-columns: 18px 4px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+  }
+  .todo-item.swiss-task:hover { background: var(--paper-2); }
+  .todo-item.swiss-task .task-check { display: flex; align-items: center; }
+  .todo-item.swiss-task .task-check input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+  .todo-item.swiss-task .priority-bar { width: 3px; height: 16px; border-radius: 2px; }
+  .priority-bar.p1 { background: var(--accent); }
+  .priority-bar.p2 { background: var(--blue); }
+  .priority-bar.p3 { background: var(--green); }
+  .todo-item.swiss-task .text { color: var(--ink); font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
+  .todo-item.swiss-task.completed .text { text-decoration: line-through; color: var(--muted); }
+  .todo-item.swiss-task .task-del {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    opacity: 0;
+    border-radius: 3px;
+  }
+  .todo-item.swiss-task:hover .task-del { opacity: 1; }
+  .todo-item.swiss-task .task-del:hover { color: var(--accent); background: var(--accent-soft); }
+  .empty-state { text-align: center; color: var(--muted); padding: 28px 10px; font-size: 12px; }
+
+  body { padding-top: 52px; height: calc(100vh - 52px); }
+  @media (min-width: 901px) and (max-width: 1280px) {
+    .quick-capture-fixed { width: min(600px, calc(100vw - 48px)); }
+  }
+  @media (max-width: 900px) {
+    body { padding-top: 0; height: 100vh; }
+    .quick-capture-fixed {
+      bottom: calc(78px + env(safe-area-inset-bottom));
+      width: calc(100vw - 24px);
+    }
+    .mobile-nav { z-index: 4000; }
+    .main { padding-bottom: 170px; }
+  }
   </style>
   <script>
     // 注册 Service Worker（让工作台可作为 App 安装到手机桌面；file:// 下静默失败）
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=33').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=35').catch(function () {});
       });
     }
   </script>
@@ -1426,12 +1642,7 @@
 </div>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 <script>
-try{
-document.addEventListener('DOMContentLoaded',function(){
-    var loader=document.getElementById('initial-loader');
-    if(loader) loader.style.display='none';
-});
-}catch(e){}
+// 加载屏由主应用启动流程控制，避免在依赖就绪前提前隐藏
 </script>
 
   <!-- 个人登录覆盖层（强制） -->
@@ -1615,10 +1826,10 @@ document.addEventListener('DOMContentLoaded',function(){
           </div>
           <div class="health-form">
             <div class="health-field"><label>当前体重</label>
-              <input type="number" id="weight" step="0.1" onchange="updateHealth('currentWeight', this.value)"> kg <span style="font-size:10px;color:var(--text-muted)">(1 kg = 2 斤)</span>
+              <input type="number" id="weight" step="0.1" onchange="updateHealth('currentWeight', this.value)"> kg
             </div>
             <div class="health-field"><label>目标体重</label>
-              <input type="number" id="target-weight" step="0.1" onchange="updateHealth('targetWeight', this.value)"> kg <span style="font-size:10px;color:var(--text-muted)">(1 kg = 2 斤)</span>
+              <input type="number" id="target-weight" step="0.1" onchange="updateHealth('targetWeight', this.value)"> kg
             </div>
             <div class="health-field"><label>今日摄入</label>
               <input type="number" id="cal-in" onchange="updateHealth('intakeKcal', this.value)"> kcal
@@ -1632,6 +1843,7 @@ document.addEventListener('DOMContentLoaded',function(){
               <div class="row"><span class="label">热量缺口</span><span class="value up" id="diff-cal">+ kcal</span></div>
               <div class="row"><span class="label">本周减重</span><span class="value down" id="week-loss">- 斤</span></div>
             </div>
+            <div id="sci-plan" style="font-size:10px;color:var(--text-muted);margin-top:8px;line-height:1.5"></div>
             <div style="font-size:10px;color:var(--text-muted);margin-top:6px">💡 跟星回说「吃了 XX」「跑了 XX 分钟」自动记入；运动消耗联动健身打卡</div>
           </div>
         </div>
@@ -1950,6 +2162,16 @@ document.addEventListener('DOMContentLoaded',function(){
   <!-- 移动端底部导航 -->
   <nav class="mobile-nav glass" id="mobile-nav"></nav>
 
+  <!-- 快速输入：底部任务捕获 -->
+  <div class="quick-capture-fixed" id="quick-capture">
+    <input type="text" id="quick-task-input" placeholder="快速添加任务，Enter 保存" autocomplete="off">
+    <div class="priority-picker">
+      <button class="priority-btn p1" data-p="p1" onclick="setQuickPriority('p1', this)" title="高优先级">P1</button>
+      <button class="priority-btn p2" data-p="p2" onclick="setQuickPriority('p2', this)" title="中优先级">P2</button>
+      <button class="priority-btn p3 active" data-p="p3" onclick="setQuickPriority('p3', this)" title="低优先级">P3</button>
+    </div>
+  </div>
+
   <!-- 设置弹窗 -->
   <div class="modal-overlay" id="settings-modal" onclick="closeModalOnBackdrop(event)">
     <div class="modal glass" onclick="event.stopPropagation()">
@@ -1959,6 +2181,7 @@ document.addEventListener('DOMContentLoaded',function(){
         <div class="modal-tab active" onclick="switchSettingTab(this,'background')">背景</div>
         <div class="modal-tab" onclick="switchSettingTab(this,'glass')">玻璃态</div>
         <div class="modal-tab" onclick="switchSettingTab(this,'sync')">同步</div>
+        <div class="modal-tab" onclick="switchSettingTab(this,'ai')">AI</div>
         <div class="modal-tab" onclick="switchSettingTab(this,'layout')">布局</div>
       </div>
 
@@ -2045,6 +2268,16 @@ document.addEventListener('DOMContentLoaded',function(){
         </div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.5">
           💡 Supabase 免费套餐含 500MB 数据库。配置后：<br>① 工作台关闭/闪退不丢数据<br>② 多设备可同步（用相同密钥）<br>③ 连接状态标识（🟢 已同步 / 🟡 同步中 / 🔴 离线）
+        </div>
+      </div>
+
+      <div class="modal-section" id="tab-ai">
+        <div class="setting-row">
+          <div class="info"><h4>DeepSeek API Key</h4><p>星回的回答使用 DeepSeek 生成。密钥只保存在本机浏览器，不会上传到 GitHub</p></div>
+        </div>
+        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <div class="info" style="width:100%"><h4>API Key</h4><p>在 platform.deepseek.com 获取</p></div>
+          <input type="password" class="setting-input" id="deepseek-api-key" placeholder="sk-...（选填）" style="width:100%">
         </div>
       </div>
 
@@ -2154,7 +2387,7 @@ document.addEventListener('DOMContentLoaded',function(){
     </div>
   </div>
 
-  <script>try{
+  <script>
 // Error handler
 window.onerror = function(msg, src, line, col, err) {
     var el = document.getElementById('initial-loader');
@@ -2281,6 +2514,7 @@ window.onerror = function(msg, src, line, col, err) {
         activityFactor: 1.2,        // 活动系数 久坐1.2/轻1.375/中1.55/高1.725
         height: 170, age: 25, gender: 'female',  // 用于算BMR
         weekStartWeight: 68.1,      // 本周开始体重(算周减重)
+        lastWeightDate: '',
         lastIntakeLog: []           // {ts, food, kcal} 本日食物日志
       },
       englishWords: [],
@@ -2296,6 +2530,7 @@ window.onerror = function(msg, src, line, col, err) {
         stats: '今日数据汇总 · 实时同步各分区进度'
       },
       ximaUid: '',
+      deepseekApiKey: '',
       planCountdowns: []
     };
 
@@ -2347,7 +2582,11 @@ window.onerror = function(msg, src, line, col, err) {
       while ((globalState.familyCheckpointGeo || []).length < (globalState.familyCheckpoints || []).length) {
         globalState.familyCheckpointGeo.push({ enabled: false, lat: 0, lon: 0, radius: 80 });
       }
-      globalState.syncConfig = globalState.syncConfig || { url: '', key: '', syncKey: '', wifiBackup: true };
+      const wbDefaultSync = { url: 'https://qhwmsvlpvetkukujfugb.supabase.co', key: 'sb_publishable__fGv4Ivl74k6CZnpIWtxmw_BdJtLg4J', syncKey: '0114', wifiBackup: true };
+      globalState.syncConfig = Object.assign({}, wbDefaultSync, globalState.syncConfig || {});
+      globalState.syncConfig.url = (globalState.syncConfig.url || '').trim() || wbDefaultSync.url;
+      globalState.syncConfig.key = (globalState.syncConfig.key || '').trim() || wbDefaultSync.key;
+      globalState.syncConfig.syncKey = (globalState.syncConfig.syncKey || '').trim() || wbDefaultSync.syncKey;
       if (!globalState.lifeSkills || !globalState.lifeSkills.categories) {
         globalState.lifeSkills = { categories: [
           { key: 'medication', name: '💊 生病用药', items: [] },
@@ -2371,8 +2610,9 @@ window.onerror = function(msg, src, line, col, err) {
       globalState.health = globalState.health || {
         currentWeight: 68.1, targetWeight: 60, intakeKcal: 1480, burnKcal: 1600,
         exerciseKcal: 0, basalMetabolism: 1500, activityFactor: 1.2,
-        height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastIntakeLog: []
+        height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastWeightDate: '', lastIntakeLog: []
       };
+      globalState.health.lastWeightDate = globalState.health.lastWeightDate || '';
       globalState.englishWords = globalState.englishWords || [];
       globalState.englishOral = globalState.englishOral || [];
       globalState.englishWordGoal = globalState.englishWordGoal || 30;
@@ -2384,6 +2624,7 @@ window.onerror = function(msg, src, line, col, err) {
         family: '宠物专属专栏 · 家庭事务管理',
         stats: '今日数据汇总 · 实时同步各分区进度'
       };
+      globalState.deepseekApiKey = globalState.deepseekApiKey || '';
       ensureDefaultWorkbench();
       // URL 自动打卡检测
       setTimeout(autoCheckinFromURL, 200);
@@ -2447,6 +2688,12 @@ window.onerror = function(msg, src, line, col, err) {
     }
 
     let saveTimer = null;
+    let _syncDebounce = null;
+    function scheduleAutoSync() {
+      if (!_sb) return;
+      clearTimeout(_syncDebounce);
+      _syncDebounce = setTimeout(() => { if (_sb) syncNow(true); }, 1200);
+    }
     function scheduleServerSave() {
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
@@ -2483,14 +2730,28 @@ window.onerror = function(msg, src, line, col, err) {
       }
     }
 
+    let _autoSaveToastTimer = null;
+    let _wbBootTime = Date.now();
+    function notifyAutoSaved() {
+      if (Date.now() - _wbBootTime < 3000) return;
+      clearTimeout(_autoSaveToastTimer);
+      _autoSaveToastTimer = setTimeout(() => {
+        if (typeof showHint === 'function') showHint('✅ 已自动保存');
+      }, 120);
+    }
+
     function saveAppState() {
       if (SERVER_MODE) { scheduleServerSave(); return; }
       localStorage.setItem('wb_app_state_v2', JSON.stringify(appState));
+      scheduleAutoSync();
+      notifyAutoSaved();
     }
 
     function saveGlobalState() {
       if (SERVER_MODE) { scheduleServerSave(); return; }
       localStorage.setItem('wb_global_state_v2', JSON.stringify(globalState));
+      scheduleAutoSync();
+      notifyAutoSaved();
     }
 
     function getCurrentWorkbench() {
@@ -2498,7 +2759,14 @@ window.onerror = function(msg, src, line, col, err) {
     }
 
     // ========== 初始化 ==========
-    document.addEventListener('DOMContentLoaded', () => {
+    let wbDomReady = false;
+    let wbDepsReady = window.__wbDepsReady === true;
+    let wbBootStarted = false;
+    function wbStartApp() {
+      if (!wbDomReady || !wbDepsReady || wbBootStarted) return;
+      wbBootStarted = true;
+      var wbLoader = document.getElementById('initial-loader');
+      if (wbLoader) wbLoader.style.display = 'none';
       applyWorkbenchStyles();
       loadState();
       renderNav();
@@ -2506,7 +2774,11 @@ window.onerror = function(msg, src, line, col, err) {
       // 登录鉴权：通过后再渲染（bootApp）。未登录时锁屏，不暴露任何数据。
       initAuth();
       window.addEventListener('resize', () => { renderMobileNav(); });
-    });
+      const q = document.getElementById('quick-task-input');
+      if (q) q.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); quickAddTask(); } });
+    }
+    document.addEventListener('DOMContentLoaded', () => { wbDomReady = true; wbStartApp(); });
+    document.addEventListener('wbDepsReady', () => { wbDepsReady = true; wbStartApp(); });
 
     function updateDate() {
       const d = new Date();
@@ -2719,23 +2991,26 @@ window.onerror = function(msg, src, line, col, err) {
         if (form) form.remove();
       }
       if (navSortable) navSortable.destroy();
-      navSortable = new Sortable(menu, {
-        handle: '.drag-handle',
-        animation: 150,
-        disabled: !navEditMode,
-        filter: '#nav-add-trigger',
-        onEnd: () => {
-          const wb = getCurrentWorkbench();
-          const liveItems = [...menu.querySelectorAll('.nav-item')].map(el => {
-            const id = el.dataset.page;
-            return wb.nav.find(n => n.id === id);
-          }).filter(Boolean);
-          // 去重
-          wb.nav = [...new Set(liveItems)];
-          saveAppState();
-          renderMobileNav();
-        }
-      });
+      navSortable = null;
+      if (window.Sortable) {
+        navSortable = new Sortable(menu, {
+          handle: '.drag-handle',
+          animation: 150,
+          disabled: !navEditMode,
+          filter: '#nav-add-trigger',
+          onEnd: () => {
+            const wb = getCurrentWorkbench();
+            const liveItems = [...menu.querySelectorAll('.nav-item')].map(el => {
+              const id = el.dataset.page;
+              return wb.nav.find(n => n.id === id);
+            }).filter(Boolean);
+            // 去重
+            wb.nav = [...new Set(liveItems)];
+            saveAppState();
+            renderMobileNav();
+          }
+        });
+      }
       document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.toggle('edit-mode', navEditMode);
         const input = item.querySelector('.text');
@@ -2956,22 +3231,25 @@ window.onerror = function(msg, src, line, col, err) {
           </div>
           <div class="widget-body"></div>
         `;
-        def.render(card.querySelector('.widget-body'));
         grid.appendChild(card);
+        def.render(card.querySelector('.widget-body'));
       });
       if (widgetSortable) widgetSortable.destroy();
-      widgetSortable = new Sortable(grid, {
-        handle: '.drag-handle-card',
-        animation: 150,
-        disabled: !editMode,
-        ghostClass: 'sortable-ghost',
-        dragClass: 'sortable-drag',
-        onEnd: () => {
-          const wb = getCurrentWorkbench();
-          wb.widgets = [...grid.querySelectorAll('.card')].map(c => c.dataset.widget).filter(Boolean);
-          saveAppState();
-        }
-      });
+      widgetSortable = null;
+      if (window.Sortable) {
+        widgetSortable = new Sortable(grid, {
+          handle: '.drag-handle-card',
+          animation: 150,
+          disabled: !editMode,
+          ghostClass: 'sortable-ghost',
+          dragClass: 'sortable-drag',
+          onEnd: () => {
+            const wb = getCurrentWorkbench();
+            wb.widgets = [...grid.querySelectorAll('.card')].map(c => c.dataset.widget).filter(Boolean);
+            saveAppState();
+          }
+        });
+      }
       updateEditModeUI();
       refreshGlassClasses();
     }
@@ -3113,8 +3391,8 @@ window.onerror = function(msg, src, line, col, err) {
           </div>
           <div class="widget-body"></div>
         `;
-        def.render(card.querySelector('.widget-body'));
         grid.appendChild(card);
+        def.render(card.querySelector('.widget-body'));
       });
       refreshGlassClasses();
       // 启用 sortable 拖排序
@@ -3963,7 +4241,12 @@ window.onerror = function(msg, src, line, col, err) {
     let _syncStatus = 'offline'; // online|syncing|error|offline
 
     function getSyncConfig() {
-      globalState.syncConfig = globalState.syncConfig || { url: '', key: '', syncKey: '', wifiBackup: true };
+      const wbDefaultSync = { url: 'https://qhwmsvlpvetkukujfugb.supabase.co', key: 'sb_publishable__fGv4Ivl74k6CZnpIWtxmw_BdJtLg4J', syncKey: '0114', wifiBackup: true };
+      const sc = globalState.syncConfig || {};
+      globalState.syncConfig = Object.assign({}, wbDefaultSync, sc);
+      globalState.syncConfig.url = (globalState.syncConfig.url || '').trim() || wbDefaultSync.url;
+      globalState.syncConfig.key = (globalState.syncConfig.key || '').trim() || wbDefaultSync.key;
+      globalState.syncConfig.syncKey = (globalState.syncConfig.syncKey || '').trim() || wbDefaultSync.syncKey;
       return globalState.syncConfig;
     }
 
@@ -3981,6 +4264,8 @@ window.onerror = function(msg, src, line, col, err) {
       // 定时自动同步(每 5 分钟)
       if (_syncTimer) clearInterval(_syncTimer);
       _syncTimer = setInterval(() => { if (_sb) syncNow(true); }, 300000);
+      // 启动后自动验证连接并上传一次最新数据
+      setTimeout(() => { if (_sb) syncNow(true); }, 2000);
       // WiFi 监听
       startWifiWatch();
       // 打开 settings 时回填
@@ -4253,20 +4538,43 @@ window.onerror = function(msg, src, line, col, err) {
         const data = await res.json();
         const cur = data.current;
         globalState.weather = { city: '当前位置', temp: Math.round(cur.temperature_2m) + '°C', humidity: cur.relative_humidity_2m + '%', uv: cur.uv_index, desc: getWeatherDesc(cur.uv_index) };
-      } catch (e) { fallbackWeather('北京'); }
+      } catch (e) {
+        try { await fetchChinaWeather(globalState.weather.city || '北京'); return; }
+        catch (e2) { fallbackWeather('北京'); return; }
+      }
+      try { localStorage.setItem('wb_last_weather', JSON.stringify(globalState.weather)); } catch(e){}
       saveGlobalState(); renderHome();
     }
 
-        function fallbackWeather(city) {
+    async function fetchChinaWeather(city) {
+      const url = 'https://wttr.in/' + encodeURIComponent(city || '北京') + '?format=j1&lang=zh';
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('weather http ' + res.status);
+      const data = await res.json();
+      const cur = data.current_condition && data.current_condition[0];
+      const area = data.nearest_area && data.nearest_area[0];
+      globalState.weather = {
+        city: (area && area.areaName && area.areaName[0] && area.areaName[0].value) || city || '当前位置',
+        temp: (cur && cur.temp_C != null) ? cur.temp_C + '°C' : '--',
+        humidity: (cur && cur.humidity != null) ? cur.humidity + '%' : '--',
+        uv: (cur && cur.uvIndex != null) ? cur.uvIndex : '--',
+        desc: (cur && cur.lang_zh && cur.lang_zh[0] && cur.lang_zh[0].value) || (cur && cur.weatherDesc && cur.weatherDesc[0] && cur.weatherDesc[0].value) || ''
+      };
+      try { localStorage.setItem('wb_last_weather', JSON.stringify(globalState.weather)); } catch(e){}
+      saveGlobalState(); renderHome();
+    }
+
+    function fallbackWeather(city) {
       try { const c = JSON.parse(localStorage.getItem('wb_last_weather')||'null'); if(c&&c.city){ globalState.weather=c; saveGlobalState();renderHome(); return; } } catch(e){}
       globalState.weather = { city, temp: '31\u00b0C', humidity: '62%', uv: '6', desc: '多云转晴' };
-      saveGlobalState(); renderHome();
-    }unction fallbackWeather(city) {
-      globalState.weather = { city, temp: '31°C', humidity: '62%', uv: '6', desc: '多云转晴' };
+      try { localStorage.setItem('wb_last_weather', JSON.stringify(globalState.weather)); } catch(e){}
       saveGlobalState(); renderHome();
     }
 
-    function manualWeather(city) { fallbackWeather(city || '北京'); }
+    async function manualWeather(city) {
+      try { await fetchChinaWeather(city || '北京'); }
+      catch (e) { fallbackWeather(city || '北京'); }
+    }
 
     function getWeatherDesc(uv) {
       if (uv >= 8) return '晴 · 紫外线强';
@@ -4278,21 +4586,29 @@ window.onerror = function(msg, src, line, col, err) {
     function renderTodoList(list, elId, onToggle, onDelete) {
       const el = document.getElementById(elId);
       if (!el) return;
-      el.innerHTML = '';
-      list.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'todo-item' + (item.done ? ' completed' : '');
+      const pending = list.filter(i => !i.done);
+      const done = list.filter(i => i.done);
+      const itemHTML = (item) => {
+        const pr = item.priority || 'p3';
         const catChip = item.section && item.section !== 'todos'
           ? '<span class="todo-cat-chip" style="font-size:10px;padding:2px 6px;border-radius:6px;background:var(--tiffany-light);color:var(--tiffany-dark);margin-left:6px">' + escapeHtml(item.sectionLabel || '') + '</span>'
           : '';
-        div.innerHTML = `
-          <input type="checkbox" ${item.done ? 'checked' : ''} onchange="${onToggle}(${item.id})">
+        return `<div class="todo-item swiss-task priority-${pr}${item.done ? ' completed' : ''}" data-id="${item.id}">
+          <label class="task-check"><input type="checkbox" ${item.done ? 'checked' : ''} onchange="${onToggle}(${item.id})"></label>
+          <span class="priority-bar ${pr}"></span>
           <span class="text">${escapeHtml(item.text)}</span>
           ${catChip}
-          <span class="del" onclick="${onDelete}(${item.id})">×</span>
-        `;
-        el.appendChild(div);
-      });
+          <button class="task-del" onclick="${onDelete}(${item.id})" title="删除">✕</button>
+        </div>`;
+      };
+      let html = '';
+      if (!pending.length && !done.length) {
+        html = '<div class="empty-state">暂无任务</div>';
+      } else {
+        if (pending.length) html += '<div class="task-section-label">Active <span class="line"></span></div>' + pending.map(itemHTML).join('');
+        if (done.length) html += '<div class="task-section-label">Completed <span class="line"></span></div>' + done.map(itemHTML).join('');
+      }
+      el.innerHTML = html;
     }
 
     function escapeHtml(text) {
@@ -4305,7 +4621,7 @@ window.onerror = function(msg, src, line, col, err) {
       const input = document.getElementById(inputId);
       const text = input.value.trim();
       if (!text) return;
-      list.push({ id: Date.now(), text, done: false });
+      list.push({ id: Date.now(), text, done: false, priority: 'p3' });
       input.value = '';
       renderFn();
       saveGlobalState();
@@ -4344,7 +4660,7 @@ window.onerror = function(msg, src, line, col, err) {
       const text = (input.value || '').trim();
       if (!text) return;
       const cat = smartCategorizeTodo(text);
-      const item = { id: Date.now(), text, done: false };
+      const item = { id: Date.now(), text, done: false, priority: 'p3' };
       if (cat) { item.section = cat.section; item.sectionLabel = cat.label; }
       globalState.todos.push(item);
       // 已通过智能分类标记，避免重复添加
@@ -4398,7 +4714,7 @@ window.onerror = function(msg, src, line, col, err) {
       if (!h) {
         h = document.createElement('div');
         h.id = 'wb-toast';
-        h.style.cssText = 'position:fixed;top:74px;left:50%;transform:translateX(-50%);padding:10px 20px;background:rgba(15,15,15,0.85);color:#fff;border-radius:24px;font-size:13px;z-index:9999;backdrop-filter:blur(8px);opacity:0;transition:opacity 0.25s;pointer-events:none';
+        h.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;background:rgba(15,15,15,0.85);color:#fff;border-radius:24px;font-size:13px;z-index:9999;backdrop-filter:blur(8px);opacity:0;transition:opacity 0.25s;pointer-events:none';
         document.body.appendChild(h);
       }
       h.textContent = msg;
@@ -4497,7 +4813,8 @@ window.onerror = function(msg, src, line, col, err) {
       closeBtn.textContent = '×'; closeBtn.style.cssText = 'position:absolute;top:12px;right:18px;font-size:22px;cursor:pointer;color:var(--text-secondary);z-index:1';
       closeBtn.onclick = () => modal.remove();
       const header = document.createElement('div');
-      header.innerHTML = '<h2 style="font-size:18px;font-weight:700;color:var(--tiffany-dark);margin:0 0 2px">🌟 星回</h2><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">有什么事想跟我说？</p>';
+      const dsStatus = (globalState.deepseekApiKey || '').trim() ? 'DeepSeek 在线' : 'DeepSeek 未配置';
+      header.innerHTML = '<h2 style="font-size:18px;font-weight:700;color:var(--tiffany-dark);margin:0 0 2px">🌟 星回 <span style="font-size:10px;font-weight:500;color:var(--text-muted);margin-left:6px">' + dsStatus + '</span></h2><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">有什么事想跟我说？</p>';
       const chatArea = document.createElement('div');
       chatArea.id = 'star-dialog-chat';
       chatArea.style.cssText = 'flex:1;overflow-y:auto;margin-bottom:10px;min-height:200px;max-height:50vh;';
@@ -4532,13 +4849,29 @@ window.onerror = function(msg, src, line, col, err) {
       const text = (input.value || '').trim();
       if (!text) return;
       globalState.aiChatHistory = globalState.aiChatHistory || [];
-      globalState.aiChatHistory.unshift({ id: Date.now(), q: text, a: '', provider: globalState.provider, ts: new Date().toISOString() });
+      const item = { id: Date.now(), q: text, a: '', provider: 'deepseek', ts: new Date().toISOString() };
+      globalState.aiChatHistory.unshift(item);
       input.value = '';
       saveGlobalState();
-      // 更新右侧 chat + 对话框
       renderAIChat();
-      const old = document.getElementById('star-dialog-modal');
-      if (old) { openStarDialog(); /* 刷新 */ }
+      renderStarDialogChat();
+      aiAnswerItem(item, text, aiSecGetAttachments());
+    }
+    function renderStarDialogChat() {
+      const chatArea = document.getElementById('star-dialog-chat');
+      if (!chatArea) return;
+      const list = globalState.aiChatHistory || [];
+      chatArea.innerHTML = list.length === 0
+        ? '<div style="opacity:0.5;text-align:center;padding:30px;font-size:12px">✨ 还没有对话，输入你的问题，我会帮你分类安排好。</div>'
+        : list.slice(0, 20).map(c => {
+            const p = providers[c.provider] || providers.doubao;
+            const ts = (c.ts || '').slice(5, 16).replace('T', ' ');
+            return `<div style="margin-bottom:10px;border-radius:10px;background:rgba(255,255,255,0.6);padding:8px 10px;font-size:12px;border:1px solid rgba(0,0,0,0.06)">
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">${ts} · ${escapeHtml(p.name)}</div>
+              <div style="padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.7);margin-bottom:4px;border-left:3px solid var(--tiffany)">${escapeHtml(c.q)}</div>
+              ${c.a ? `<div style="padding:6px 8px;border-radius:8px;background:rgba(10,186,181,0.1);border-left:3px solid var(--tiffany-dark)">${escapeHtml(c.a).replace(/\n/g,'<br>')}</div>` : '<div style="opacity:0.5;font-size:11px;font-style:italic;padding:4px 8px">⏳ 等待回答...</div>'}
+            </div>`;
+          }).join('');
     }
 
     function updateExamProgress() {
@@ -4565,10 +4898,13 @@ window.onerror = function(msg, src, line, col, err) {
         if (prog) prog.textContent = `${done}/${total}`;
         if (bar) bar.style.width = total ? (done / total * 100) + '%' : '0%';
       });
-      document.getElementById('mini-todo').textContent = globalState.todos.filter(i => !i.done).length;
-      document.getElementById('mini-family').textContent = globalState.familyTasks.filter(i => !i.done).length;
+      const miniTodo = document.getElementById('mini-todo');
+      const miniFamily = document.getElementById('mini-family');
+      const miniCheck = document.getElementById('mini-check');
+      if (miniTodo) miniTodo.textContent = globalState.todos.filter(i => !i.done).length;
+      if (miniFamily) miniFamily.textContent = globalState.familyTasks.filter(i => !i.done).length;
       const selfDone = globalState.selfTasks.filter(i => i.done).length;
-      document.getElementById('mini-check').textContent = selfDone >= 3 ? '已完成' : '待打卡';
+      if (miniCheck) miniCheck.textContent = selfDone >= 3 ? '已完成' : '待打卡';
     }
 
     // ========== 倒计时 ==========
@@ -4632,7 +4968,17 @@ window.onerror = function(msg, src, line, col, err) {
       if (field) {
         let v = parseFloat(value);
         if (!isNaN(v)) {
-          if (field === 'currentWeight' || field === 'targetWeight') { v = v / 2; }
+          if (field === 'currentWeight') {
+            const today = new Date().toISOString().slice(0, 10);
+            const prev = h.currentWeight;
+            if (h.lastWeightDate) {
+              const days = Math.floor((Date.now() - new Date(h.lastWeightDate).getTime()) / 86400000);
+              if (days >= 7) h.weekStartWeight = prev || h.weekStartWeight || v;
+            } else {
+              h.weekStartWeight = prev || v;
+            }
+            h.lastWeightDate = today;
+          }
           h[field] = v;
         }
         saveGlobalState();
@@ -4653,13 +4999,25 @@ window.onerror = function(msg, src, line, col, err) {
       const target = h.targetWeight || 0;
       const diffW = (weight - target).toFixed(1);
       const calDiff = (h.burnKcal || 0) - (h.intakeKcal || 0);
-      const weekLoss = ((h.weekStartWeight || weight) - weight).toFixed(1);
+      const weekLoss = ((h.weekStartWeight || weight) - weight).toFixed(2);
       const set = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
-      set('diff-weight', (diffW > 0 ? '+' : '') + diffW + ' 斤');
+      set('diff-weight', (diffW > 0 ? '+' : '') + diffW + ' kg');
       set('diff-cal', (calDiff > 0 ? '+' : '') + calDiff + ' kcal');
       const dc = document.getElementById('diff-cal');
       if (dc) dc.className = 'value ' + (calDiff >= 0 ? 'up' : 'down');
-      set('week-loss', (weekLoss > 0 ? '-' : '+') + Math.abs(weekLoss) + ' 斤');
+      set('week-loss', (weekLoss > 0 ? '-' : '+') + Math.abs(weekLoss) + ' kg');
+      // 科学减重建议：TDEE = BMR × 活动系数；减脂缺口 300-500 kcal/天，目标每周 0.25-0.5kg
+      const goal = (globalState.fitnessGoal || {}).goal || 'lose';
+      const tdee = Math.round((h.basalMetabolism || 0) * (h.activityFactor || 1.2));
+      let deficit = 0;
+      if (goal === 'lose') deficit = Math.round(Math.min(500, Math.max(300, weight * 6)));
+      else if (goal === 'gain') deficit = -Math.round(Math.min(300, Math.max(150, weight * 3)));
+      const recIntake = Math.round(tdee - deficit);
+      const weeklyTarget = deficit ? (Math.abs(deficit) * 7 / 7700).toFixed(2) : '0.00';
+      const sci = document.getElementById('sci-plan');
+      if (sci) {
+        sci.textContent = `科学建议：TDEE ${tdee} kcal · ${goal === 'lose' ? '每日缺口 ' + deficit + ' kcal' : goal === 'gain' ? '每日盈余 ' + Math.abs(deficit) + ' kcal' : '维持摄入'} · 建议摄入 ${recIntake} kcal · 目标每周 ${weeklyTarget} kg`;
+      }
     }
 
     // 健康档案(BMR/活动系数/身高体重年龄)
@@ -4839,6 +5197,62 @@ window.onerror = function(msg, src, line, col, err) {
     function aiAsk(text) { document.getElementById('ai-input').value = text; aiSend(); }
     function aiOpen(url) { window.open(url, '_blank'); }
 
+    async function deepseekReply(text) {
+      let key = ((globalState.deepseekApiKey || '') || '').trim();
+      if (!key) {
+        const entered = prompt('请粘贴 DeepSeek API Key（只保存在本机浏览器）：', '');
+        if (entered && entered.trim()) {
+          globalState.deepseekApiKey = entered.trim();
+          saveGlobalState();
+        }
+        key = ((globalState.deepseekApiKey || '') || '').trim();
+      }
+      if (!key) {
+        if (typeof showHint === 'function') showHint('请先在设置 → AI 填写 DeepSeek API Key');
+        return '';
+      }
+      const wx = globalState.weather || {};
+      const hw = globalState.health || {};
+      const weightDue = !hw.lastWeightDate || (Date.now() - new Date(hw.lastWeightDate || 0).getTime()) >= 10 * 86400000;
+      const weightRemind = weightDue ? '\n请提醒用户：距离上次记录体重已超过 10 天，该更新体重了。' : '';
+      const wxText = (wx.city && wx.temp && wx.temp !== '--')
+        ? `\n当前天气：${wx.city} ${wx.temp}，${wx.desc || ''}，湿度 ${wx.humidity || '--'}。请据此提醒用户注意穿衣、防晒、带伞或健康事项。`
+        : '';
+      const contextText = wxText + weightRemind;
+      const recent = (globalState.aiChatHistory || []).slice(0, 6)
+        .map(c => '用户问：' + c.q + '\n星回答：' + (c.a || '（等待中）')).join('\n');
+      const sys = '你是「星回」，是用户 White 最亲近、最懂他的个人 AI 助手，形象参考恋与深空的沈星回：温柔、细腻、认真、有分寸，会记住用户的话并站在用户角度给出可落地的建议。回答使用简体中文，语气自然亲近但不过度卖萌，适当结合用户的工作台数据（待办、健康、计划、天气）。' + contextText + (recent ? '\n最近对话参考：\n' + recent : '') + '\n请保密用户分享的所有日常，只用于帮助他优化生活。';
+      const res = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [{ role: 'system', content: sys }, { role: 'user', content: text }],
+          temperature: 0.8,
+          max_tokens: 1200
+        })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const out = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      return (out || '').trim();
+    }
+    async function aiAnswerItem(item, text, att) {
+      const local = smartAIRespond(text, att);
+      const localAction = /食物识别成功|运动识别成功|链接已识别/.test(local);
+      if (localAction || (att && (att.image || att.voice))) {
+        item.a = local;
+      } else {
+        try { item.a = (await deepseekReply(text)) || local; }
+        catch (e) { item.a = local; }
+      }
+      item.provider = 'deepseek';
+      saveGlobalState();
+      renderAIChat();
+      renderStarDialogChat();
+      if (_sb) syncNow(true);
+    }
+
     // ========== 喜马拉雅个人链接 ==========
     function _ximaUid() { globalState.ximaUid = globalState.ximaUid || ''; return globalState.ximaUid; }
     function openXimaHub() {
@@ -4883,18 +5297,15 @@ window.onerror = function(msg, src, line, col, err) {
       globalState.health = globalState.health || {
         currentWeight: 68.1, targetWeight: 60, intakeKcal: 1480, burnKcal: 1600,
         exerciseKcal: 0, basalMetabolism: 1500, activityFactor: 1.2,
-        height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastIntakeLog: []
+        height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastWeightDate: '', lastIntakeLog: []
       };
-      globalState.aiChatHistory.unshift({
-        id: Date.now(),
-        q: text,
-        a: smartAIRespond(text, aiSecGetAttachments()),
-        provider: globalState.provider,
-        ts: new Date().toISOString()
-      });
+      const att = aiSecGetAttachments();
+      const item = { id: Date.now(), q: text, a: '', provider: globalState.provider, ts: new Date().toISOString() };
+      globalState.aiChatHistory.unshift(item);
       if (input) input.value = '';
       saveGlobalState();
       renderAIChat();
+      aiAnswerItem(item, text, att);
     }
 
     // ========== 星回智能回复（不依赖后端） ==========
@@ -5164,7 +5575,7 @@ function aiDel(id) {
       globalState.health = globalState.health || {
         currentWeight: 68.1, targetWeight: 60, intakeKcal: 1480, burnKcal: 1600,
         exerciseKcal: 0, basalMetabolism: 1500, activityFactor: 1.2,
-        height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastIntakeLog: []
+        height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastWeightDate: '', lastIntakeLog: []
       };
       const fg = globalState.fitnessGoal;
       const plan = fitnessGenPlan(fg);
@@ -5199,7 +5610,7 @@ function aiDel(id) {
       globalState.health = globalState.health || {
         currentWeight: 68.1, targetWeight: 60, intakeKcal: 1480, burnKcal: 1600,
         exerciseKcal: 0, basalMetabolism: 1500, activityFactor: 1.2,
-        height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastIntakeLog: []
+        height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastWeightDate: '', lastIntakeLog: []
       };
         globalState.fitnessPhotos.push({ id: Date.now(), url: e.target.result, date: new Date().toISOString().slice(0,10), note: '训练记录' });
         saveGlobalState();
@@ -5363,6 +5774,20 @@ function aiDel(id) {
       renderAIChat();
     }
 
+    // 星回主动提醒：体重按 10 天周期更新
+    function starRemindWeightCheck() {
+      const h = globalState.health || {};
+      const last = h.lastWeightDate;
+      let due = !last;
+      if (last) {
+        try { due = (Date.now() - new Date(last).getTime()) >= 10 * 86400000; } catch (e) {}
+      }
+      if (!due) return;
+      setTimeout(() => {
+        if (typeof showHint === 'function') showHint('⏰ 星回提醒：该更新体重了（10 天周期）');
+      }, 2200);
+    }
+
     // ========== 英语学习小组件 ==========
     function renderEnglishLearningWidget(body) {
       globalState.englishWords = globalState.englishWords || [];
@@ -5472,6 +5897,41 @@ function aiDel(id) {
       renderHome();
     }
 
+    // ========== 快速输入（底部任务捕获） ==========
+    let _quickPriority = 'p3';
+    function setQuickPriority(p, btn) {
+      _quickPriority = p;
+      document.querySelectorAll('#quick-capture .priority-btn').forEach(b => b.classList.toggle('active', b === btn));
+    }
+    function quickTargetList() {
+      if (currentPage === 'exam') return globalState.examTasks;
+      if (currentPage === 'self') return globalState.selfTasks;
+      if (currentPage === 'ops') return globalState.opsTasks;
+      if (currentPage === 'family') return globalState.familyTasks;
+      return globalState.todos;
+    }
+    function renderCurrentTaskArea() {
+      if (currentPage === 'home') { renderHome(); return; }
+      if (currentPage === 'plan') { renderPlans(); return; }
+      if (currentPage === 'exam') { renderExam(); updateProgress(); return; }
+      if (currentPage === 'self') { renderSelf(); updateProgress(); return; }
+      if (currentPage === 'ops') { renderOps(); updateProgress(); return; }
+      if (currentPage === 'family') { renderFamily(); updateProgress(); return; }
+      if (currentPage === 'stats') { renderStats(); return; }
+    }
+    function quickAddTask() {
+      const input = document.getElementById('quick-task-input');
+      const text = (input.value || '').trim();
+      if (!text) return;
+      const target = quickTargetList();
+      if (!target) return;
+      target.push({ id: Date.now(), text, done: false, priority: _quickPriority, createdAt: new Date().toISOString() });
+      input.value = '';
+      saveGlobalState();
+      renderCurrentTaskArea();
+      showHint('✅ 已添加 ' + _quickPriority.toUpperCase() + ' 任务并自动保存');
+    }
+
     // ========== 设置面板 ==========
     function openSettings() {
       const wb = getCurrentWorkbench();
@@ -5485,6 +5945,17 @@ function aiDel(id) {
       document.getElementById('blur-value').textContent = wb.glassBlur + 'px';
       const tg = document.getElementById('toggle-nav-glass');
       if (tg) tg.classList.toggle('on', !!wb.glassNav);
+      const cfg = getSyncConfig();
+      const urlEl = document.getElementById('sync-sb-url');
+      const keyEl = document.getElementById('sync-sb-key');
+      const skEl = document.getElementById('sync-key');
+      const wfEl = document.getElementById('toggle-wifi-backup');
+      if (urlEl) urlEl.value = cfg.url;
+      if (keyEl) keyEl.value = cfg.key;
+      if (skEl) skEl.value = cfg.syncKey;
+      if (wfEl) wfEl.classList.toggle('on', !!cfg.wifiBackup);
+      const aiKeyEl = document.getElementById('deepseek-api-key');
+      if (aiKeyEl) aiKeyEl.value = globalState.deepseekApiKey || '';
       onBgTypeChange();
       document.getElementById('settings-modal').classList.add('active');
     }
@@ -5519,13 +5990,17 @@ function aiDel(id) {
     function previewBg() {
       const type = document.getElementById('bg-type').value;
       const root = document.documentElement;
+      const wb = getCurrentWorkbench();
       if (type === 'color') {
-        root.style.setProperty('--bg-color', document.getElementById('bg-color').value);
+        wb.background = { type: 'color', value: document.getElementById('bg-color').value };
+        root.style.setProperty('--bg-color', wb.background.value);
         root.style.setProperty('--bg-image', 'none');
       } else if (type === 'image') {
+        wb.background = { type: 'image', value: document.getElementById('bg-image-url').value };
         root.style.setProperty('--bg-color', '#1a1a2e');
-        root.style.setProperty('--bg-image', `url('${document.getElementById('bg-image-url').value}')`);
+        root.style.setProperty('--bg-image', `url('${wb.background.value}')`);
       }
+      saveAppState();
     }
 
     function setPresetBg(url) {
@@ -5550,6 +6025,9 @@ function aiDel(id) {
       const val = document.getElementById('card-opacity').value;
       document.getElementById('opacity-value').textContent = val + '%';
       document.documentElement.style.setProperty('--card-opacity', val / 100);
+      const wb = getCurrentWorkbench();
+      wb.cardOpacity = parseInt(val) / 100;
+      saveAppState();
     }
 
     function previewGlass() {
@@ -5557,12 +6035,16 @@ function aiDel(id) {
       const wb = getCurrentWorkbench();
       wb.glassType = type;
       refreshGlassClasses();
+      saveAppState();
     }
 
     function previewBlur() {
       const val = document.getElementById('glass-blur').value;
       document.getElementById('blur-value').textContent = val + 'px';
       document.documentElement.style.setProperty('--glass-blur', val + 'px');
+      const wb = getCurrentWorkbench();
+      wb.glassBlur = parseInt(val);
+      saveAppState();
     }
 
     function saveSettings() {
@@ -5578,6 +6060,8 @@ function aiDel(id) {
       wb.glassBlur = parseInt(document.getElementById('glass-blur').value);
       const tg = document.getElementById('toggle-nav-glass');
       if (tg) wb.glassNav = tg.classList.contains('on');
+      const aiKeyEl = document.getElementById('deepseek-api-key');
+      if (aiKeyEl) globalState.deepseekApiKey = aiKeyEl.value.trim();
       saveSyncConfig();
       saveAppState();
       applyWorkbenchStyles();
@@ -5754,6 +6238,7 @@ function aiDel(id) {
       updateEditModeUI();
       initSync();
       starRemindCountdowns();
+      starRemindWeightCheck();
       // 双击星回 widget 打开独立对话框
       document.addEventListener('dblclick', (e) => {
         const card = e.target.closest('.card[data-widget="aiSecretary"]');
@@ -6153,14 +6638,10 @@ function aiDel(id) {
     // ========== SW v8 ==========
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js?v=33').catch(function () {});
+        navigator.serviceWorker.register('/sw.js?v=35').catch(function () {});
       });
     }
-  
-} catch(e) {
-    var el = document.getElementById('initial-loader');
-    if(el) el.innerHTML = '<div style=\"color:#ef4444;font-size:14px\">' + e.message + '</div>';
-}</script>
+</script>
 </body>
 </html>
 

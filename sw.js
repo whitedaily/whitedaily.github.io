@@ -1,11 +1,11 @@
 ﻿/* Service Worker - force refresh */
-const CACHE = 'daily-v6';
+const CACHE = 'daily-v8';
 const FILES = [
   'index.html',
-  'manifest.json',
-  'css/style.css',
-  'js/data.js','js/calendar.js','js/reminder.js','js/screenshot.js','js/charts.js','js/briefing.js','js/sync.js','js/app.js',
-  'lib/chart.umd.min.js','lib/tesseract.min.js'
+  'manifest.webmanifest',
+  'favicon.png',
+  'icon-192.png',
+  'icon-512.png'
 ];
 self.addEventListener('install', e => {
   e.waitUntil(
