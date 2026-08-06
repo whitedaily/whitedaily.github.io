@@ -1567,6 +1567,51 @@
   .priority-btn.p2.active { background: var(--blue); border-color: var(--blue); color: #fff; }
   .priority-btn.p3.active { background: var(--green); border-color: var(--green); color: #fff; }
 
+  .chat-image-row {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 2px;
+  }
+  .chat-image-chip {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .chat-image-chip img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .chat-image-chip button {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 3px;
+    background: rgba(26,26,26,0.75);
+    color: #fff;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .chat-image-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .chat-image-list img {
+    max-width: 120px;
+    max-height: 120px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+
   /* 任务列表：Active / Completed + 优先级 + hover 删除 */
   .task-section-label {
     display: flex;
@@ -2034,6 +2079,7 @@
     <div class="wx-input-wrap" id="right-input-wrap" style="margin-top:8px;position:relative">
       <textarea class="wx-textarea" id="ai-input" placeholder="输入文字，或按住Ctrl+Win使用语音输入" oninput="wxUpdateCount()" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();wxSendClick()}" style="font-family:inherit"></textarea>
       <input type="url" class="wx-textarea" id="rp-url" placeholder="粘贴链接,按回车分类..." style="display:none;min-height:32px" onkeydown="if(event.key==='Enter'){event.preventDefault();wxSendClick()}">
+      <div class="chat-image-row" id="chat-image-row"></div>
       <div class="wx-toolbar">
         <span class="wx-icon" id="wx-emoji" title="表情" onclick="wxToggleEmoji()">😊</span>
         <span class="wx-icon" title="文件" onclick="wxPickFile()">📦</span>
@@ -2151,6 +2197,42 @@
           btn.classList.toggle('recording', isRec);
         }
       }, 50);
+    }
+    // 粘贴图片到聊天框
+    let _chatImages = [];
+    function handleChatPaste(e, rowId) {
+      const items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      for (const it of items) {
+        if (it.type && it.type.indexOf('image/') === 0) {
+          e.preventDefault();
+          const f = it.getAsFile();
+          if (!f) continue;
+          const reader = new FileReader();
+          reader.onload = () => {
+            _chatImages.push({ url: reader.result, name: f.name || '粘贴图片' });
+            renderChatImages(rowId);
+          };
+          reader.readAsDataURL(f);
+        }
+      }
+    }
+    function renderChatImages(rowId) {
+      const row = document.getElementById(rowId);
+      if (!row) return;
+      row.innerHTML = _chatImages.map((img, i) => `<span class="chat-image-chip"><img src="${img.url}" alt="${escapeHtml(img.name || '图片')}"><button onclick="removeChatImage(${i}, '${rowId}')">×</button></span>`).join('');
+      row.style.display = _chatImages.length ? 'flex' : 'none';
+    }
+    function removeChatImage(i, rowId) {
+      _chatImages.splice(i, 1);
+      renderChatImages(rowId);
+    }
+    function clearChatImages() {
+      _chatImages = [];
+      ['chat-image-row', 'star-dialog-image-row'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.innerHTML = ''; el.style.display = 'none'; }
+      });
     }
     // 旧 rightPanelMode 兼容(已被微信工具栏替代,但保留避免报错)
     function rightPanelMode() { wxUpdateCount(); }
@@ -2776,6 +2858,8 @@ window.onerror = function(msg, src, line, col, err) {
       window.addEventListener('resize', () => { renderMobileNav(); });
       const q = document.getElementById('quick-task-input');
       if (q) q.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); quickAddTask(); } });
+      const aiInput = document.getElementById('ai-input');
+      if (aiInput) aiInput.addEventListener('paste', (e) => handleChatPaste(e, 'chat-image-row'));
     }
     document.addEventListener('DOMContentLoaded', () => { wbDomReady = true; wbStartApp(); });
     document.addEventListener('wbDepsReady', () => { wbDepsReady = true; wbStartApp(); });
@@ -4832,30 +4916,40 @@ window.onerror = function(msg, src, line, col, err) {
             </div>`;
           }).join('');
       const inputRow = document.createElement('div');
-      inputRow.style.cssText = 'display:flex;gap:8px;';
+      inputRow.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
       inputRow.innerHTML = `
-        <input type="text" id="star-dialog-input" placeholder="跟星回说点什么..." style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px" onkeypress="if(event.key==='Enter')starDialogSend()">
-        <button onclick="starDialogSend()" style="padding:8px 16px;background:var(--tiffany);color:#fff;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-weight:600">发送</button>`;
+        <div class="chat-image-row" id="star-dialog-image-row"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="star-dialog-input" placeholder="跟星回说点什么..." style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px" onkeypress="if(event.key==='Enter')starDialogSend()">
+          <button onclick="starDialogSend()" style="padding:8px 16px;background:var(--tiffany);color:#fff;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-weight:600">发送</button>
+        </div>`;
       card.appendChild(header);
       card.appendChild(chatArea);
       card.appendChild(inputRow);
       modal.appendChild(card);
       modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
       document.body.appendChild(modal);
-      setTimeout(() => document.getElementById('star-dialog-input').focus(), 200);
+      setTimeout(() => {
+        const si = document.getElementById('star-dialog-input');
+        if (si) { si.focus(); si.addEventListener('paste', (e) => handleChatPaste(e, 'star-dialog-image-row')); }
+      }, 200);
     }
     function starDialogSend() {
       const input = document.getElementById('star-dialog-input');
       const text = (input.value || '').trim();
-      if (!text) return;
+      const imgs = _chatImages.slice();
+      if (!text && !imgs.length) return;
       globalState.aiChatHistory = globalState.aiChatHistory || [];
-      const item = { id: Date.now(), q: text, a: '', provider: 'deepseek', ts: new Date().toISOString() };
+      const att = aiSecGetAttachments();
+      if (imgs.length) { att.image = imgs[0].url; att.images = imgs; }
+      const item = { id: Date.now(), q: text || '（图片）', a: '', provider: 'deepseek', ts: new Date().toISOString(), images: imgs.map(x => x.url) };
       globalState.aiChatHistory.unshift(item);
       input.value = '';
+      clearChatImages();
       saveGlobalState();
       renderAIChat();
       renderStarDialogChat();
-      aiAnswerItem(item, text, aiSecGetAttachments());
+      aiAnswerItem(item, text || '（图片）', att);
     }
     function renderStarDialogChat() {
       const chatArea = document.getElementById('star-dialog-chat');
@@ -4866,9 +4960,12 @@ window.onerror = function(msg, src, line, col, err) {
         : list.slice(0, 20).map(c => {
             const p = providers[c.provider] || providers.doubao;
             const ts = (c.ts || '').slice(5, 16).replace('T', ' ');
+            const imgHtml = (c.images && c.images.length)
+              ? '<div class="chat-image-list">' + c.images.map(u => `<img src="${u}" alt="图片">`).join('') + '</div>'
+              : '';
             return `<div style="margin-bottom:10px;border-radius:10px;background:rgba(255,255,255,0.6);padding:8px 10px;font-size:12px;border:1px solid rgba(0,0,0,0.06)">
               <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">${ts} · ${escapeHtml(p.name)}</div>
-              <div style="padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.7);margin-bottom:4px;border-left:3px solid var(--tiffany)">${escapeHtml(c.q)}</div>
+              <div style="padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.7);margin-bottom:4px;border-left:3px solid var(--tiffany)">${escapeHtml(c.q)}${imgHtml}</div>
               ${c.a ? `<div style="padding:6px 8px;border-radius:8px;background:rgba(10,186,181,0.1);border-left:3px solid var(--tiffany-dark)">${escapeHtml(c.a).replace(/\n/g,'<br>')}</div>` : '<div style="opacity:0.5;font-size:11px;font-style:italic;padding:4px 8px">⏳ 等待回答...</div>'}
             </div>`;
           }).join('');
@@ -5287,7 +5384,8 @@ window.onerror = function(msg, src, line, col, err) {
     function aiSend() {
       const input = document.getElementById('ai-input');
       const text = (input ? input.value : '').trim();
-      if (!text) return;
+      const imgs = _chatImages.slice();
+      if (!text && !imgs.length) return;
       globalState.aiChatHistory = globalState.aiChatHistory || [];
       globalState.expenses = globalState.expenses || [];
       globalState.expenseBudget = globalState.expenseBudget || { monthly: 5000, alertAt: 80 };
@@ -5300,12 +5398,14 @@ window.onerror = function(msg, src, line, col, err) {
         height: 170, age: 25, gender: 'female', weekStartWeight: 68.1, lastWeightDate: '', lastIntakeLog: []
       };
       const att = aiSecGetAttachments();
-      const item = { id: Date.now(), q: text, a: '', provider: globalState.provider, ts: new Date().toISOString() };
+      if (imgs.length) { att.image = imgs[0].url; att.images = imgs; }
+      const item = { id: Date.now(), q: text || '（图片）', a: '', provider: globalState.provider, ts: new Date().toISOString(), images: imgs.map(x => x.url) };
       globalState.aiChatHistory.unshift(item);
       if (input) input.value = '';
+      clearChatImages();
       saveGlobalState();
       renderAIChat();
-      aiAnswerItem(item, text, att);
+      aiAnswerItem(item, text || '（图片）', att);
     }
 
     // ========== 星回智能回复（不依赖后端） ==========
@@ -5441,10 +5541,13 @@ window.onerror = function(msg, src, line, col, err) {
         const p = providers[c.provider] || providers.doubao;
         const ts = (c.ts || '').slice(5, 16).replace('T', ' ');
         const hasAnswer = !!(c.a && c.a.trim());
+        const imgHtml = (c.images && c.images.length)
+          ? '<div class="chat-image-list">' + c.images.map(u => `<img src="${u}" alt="图片">`).join('') + '</div>'
+          : '';
         return `
           <div class="ai-chat-item" data-id="${c.id}">
             <div class="ai-chat-meta"><span>${ts}</span><span>📡 ${escapeHtml(p.name)}</span><span style="margin-left:auto;cursor:pointer;color:var(--text-muted)" onclick="aiDel(${c.id})" title="删除">🗑️</span></div>
-            <div class="ai-bubble q-bubble">❓ ${escapeHtml(c.q)}</div>
+            <div class="ai-bubble q-bubble">❓ ${escapeHtml(c.q)}${imgHtml}</div>
             ${hasAnswer
               ? `<div class="ai-bubble a-bubble">${escapeHtml(c.a).replace(/\n/g,'<br>')}</div>`
               : `<div class="ai-bubble a-bubble pending">⏳ 等待回答... 打开外部 AI 后粘贴回来</div>`}
