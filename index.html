@@ -1876,17 +1876,8 @@
             <div class="health-field"><label>目标体重</label>
               <input type="number" id="target-weight" step="0.1" onchange="updateHealth('targetWeight', this.value)"> kg
             </div>
-            <div class="health-field"><label>今日摄入</label>
-              <input type="number" id="cal-in" onchange="updateHealth('intakeKcal', this.value)"> kcal
-            </div>
-            <div class="health-field"><label>今日消耗</label>
-              <input type="number" id="cal-out" onchange="updateHealth('burnKcal', this.value)"> kcal
-              <span style="font-size:10px;color:var(--text-muted);margin-left:4px" id="burn-breakdown">= 基础 + 运动</span>
-            </div>
             <div class="health-result">
               <div class="row"><span class="label">距目标</span><span class="value down" id="diff-weight">- 斤</span></div>
-              <div class="row"><span class="label">热量缺口</span><span class="value up" id="diff-cal">+ kcal</span></div>
-              <div class="row"><span class="label">本周减重</span><span class="value down" id="week-loss">- 斤</span></div>
             </div>
             <div id="sci-plan" style="font-size:10px;color:var(--text-muted);margin-top:8px;line-height:1.5"></div>
             <div style="font-size:10px;color:var(--text-muted);margin-top:6px">💡 跟星回说「吃了 XX」「跑了 XX 分钟」自动记入；运动消耗联动健身打卡</div>
@@ -5080,29 +5071,13 @@ window.onerror = function(msg, src, line, col, err) {
         }
         saveGlobalState();
       }
-      // 自动算今日消耗 = 基础代谢 * 活动系数 + 运动消耗
+      // 距目标
       const basalTotal = Math.round((h.basalMetabolism || 0) * (h.activityFactor || 1.2));
-      const autoBurn = basalTotal + (h.exerciseKcal || 0);
-      // 写入 input 时若与自动值不同(用户手动改过)保留用户值,否则跟随自动
-      if (field !== 'burnKcal' && document.activeElement !== document.getElementById('cal-out')) {
-        h.burnKcal = autoBurn;
-        const el = document.getElementById('cal-out');
-        if (el) el.value = autoBurn;
-      }
-      const breakdown = document.getElementById('burn-breakdown');
-      if (breakdown) breakdown.textContent = '= 基础' + basalTotal + ' + 运动' + (h.exerciseKcal||0);
-      // 距离/缺口/本周减重
       const weight = h.currentWeight || 0;
       const target = h.targetWeight || 0;
       const diffW = (weight - target).toFixed(1);
-      const calDiff = (h.burnKcal || 0) - (h.intakeKcal || 0);
-      const weekLoss = ((h.weekStartWeight || weight) - weight).toFixed(2);
       const set = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
       set('diff-weight', (diffW > 0 ? '+' : '') + diffW + ' kg');
-      set('diff-cal', (calDiff > 0 ? '+' : '') + calDiff + ' kcal');
-      const dc = document.getElementById('diff-cal');
-      if (dc) dc.className = 'value ' + (calDiff >= 0 ? 'up' : 'down');
-      set('week-loss', (weekLoss > 0 ? '-' : '+') + Math.abs(weekLoss) + ' kg');
       // 科学减重建议：TDEE = BMR × 活动系数；减脂缺口 300-500 kcal/天，目标每周 0.25-0.5kg
       const goal = (globalState.fitnessGoal || {}).goal || 'lose';
       const tdee = Math.round((h.basalMetabolism || 0) * (h.activityFactor || 1.2));
@@ -5207,10 +5182,6 @@ window.onerror = function(msg, src, line, col, err) {
       if (w) w.value = h.currentWeight;
       const t = document.getElementById('target-weight');
       if (t) t.value = h.targetWeight;
-      const ci = document.getElementById('cal-in');
-      if (ci) ci.value = h.intakeKcal;
-      const co = document.getElementById('cal-out');
-      if (co) co.value = h.burnKcal;
       updateHealth();
     }
 
