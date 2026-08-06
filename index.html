@@ -1863,26 +1863,8 @@
 
     <!-- 自律 -->
     <section class="page" id="self">
-      <div class="page-header"><div class="page-title"><h1 data-h1="self">自律</h1><p class="editable-sub" data-sub="self" onclick="editPageSubtitle('self', this)" title="点击编辑副标题">健康打卡 · 记录体重、热量与运动</p></div></div>
+      <div class="page-header"><div class="page-title"><h1 data-h1="self">自律</h1><p class="editable-sub" data-sub="self" onclick="editPageSubtitle('self', this)" title="点击编辑副标题">自律打卡 · 每日目标与习惯</p></div></div>
       <div class="widget-grid">
-        <div class="card glass" id="health-card">
-          <div class="card-title"><span><span class="emoji">🏃</span>今日健康打卡</span>
-            <button onclick="openHealthProfile()" style="background:transparent;border:none;color:var(--tiffany-dark);font-size:11px;cursor:pointer">⚙ 设置</button>
-          </div>
-          <div class="health-form">
-            <div class="health-field"><label>当前体重</label>
-              <input type="number" id="weight" step="0.1" onchange="updateHealth('currentWeight', this.value)"> kg
-            </div>
-            <div class="health-field"><label>目标体重</label>
-              <input type="number" id="target-weight" step="0.1" onchange="updateHealth('targetWeight', this.value)"> kg
-            </div>
-            <div class="health-result">
-              <div class="row"><span class="label">距目标</span><span class="value down" id="diff-weight">- 斤</span></div>
-            </div>
-            <div id="sci-plan" style="font-size:10px;color:var(--text-muted);margin-top:8px;line-height:1.5"></div>
-            <div style="font-size:10px;color:var(--text-muted);margin-top:6px">💡 跟星回说「吃了 XX」「跑了 XX 分钟」自动记入；运动消耗联动健身打卡</div>
-          </div>
-        </div>
         <div class="card glass">
           <div class="card-title"><span><span class="emoji">✅</span>自律打卡项</span></div>
           <div class="todo-input-wrap">
@@ -6306,7 +6288,6 @@ function aiDel(id) {
       applyWorkbenchStyles();
       renderNav(); renderMobileNav();
       renderHome(); updateDate(); startClock(); renderCalendar(); loadWeather();
-      hydrateHealthInputs();
       renderSelfFavorites();
       renderAIChat();
       updateEditModeUI();
